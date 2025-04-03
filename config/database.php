@@ -30,24 +30,12 @@ return [
     */
 
     'connections' => [
-
-        'sqlite' => [
-            'driver' => 'sqlite',
-            'url' => env('DB_URL'),
-            'database' => env('DB_DATABASE', database_path('database.sqlite')),
-            'prefix' => '',
-            'foreign_key_constraints' => env('DB_FOREIGN_KEYS', true),
-            'busy_timeout' => null,
-            'journal_mode' => null,
-            'synchronous' => null,
-        ],
-
         'mysql' => [
             'driver' => 'mysql',
             'url' => env('DB_URL'),
             'host' => env('DB_HOST', '127.0.0.1'),
             'port' => env('DB_PORT', '3306'),
-            'database' => env('DB_DATABASE', 'laravel'),
+            'database' => env('APP_ENV') === 'local' ? env('DB_DATABASE_LOCAL', 'legui') : env('DB_DATABASE_PRODUCCION', 'admin'),
             'username' => env('DB_USERNAME', 'root'),
             'password' => env('DB_PASSWORD', ''),
             'unix_socket' => env('DB_SOCKET', ''),
