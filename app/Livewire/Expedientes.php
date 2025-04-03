@@ -13,7 +13,6 @@ class Expedientes extends Component
 {
     use WithPagination;
 
-
     public $modalExp = false;
     public $modalEdit = false;
     public $busquedaExp = '';
@@ -28,7 +27,7 @@ class Expedientes extends Component
 
     public ExpedienteForm $expedienteForm;
 
-    public $menuVis ible = null; // Para controlar el menú desplegable
+    public $menuVisible = null; // Para controlar el menú desplegable
 
     public $filtro = [
         'fechaDesde' => null,
@@ -151,7 +150,10 @@ class Expedientes extends Component
                     $this->asunto = null;
                     $this->causante = null;
                     $this->expedienteForm->reset();
-                    $this->alert('error', 'El expediente ya está ingresado en la base de datos');
+                    $this->dispatch('swal:error', [
+                        'title' => 'Error',
+                        'text' => 'El expediente ya está ingresado en la base de datos',
+                    ]);
                     return;
                 }
 
@@ -165,14 +167,20 @@ class Expedientes extends Component
                 $this->expedienteForm->causante = $this->causante;
                 $this->expedienteForm->fecha_ingreso = now()->format('Y-m-d');
 
-                $this->alert('success', 'Se encontró el expediente');
+                $this->dispatch('swal:success', [
+                    'title' => 'Éxito',
+                    'text' => 'Se encontró el expediente',
+                ]);
             } else {
                 // Si no se encuentra, limpiar los datos
                 $this->expedienteEncontrado = null;
                 $this->asunto = null;
                 $this->causante = null;
                 $this->expedienteForm->reset();
-                $this->alert('error', 'No se encontró el expediente');
+                $this->dispatch('swal:error', [
+                    'title' => 'Error',
+                    'text' => 'No se encontró el expediente',
+                ]);
             }
         } else {
             // Si la búsqueda está vacía, limpiar los datos
@@ -200,9 +208,11 @@ class Expedientes extends Component
         $expedienteExistente = \App\Models\Expediente::where('num_exp', $this->expedienteEncontrado['numero'])->first();
 
         if ($expedienteExistente) {
-            $this->alert('error', 'El expediente ya se encuentra cargado.', [
+            $this->dispatch('swal:error', [
+                'title' => 'Error',
+                'text' => 'El expediente ya se encuentra cargado.',
                 'position' => 'center',
-                'toast' => null
+                'showConfirmButton' => true,
             ]);
         } else {
             $this->validate();
@@ -239,9 +249,11 @@ class Expedientes extends Component
                 ->find($this->expedienteForm->ofi_salida);
 
             if (!$oficina) {
-                $this->alert('error', 'Por favor, seleccione una oficina válida', [
+                $this->dispatch('swal:error', [
+                    'title' => 'Error',
+                    'text' => 'Por favor, seleccione una oficina válida',
                     'position' => 'center',
-                    'toast' => null
+                    'showConfirmButton' => true,
                 ]);
             }
 
@@ -254,29 +266,37 @@ class Expedientes extends Component
 
             if ($resultado === 1) {
                 $this->modalEdit = false;
-                $this->alert('success', 'El expediente fue editado exitosamente.', [
+                $this->dispatch('swal:success', [
+                    'title' => 'Éxito',
+                    'text' => 'El expediente fue editado exitosamente.',
                     'position' => 'center',
-                    'toast' => null
+                    'showConfirmButton' => true,
                 ]);
 
                 // Limpiar la búsqueda y la lista de oficinas
                 $this->query = '';
                 $this->oficinas = [];
             } elseif ($resultado === -1) {
-                $this->alert('info', 'No hubo cambios en el expediente.', [
+                $this->dispatch('swal:info', [
+                    'title' => 'Información',
+                    'text' => 'No hubo cambios en el expediente.',
                     'position' => 'center',
-                    'toast' => null
+                    'showConfirmButton' => true,
                 ]);
             } else {
-                $this->alert('error', 'Hubo un error al actualizar el expediente.', [
+                $this->dispatch('swal:error', [
+                    'title' => 'Error',
+                    'text' => 'Hubo un error al actualizar el expediente.',
                     'position' => 'center',
-                    'toast' => null
+                    'showConfirmButton' => true,
                 ]);
             }
         } catch (\Exception $e) {
-            $this->alert('error', 'Error al actualizar: ' . $e->getMessage(), [
+            $this->dispatch('swal:error', [
+                'title' => 'Error',
+                'text' => 'Error al actualizar: ' . $e->getMessage(),
                 'position' => 'center',
-                'toast' => null
+                'showConfirmButton' => true,
             ]);
         }
     }
@@ -286,18 +306,17 @@ class Expedientes extends Component
     public function confirmarBorrado($expedienteId)
     {
         $this->expedienteId = $expedienteId;
-        // Lanza el popup de confirmación
-        $this->alert('warning', '¿Está seguro de que desea Borrar este expediente?', [
+        $this->dispatch('swal:confirm', [
+            'title' => '¿Está seguro?',
+            'text' => '¿Está seguro de que desea Borrar este expediente?',
+            'icon' => 'warning',
             'showConfirmButton' => true,
             'confirmButtonText' => 'Sí, borrar',
             'showCancelButton' => true,
             'cancelButtonText' => 'Cancelar',
-            'onConfirmed' => 'borrarExpediente',  // Método a ejecutar si el usuario confirma
-            'onDismissed' => 'cancelarBorrado',  // Método a ejecutar si el usuario confirma
-            'timer' => null,
+            'onConfirmed' => 'borrarExpediente',
+            'onDismissed' => 'cancelarBorrado',
             'position' => 'center',
-            'toast' => null
-
         ]);
     }
 
@@ -307,22 +326,31 @@ class Expedientes extends Component
         $expediente = \App\Models\Expediente::find($this->expedienteId);
         if ($expediente) {
             $expediente->delete(); //Eliminar el expediente
-            $this->alert('success', 'El expediente fue borrado exitosamente.', options: [
+            $this->dispatch('swal:success', [
+                'title' => 'Éxito',
+                'text' => 'El expediente fue borrado exitosamente.',
                 'position' => 'center',
-                'toast' => null
+                'showConfirmButton' => true,
             ]);
         } else {
-            $this->alert('error', 'No se encontró el expediente');
+            $this->dispatch('swal:error', [
+                'title' => 'Error',
+                'text' => 'No se encontró el expediente',
+                'position' => 'center',
+                'showConfirmButton' => true,
+            ]);
         }
     }
-    #[On('cancelarBorrado')]
 
+    #[On('cancelarBorrado')]
     public function cancelarBorrado()
     {
         // Lógica opcional si el usuario cancela la acción
-        $this->alert('info', 'Se canceló exitosamente.', options: [
+        $this->dispatch('swal:info', [
+            'title' => 'Información',
+            'text' => 'Se canceló exitosamente.',
             'position' => 'center',
-            'toast' => null
+            'showConfirmButton' => true,
         ]);
         $this->expedienteId = null;
     }
@@ -369,7 +397,12 @@ class Expedientes extends Component
         // Aplicar filtros en el método getExp()
         $this->render();
         $this->modalFiltro = false;
-        $this->alert('success', 'Filtros aplicados correctamente');
+        $this->dispatch('swal:success', [
+            'title' => 'Éxito',
+            'text' => 'Filtros aplicados correctamente',
+            'position' => 'center',
+            'showConfirmButton' => true,
+        ]);
     }
 
     public function limpiarFiltros()
@@ -377,8 +410,14 @@ class Expedientes extends Component
         $this->filtro['fechaDesde'] = null;
         $this->filtro['fechaHasta'] = null;
         $this->render();
-        $this->alert('info', 'Filtros limpiados correctamente');
+        $this->dispatch('swal:info', [
+            'title' => 'Información',
+            'text' => 'Filtros limpiados correctamente',
+            'position' => 'center',
+            'showConfirmButton' => true,
+        ]);
     }
+
     public function verDetalle($id)
     {
         $this->redirectRoute('expediente.detalle', ['id' => $id]);
