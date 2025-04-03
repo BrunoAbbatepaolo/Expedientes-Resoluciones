@@ -59,7 +59,7 @@
     </x-slot:content>
 
     <x-slot:footer>
-        <div class="flex gap-4 justify-end">
+        <div class="flex gap-4 justify-end dark:bg-gray-400">
             @if ($expedienteEncontrado)
             <x-button-blue wire:click="guardar">Guardar</x-button-blue>
             @endif
