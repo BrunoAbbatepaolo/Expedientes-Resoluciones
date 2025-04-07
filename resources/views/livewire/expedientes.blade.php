@@ -1,4 +1,7 @@
 <div class="space-y-4">
+    <div class="text-3xl font-bold text-center p-4 dark:bg-zinc-900 dark:bg-black dark:text-white rounded-lg dark:shadow-md">
+        Sistema de Carga de Expedientes
+    </div>
     <!-- Barra de búsqueda y botones -->
     <div class="flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center">
         <!-- Barra de búsqueda simplificada -->
@@ -14,9 +17,9 @@
 
         <!-- Grupo de botones simplificado -->
         <div class="flex gap-2">
-            <x-button wire:click="$set('modalFiltro', true)" class="bg-blue-600 hover:bg-blue-700">
-                Filtros
-            </x-button>
+            <flux:modal.trigger name="modal-filtro">
+                <flux:button class="bg-blue-600 hover:bg-blue-700">Filtrar</flux:button>
+            </flux:modal.trigger>
             <x-button wire:click="$set('modalExp', true)" class="bg-sky-600 hover:bg-sky-700">
                 Nuevo Expediente
             </x-button>
@@ -29,11 +32,10 @@
             <thead class="bg-gray-100 dark:bg-gray-800">
                 <tr>
                     <x-th>Número</x-th>
-                    <x-th>Fojas</x-th>
+                    <x-th class="hidden 2xl:table-cell">Fojas</x-th>
                     <x-th>Ingreso</x-th>
                     <x-th>Causante</x-th>
-                    <x-th>Asunto</x-th>
-                    <x-th>Área Salida</x-th>
+                    <x-th class="hidden 2xl:table-cell">Asunto</x-th>
                     <x-th>Oficina Salida</x-th>
                     <x-th>Salida</x-th>
                     <x-th class="text-center">Acciones</x-th>
@@ -45,7 +47,7 @@
                     <x-td click="verDetalle({{ $expediente->id }})" class="cursor-pointer">
                         {{ $expediente->num_exp }}
                     </x-td>
-                    <x-td class="text-center">
+                    <x-td class="text-center hidden 2xl:table-cell">
                         {{ $expediente->folio }}
                     </x-td>
                     <x-td>
@@ -55,11 +57,9 @@
                         {{ $expediente->causante }}
                     </x-td>
                     <x-td>
-                        <div class="max-w-xs truncate">{{ $expediente->asunto }}</div>
+                        <div class="max-w-xs hidden 2xl:table-cell truncate">{{ $expediente->asunto }}</div>
                     </x-td>
-                    <x-td>
-                        {{ $expediente->oficina->area->nombre ?? '-' }}
-                    </x-td>
+
                     <x-td>
                         {{ $expediente->oficina->nombre ?? '-' }}
                     </x-td>
@@ -121,41 +121,5 @@
     <!-- Modales -->
     @include('livewire.modal-buscar-expediente')
     @include('livewire.modal-editar-expediente')
-    @include('livewire.modal-filtro-expediente')
+    @include('livewire.modal-filtros')
 </div>
-
-@push('scripts')
-<script>
-    document.addEventListener('livewire:init', () => {
-        // Manejo simplificado de alertas
-        ['success', 'error', 'info', 'warning'].forEach(type => {
-            Livewire.on(`swal:${type}`, (data) => {
-                Swal.fire({
-                    icon: type,
-                    title: data[0]?.title || type.charAt(0).toUpperCase() + type.slice(1),
-                    text: data[0]?.text || '',
-                    showConfirmButton: data[0]?.showConfirmButton ?? true,
-                    timer: data[0]?.timer || null
-                });
-            });
-        });
-
-        Livewire.on('swal:confirm', (data) => {
-            Swal.fire({
-                title: data[0]?.title || '¿Está seguro?',
-                text: data[0]?.text || '¿Desea continuar con esta acción?',
-                icon: data[0]?.icon || 'warning',
-                showCancelButton: true,
-                confirmButtonText: data[0]?.confirmButtonText || 'Sí',
-                cancelButtonText: data[0]?.cancelButtonText || 'Cancelar'
-            }).then((result) => {
-                if (result.isConfirmed && data[0]?.onConfirmed) {
-                    Livewire.dispatch(data[0].onConfirmed);
-                } else if (!result.isConfirmed && data[0]?.onDismissed) {
-                    Livewire.dispatch(data[0].onDismissed);
-                }
-            });
-        });
-    });
-</script>
-@endpush
