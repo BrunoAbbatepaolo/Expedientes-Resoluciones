@@ -3,6 +3,7 @@
 namespace App\Livewire;
 
 use Livewire\Component;
+use App\Livewire\Flux;
 use Livewire\WithPagination;
 use App\Livewire\Forms\ExpedienteForm;
 use \Livewire\Attributes\On;
@@ -68,6 +69,7 @@ class Expedientes extends Component
             $this->oficinas = []; // Limpiar resultados del autocompletado
         }
     }
+    public function ModalFiltro() {}
 
     public function render()
     {
@@ -396,7 +398,7 @@ class Expedientes extends Component
 
         // Aplicar filtros en el método getExp()
         $this->render();
-        $this->modalFiltro = false;
+        $this->modal('modal-filtro')->close();
         $this->dispatch('swal:success', [
             'title' => 'Éxito',
             'text' => 'Filtros aplicados correctamente',
@@ -416,10 +418,11 @@ class Expedientes extends Component
             'position' => 'center',
             'showConfirmButton' => true,
         ]);
+        $this->modal('modal-filtro')->close();
     }
 
     public function verDetalle($id)
     {
-        $this->redirectRoute('expediente.detalle', ['id' => $id]);
+        $this->redirectRoute('expedientes.detalle', ['id' => $id]);
     }
 }

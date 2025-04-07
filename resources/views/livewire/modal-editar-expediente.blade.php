@@ -2,7 +2,7 @@
     <x-slot:title>
         <div class="bg-sky-900 text-white text-center py-4 -mt-4 -mx-6 rounded-t-lg">
             <h2 class="text-lg font-bold">Editar Expediente</h2>
-        </div>        
+        </div>
     </x-slot:title>
 
     <x-slot:content class="justify-center">
@@ -30,19 +30,19 @@
             <x-input wire:model="expedienteForm.asunto" placeholder="Ingrese el asunto" class="w-full" />
             <x-input-error for="expedienteForm.asunto" />
         </div>
-        
+
         <div class="flex gap-4 mb-4">
             <div class="flex-1">
                 <x-label value="Fecha de Ingreso" />
                 <x-input wire:model="expedienteForm.fecha_ingreso" type="date" class="w-full" />
                 <x-input-error for="expedienteForm.fecha_ingreso" />
             </div>
-        
+
             <div class="flex-1">
                 <x-label value="Fecha de Salida" />
                 <x-input wire:model="expedienteForm.fecha_salida" type="date" class="w-full" />
                 @error('expedienteForm.fecha_salida')
-                 <span class="text-red-500 text-sm">{{ $message }}</span>
+                <span class="text-red-500 text-sm">{{ $message }}</span>
                 @enderror
                 <x-input-error for="expedienteForm.fecha_salida" />
             </div>
@@ -55,25 +55,23 @@
                 wire:model.live="query"
                 class="w-full border-gray-300 rounded-md shadow-sm"
                 placeholder="Ingrese oficina de salida"
-                autocomplete="off"
-            />
-        
+                autocomplete="off" />
+
             @if(!empty($oficinas))
-                <ul class="absolute bg-white border border-gray-300 rounded-md shadow-lg w-full z-10 max-h-40 overflow-y-auto mt-1">
-                    @foreach($oficinas as $oficina)
-                        <li
-                            class="px-4 py-2 cursor-pointer hover:bg-gray-100"
-                            wire:click="selectOficina({{ $oficina->id }})"
-                        >
-                            {{ $oficina->nombre }} ({{ $oficina->codigo }})
-                        </li>
-                    @endforeach
-                </ul>
+            <ul class="absolute bg-white border border-gray-300 rounded-md shadow-lg w-full z-10 max-h-40 overflow-y-auto mt-1">
+                @foreach($oficinas as $oficina)
+                <li
+                    class="px-4 py-2 cursor-pointer hover:bg-gray-100"
+                    wire:click="selectOficina({{ $oficina->id }})">
+                    {{ $oficina->nombre }} ({{ $oficina->codigo }})
+                </li>
+                @endforeach
+            </ul>
             @endif
-            
+
             <!-- Campo oculto para mantener el ID de la oficina -->
             <input type="hidden" wire:model="expedienteForm.ofi_salida">
-            
+
             <x-input-error for="expedienteForm.ofi_salida" />
         </div>
     </x-slot:content>
