@@ -9,6 +9,7 @@ use App\Livewire\Forms\ExpedienteForm;
 use \Livewire\Attributes\On;
 use Carbon\Carbon;
 use App\Models\Oficina;
+use Jantinnerezo\LivewireAlert\Facades\LivewireAlert;
 
 class Expedientes extends Component
 {
@@ -69,7 +70,6 @@ class Expedientes extends Component
             $this->oficinas = []; // Limpiar resultados del autocompletado
         }
     }
-    public function ModalFiltro() {}
 
     public function render()
     {
@@ -152,10 +152,6 @@ class Expedientes extends Component
                     $this->asunto = null;
                     $this->causante = null;
                     $this->expedienteForm->reset();
-                    $this->dispatch('swal:error', [
-                        'title' => 'Error',
-                        'text' => 'El expediente ya está ingresado en la base de datos',
-                    ]);
                     return;
                 }
 
@@ -168,21 +164,12 @@ class Expedientes extends Component
                 $this->expedienteForm->folio = $this->expedienteEncontrado['folio'];
                 $this->expedienteForm->causante = $this->causante;
                 $this->expedienteForm->fecha_ingreso = now()->format('Y-m-d');
-
-                $this->dispatch('swal:success', [
-                    'title' => 'Éxito',
-                    'text' => 'Se encontró el expediente',
-                ]);
             } else {
                 // Si no se encuentra, limpiar los datos
                 $this->expedienteEncontrado = null;
                 $this->asunto = null;
                 $this->causante = null;
                 $this->expedienteForm->reset();
-                $this->dispatch('swal:error', [
-                    'title' => 'Error',
-                    'text' => 'No se encontró el expediente',
-                ]);
             }
         } else {
             // Si la búsqueda está vacía, limpiar los datos
@@ -210,17 +197,11 @@ class Expedientes extends Component
         $expedienteExistente = \App\Models\Expediente::where('num_exp', $this->expedienteEncontrado['numero'])->first();
 
         if ($expedienteExistente) {
-            $this->dispatch('swal:error', [
-                'title' => 'Error',
-                'text' => 'El expediente ya se encuentra cargado.',
-                'position' => 'center',
-                'showConfirmButton' => true,
-            ]);
         } else {
             $this->validate();
             $resultado = $this->expedienteForm->store();
         }
-        $this->modalExp = false;
+        $this->modal('modal-exp')->close();
         $this->expedienteForm->num_exp = null;
         $this->expedienteForm->asunto = null;
         $this->expedienteForm->folio = null;
@@ -249,16 +230,8 @@ class Expedientes extends Component
             // Buscar la oficina directamente por ID usando el campo ofi_salida
             $oficina = Oficina::on('mysql_legui')
                 ->find($this->expedienteForm->ofi_salida);
-
             if (!$oficina) {
-                $this->dispatch('swal:error', [
-                    'title' => 'Error',
-                    'text' => 'Por favor, seleccione una oficina válida',
-                    'position' => 'center',
-                    'showConfirmButton' => true,
-                ]);
             }
-
             // Actualizar los valores de cod_area y cod_oficina en el formulario
             $this->expedienteForm->cod_area = $oficina->cod_area;
             $this->expedienteForm->cod_oficina = $oficina->codigo;
@@ -268,38 +241,15 @@ class Expedientes extends Component
 
             if ($resultado === 1) {
                 $this->modalEdit = false;
-                $this->dispatch('swal:success', [
-                    'title' => 'Éxito',
-                    'text' => 'El expediente fue editado exitosamente.',
-                    'position' => 'center',
-                    'showConfirmButton' => true,
-                ]);
+
 
                 // Limpiar la búsqueda y la lista de oficinas
                 $this->query = '';
                 $this->oficinas = [];
             } elseif ($resultado === -1) {
-                $this->dispatch('swal:info', [
-                    'title' => 'Información',
-                    'text' => 'No hubo cambios en el expediente.',
-                    'position' => 'center',
-                    'showConfirmButton' => true,
-                ]);
             } else {
-                $this->dispatch('swal:error', [
-                    'title' => 'Error',
-                    'text' => 'Hubo un error al actualizar el expediente.',
-                    'position' => 'center',
-                    'showConfirmButton' => true,
-                ]);
             }
         } catch (\Exception $e) {
-            $this->dispatch('swal:error', [
-                'title' => 'Error',
-                'text' => 'Error al actualizar: ' . $e->getMessage(),
-                'position' => 'center',
-                'showConfirmButton' => true,
-            ]);
         }
     }
 
@@ -308,18 +258,6 @@ class Expedientes extends Component
     public function confirmarBorrado($expedienteId)
     {
         $this->expedienteId = $expedienteId;
-        $this->dispatch('swal:confirm', [
-            'title' => '¿Está seguro?',
-            'text' => '¿Está seguro de que desea Borrar este expediente?',
-            'icon' => 'warning',
-            'showConfirmButton' => true,
-            'confirmButtonText' => 'Sí, borrar',
-            'showCancelButton' => true,
-            'cancelButtonText' => 'Cancelar',
-            'onConfirmed' => 'borrarExpediente',
-            'onDismissed' => 'cancelarBorrado',
-            'position' => 'center',
-        ]);
     }
 
     #[On('borrarExpediente')]
@@ -328,32 +266,13 @@ class Expedientes extends Component
         $expediente = \App\Models\Expediente::find($this->expedienteId);
         if ($expediente) {
             $expediente->delete(); //Eliminar el expediente
-            $this->dispatch('swal:success', [
-                'title' => 'Éxito',
-                'text' => 'El expediente fue borrado exitosamente.',
-                'position' => 'center',
-                'showConfirmButton' => true,
-            ]);
         } else {
-            $this->dispatch('swal:error', [
-                'title' => 'Error',
-                'text' => 'No se encontró el expediente',
-                'position' => 'center',
-                'showConfirmButton' => true,
-            ]);
         }
     }
 
     #[On('cancelarBorrado')]
     public function cancelarBorrado()
     {
-        // Lógica opcional si el usuario cancela la acción
-        $this->dispatch('swal:info', [
-            'title' => 'Información',
-            'text' => 'Se canceló exitosamente.',
-            'position' => 'center',
-            'showConfirmButton' => true,
-        ]);
         $this->expedienteId = null;
     }
 
@@ -371,7 +290,7 @@ class Expedientes extends Component
 
     public function cerrar()
     {
-        $this->modalExp = false;
+        $this->modal('modal-exp')->close();
         $this->expedienteForm->num_exp = null;
         $this->expedienteForm->asunto = null;
         $this->expedienteForm->folio = null;
@@ -395,16 +314,12 @@ class Expedientes extends Component
             'filtro.fechaDesde' => 'nullable|date',
             'filtro.fechaHasta' => 'nullable|date',
         ]);
-
         // Aplicar filtros en el método getExp()
         $this->render();
         $this->modal('modal-filtro')->close();
-        $this->dispatch('swal:success', [
-            'title' => 'Éxito',
-            'text' => 'Filtros aplicados correctamente',
-            'position' => 'center',
-            'showConfirmButton' => true,
-        ]);
+        LivewireAlert::title('Filtros Aplicados!')
+            ->success()
+            ->show();
     }
 
     public function limpiarFiltros()
@@ -412,17 +327,18 @@ class Expedientes extends Component
         $this->filtro['fechaDesde'] = null;
         $this->filtro['fechaHasta'] = null;
         $this->render();
-        $this->dispatch('swal:info', [
-            'title' => 'Información',
-            'text' => 'Filtros limpiados correctamente',
-            'position' => 'center',
-            'showConfirmButton' => true,
-        ]);
         $this->modal('modal-filtro')->close();
     }
 
     public function verDetalle($id)
     {
         $this->redirectRoute('expedientes.detalle', ['id' => $id]);
+    }
+
+    public function mostrar()
+    {
+        LivewireAlert::title('Changes saved!')
+            ->success()
+            ->show();
     }
 }

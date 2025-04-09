@@ -1,5 +1,5 @@
 <div class="space-y-4">
-    <div class="text-3xl font-bold text-center p-4 dark:bg-zinc-900 dark:bg-black dark:text-white rounded-lg dark:shadow-md">
+    <div class="text-3xl font-bold text-center p-4 dark:bg-zinc-900 dark:text-white rounded-lg dark:shadow-md">
         Sistema de Carga de Expedientes
     </div>
     <!-- Barra de búsqueda y botones -->
@@ -18,11 +18,11 @@
         <!-- Grupo de botones simplificado -->
         <div class="flex gap-2">
             <flux:modal.trigger name="modal-filtro">
-                <flux:button class="bg-blue-600 hover:bg-blue-700">Filtrar</flux:button>
+                <flux:button>Filtrar</flux:button>
             </flux:modal.trigger>
-            <x-button wire:click="$set('modalExp', true)" class="bg-sky-600 hover:bg-sky-700">
-                Nuevo Expediente
-            </x-button>
+            <flux:modal.trigger name="modal-exp">
+                <flux:button>Nuevo Expediente</flux:button>
+            </flux:modal.trigger>
         </div>
     </div>
 
@@ -118,8 +118,10 @@
         {{ $expedientes->links() }}
     </div>
 
+    <div><button wire:click="mostrar">MOSTRAR</button></div>
     <!-- Modales -->
     @include('livewire.modal-buscar-expediente')
     @include('livewire.modal-editar-expediente')
     @include('livewire.modal-filtros')
+    @include('livewire.modal-exp')
 </div>
