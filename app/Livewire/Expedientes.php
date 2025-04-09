@@ -3,16 +3,17 @@
 namespace App\Livewire;
 
 use Livewire\Component;
+use App\Livewire\Flux;
 use Livewire\WithPagination;
 use App\Livewire\Forms\ExpedienteForm;
 use \Livewire\Attributes\On;
 use Carbon\Carbon;
 use App\Models\Oficina;
+use Jantinnerezo\LivewireAlert\Facades\LivewireAlert;
 
 class Expedientes extends Component
 {
     use WithPagination;
-
 
     public $modalExp = false;
     public $modalEdit = false;
@@ -28,7 +29,7 @@ class Expedientes extends Component
 
     public ExpedienteForm $expedienteForm;
 
-    public $menuVis ible = null; // Para controlar el menú desplegable
+    public $menuVisible = null; // Para controlar el menú desplegable
 
     public $filtro = [
         'fechaDesde' => null,
@@ -151,7 +152,6 @@ class Expedientes extends Component
                     $this->asunto = null;
                     $this->causante = null;
                     $this->expedienteForm->reset();
-                    $this->alert('error', 'El expediente ya está ingresado en la base de datos');
                     return;
                 }
 
@@ -164,15 +164,12 @@ class Expedientes extends Component
                 $this->expedienteForm->folio = $this->expedienteEncontrado['folio'];
                 $this->expedienteForm->causante = $this->causante;
                 $this->expedienteForm->fecha_ingreso = now()->format('Y-m-d');
-
-                $this->alert('success', 'Se encontró el expediente');
             } else {
                 // Si no se encuentra, limpiar los datos
                 $this->expedienteEncontrado = null;
                 $this->asunto = null;
                 $this->causante = null;
                 $this->expedienteForm->reset();
-                $this->alert('error', 'No se encontró el expediente');
             }
         } else {
             // Si la búsqueda está vacía, limpiar los datos
@@ -200,15 +197,11 @@ class Expedientes extends Component
         $expedienteExistente = \App\Models\Expediente::where('num_exp', $this->expedienteEncontrado['numero'])->first();
 
         if ($expedienteExistente) {
-            $this->alert('error', 'El expediente ya se encuentra cargado.', [
-                'position' => 'center',
-                'toast' => null
-            ]);
         } else {
             $this->validate();
             $resultado = $this->expedienteForm->store();
         }
-        $this->modalExp = false;
+        $this->modal('modal-exp')->close();
         $this->expedienteForm->num_exp = null;
         $this->expedienteForm->asunto = null;
         $this->expedienteForm->folio = null;
@@ -237,14 +230,8 @@ class Expedientes extends Component
             // Buscar la oficina directamente por ID usando el campo ofi_salida
             $oficina = Oficina::on('mysql_legui')
                 ->find($this->expedienteForm->ofi_salida);
-
             if (!$oficina) {
-                $this->alert('error', 'Por favor, seleccione una oficina válida', [
-                    'position' => 'center',
-                    'toast' => null
-                ]);
             }
-
             // Actualizar los valores de cod_area y cod_oficina en el formulario
             $this->expedienteForm->cod_area = $oficina->cod_area;
             $this->expedienteForm->cod_oficina = $oficina->codigo;
@@ -254,30 +241,15 @@ class Expedientes extends Component
 
             if ($resultado === 1) {
                 $this->modalEdit = false;
-                $this->alert('success', 'El expediente fue editado exitosamente.', [
-                    'position' => 'center',
-                    'toast' => null
-                ]);
+
 
                 // Limpiar la búsqueda y la lista de oficinas
                 $this->query = '';
                 $this->oficinas = [];
             } elseif ($resultado === -1) {
-                $this->alert('info', 'No hubo cambios en el expediente.', [
-                    'position' => 'center',
-                    'toast' => null
-                ]);
             } else {
-                $this->alert('error', 'Hubo un error al actualizar el expediente.', [
-                    'position' => 'center',
-                    'toast' => null
-                ]);
             }
         } catch (\Exception $e) {
-            $this->alert('error', 'Error al actualizar: ' . $e->getMessage(), [
-                'position' => 'center',
-                'toast' => null
-            ]);
         }
     }
 
@@ -286,19 +258,6 @@ class Expedientes extends Component
     public function confirmarBorrado($expedienteId)
     {
         $this->expedienteId = $expedienteId;
-        // Lanza el popup de confirmación
-        $this->alert('warning', '¿Está seguro de que desea Borrar este expediente?', [
-            'showConfirmButton' => true,
-            'confirmButtonText' => 'Sí, borrar',
-            'showCancelButton' => true,
-            'cancelButtonText' => 'Cancelar',
-            'onConfirmed' => 'borrarExpediente',  // Método a ejecutar si el usuario confirma
-            'onDismissed' => 'cancelarBorrado',  // Método a ejecutar si el usuario confirma
-            'timer' => null,
-            'position' => 'center',
-            'toast' => null
-
-        ]);
     }
 
     #[On('borrarExpediente')]
@@ -307,23 +266,13 @@ class Expedientes extends Component
         $expediente = \App\Models\Expediente::find($this->expedienteId);
         if ($expediente) {
             $expediente->delete(); //Eliminar el expediente
-            $this->alert('success', 'El expediente fue borrado exitosamente.', options: [
-                'position' => 'center',
-                'toast' => null
-            ]);
         } else {
-            $this->alert('error', 'No se encontró el expediente');
         }
     }
-    #[On('cancelarBorrado')]
 
+    #[On('cancelarBorrado')]
     public function cancelarBorrado()
     {
-        // Lógica opcional si el usuario cancela la acción
-        $this->alert('info', 'Se canceló exitosamente.', options: [
-            'position' => 'center',
-            'toast' => null
-        ]);
         $this->expedienteId = null;
     }
 
@@ -341,7 +290,7 @@ class Expedientes extends Component
 
     public function cerrar()
     {
-        $this->modalExp = false;
+        $this->modal('modal-exp')->close();
         $this->expedienteForm->num_exp = null;
         $this->expedienteForm->asunto = null;
         $this->expedienteForm->folio = null;
@@ -365,11 +314,12 @@ class Expedientes extends Component
             'filtro.fechaDesde' => 'nullable|date',
             'filtro.fechaHasta' => 'nullable|date',
         ]);
-
         // Aplicar filtros en el método getExp()
         $this->render();
-        $this->modalFiltro = false;
-        $this->alert('success', 'Filtros aplicados correctamente');
+        $this->modal('modal-filtro')->close();
+        LivewireAlert::title('Filtros Aplicados!')
+            ->success()
+            ->show();
     }
 
     public function limpiarFiltros()
@@ -377,10 +327,18 @@ class Expedientes extends Component
         $this->filtro['fechaDesde'] = null;
         $this->filtro['fechaHasta'] = null;
         $this->render();
-        $this->alert('info', 'Filtros limpiados correctamente');
+        $this->modal('modal-filtro')->close();
     }
+
     public function verDetalle($id)
     {
-        $this->redirectRoute('expediente.detalle', ['id' => $id]);
+        $this->redirectRoute('expedientes.detalle', ['id' => $id]);
+    }
+
+    public function mostrar()
+    {
+        LivewireAlert::title('Changes saved!')
+            ->success()
+            ->show();
     }
 }

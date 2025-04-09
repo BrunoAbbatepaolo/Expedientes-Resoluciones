@@ -19,6 +19,7 @@ Route::middleware(['auth'])->group(function () {
     Volt::route('settings/appearance', 'settings.appearance')->name('settings.appearance');
     Volt::route('resoluciones', 'resoluciones')->middleware('auth')->name('resoluciones');
     Volt::route('expedientes', 'expedientes')->middleware('auth')->name('expedientes');
+    Volt::route('expedientes/detalle/{id}', 'detalles')->middleware('auth')->name('expedientes.detalle');
     Volt::route('oficinas', 'oficinas')->middleware('auth')->name('oficinas');
 });
 
