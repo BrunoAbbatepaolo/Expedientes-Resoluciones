@@ -28,47 +28,46 @@
 
     <!-- Tabla simplificada -->
     <div class="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700">
-        <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-            <thead class="bg-gray-100 dark:bg-gray-800">
+        <table class="w-full table-fixed divide-y divide-gray-200 dark:divide-gray-700">
+            <thead class="bg-gray-100 dark:bg-gray-800 sticky top-0 z-10">
                 <tr>
-                    <x-th class="min-w-[120px]">Número</x-th>
-                    <x-th class="hidden 2xl:table-cell min-w-[120px]">Fojas</x-th>
-                    <x-th class="min-w-[120px]">Ingreso</x-th>
-                    <x-th class="min-w-[120px]">Causante</x-th>
-                    <x-th class="hidden 2xl:table-cell min-w-[120px]">Asunto</x-th>
-                    <x-th class="min-w-[120px]">Oficina Salida</x-th>
-                    <x-th class="min-w-[120px]">Salida</x-th>
-                    <x-th class="text-center min-w-[120px]">Acciones</x-th>
+                    <x-th class="w-[120px]">Número</x-th>
+                    <x-th class="hidden 2xl:table-cell w-[120px]">Fojas</x-th>
+                    <x-th class="w-[120px]">Ingreso</x-th>
+                    <x-th class="w-[120px]">Causante</x-th>
+                    <x-th class="hidden 2xl:table-cell w-[150px]">Asunto</x-th>
+                    <x-th class="w-[150px]">Oficina Salida</x-th>
+                    <x-th class="w-[120px]">Salida</x-th>
+                    <x-th class="text-center w-[100px]">Acciones</x-th>
                 </tr>
             </thead>
             <tbody class="bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-700">
                 @forelse ($expedientes as $expediente)
                 <tr class="hover:bg-gray-50 dark:hover:bg-gray-800/50">
-                    <x-td click="verDetalle({{ $expediente->id }})" class="cursor-pointer min-w-[120px] text-center">
+                    <x-td click="verDetalle({{ $expediente->id }})" class="cursor-pointer text-center">
                         {{ $expediente->num_exp }}
                     </x-td>
-                    <x-td class="hidden 2xl:table-cell min-w-[120px] text-center">
+                    <x-td class="hidden 2xl:table-cell text-center">
                         {{ $expediente->folio }}
                     </x-td>
-                    <x-td class="min-w-[120px] text-center">
+                    <x-td class="text-center">
                         {{ $this->obtenerDMY($expediente->fecha_ingreso) }}
                     </x-td>
-                    <x-td class="min-w-[120px] text-center">
+                    <x-td class="text-center">
                         {{ $expediente->causante }}
                     </x-td>
-                    <x-td class="min-w-[120px] text-center">
-                        <div class="max-w-xs hidden 2xl:table-cell truncate">{{ $expediente->asunto }}</div>
+                    <x-td class="hidden 2xl:table-cell text-center">
+                        <div class="truncate">{{ $expediente->asunto }}</div>
                     </x-td>
-
-                    <x-td class="min-w-[120px] text-center">
+                    <x-td class="text-center">
                         {{ $expediente->oficina->nombre ?? '-' }}
                     </x-td>
-                    <x-td class="min-w-[120px] text-centers">
+                    <x-td class="text-center">
                         {{ $this->obtenerDMY($expediente->fecha_salida)}}
                     </x-td>
-                    <x-td class="min-w-[120px] text-center">
+                    <x-td class="text-center">
                         <!-- Contenedor del menú -->
-                        <div class="relative" x-data="{ open: false }" @click.outside="open = false">
+                        <div class="relative inline-block" x-data="{ open: false }" @click.outside="open = false">
                             <button @click="open = !open"
                                 class="p-2 rounded-lg bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 transition-colors duration-200">
                                 <svg class="size-5 text-gray-600 dark:text-gray-400" fill="currentColor"
@@ -80,8 +79,8 @@
 
                             <!-- Menú desplegable sin transiciones -->
                             <div x-show="open" x-cloak
-                                class="absolute top-0 right-6 w-48 rounded-lg bg-white dark:bg-gray-800 shadow-xl ring-1 ring-gray-200 dark:ring-gray-700 z-50 overflow-hidden"
-                                style="transform: translateX(-15%);" x-transition:enter="transition-none"
+                                class="absolute right-0 z-50 w-48 rounded-lg bg-white dark:bg-gray-800 shadow-xl ring-1 ring-gray-200 dark:ring-gray-700 overflow-hidden"
+                                x-transition:enter="transition-none"
                                 x-transition:leave="transition-none">
                                 <!-- Contenido del menú -->
                                 <flux:modal.trigger name="modal-editarExpediente">
@@ -104,19 +103,19 @@
                                         Eliminar expediente
                                     </button>
                                 </flux:modal.trigger>
-
                             </div>
                         </div>
                     </x-td>
                 </tr>
                 @empty
                 <tr>
-                    <td colspan="9" class="px-6 py-4 text-center text-gray-500">No se encontraron expedientes.</td>
+                    <td colspan="8" class="px-6 py-4 text-center text-gray-500">No se encontraron expedientes.</td>
                 </tr>
                 @endforelse
             </tbody>
         </table>
     </div>
+
 
     <!-- Paginación -->
     <div class="mt-4">
