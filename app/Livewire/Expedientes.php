@@ -213,7 +213,6 @@ class Expedientes extends Component
 
     public function editar($id)
     {
-        $this->modalEdit = true;
         $expediente = \App\Models\Expediente::find($id);
         $this->expedienteForm->loadExpMitiv($expediente);
         //Codigo para que la fecha aparezca como placeholder
@@ -260,27 +259,18 @@ class Expedientes extends Component
         $this->expedienteId = $expedienteId;
     }
 
-    #[On('borrarExpediente')]
-    public function borrarExpediente()
+    public function eliminarExpediente()
     {
-        $expediente = \App\Models\Expediente::find($this->expedienteId);
-        if ($expediente) {
-            $expediente->delete(); //Eliminar el expediente
-        } else {
-        }
+        \App\Models\Expediente::findOrFail($this->expedienteId)->delete();
+        $this->modal('modal-ConfirmarBorrado')->close();
+        $this->reset('expedienteId');
+        LivewireAlert::title('Expediente eliminado')->success()->timer(2500)->toast()->position('top-end')->show();
     }
-
-    #[On('cancelarBorrado')]
-    public function cancelarBorrado()
-    {
-        $this->expedienteId = null;
-    }
-
 
     public static function obtenerDMY($fecha = null)
     {
         if (is_null($fecha)) {
-            return "";
+            return "-";
         } else {
             $fecha = Carbon::parse($fecha)->locale('es');
             return $fecha->format('d-m-Y');
@@ -297,6 +287,10 @@ class Expedientes extends Component
         $this->expedienteForm->causante = null;
         $this->expedienteForm->fecha_ingreso = null;
         $this->expedienteEncontrado = null;
+    }
+    public function cancelarModal()
+    {
+        $this->modal('modal-editarExpediente')->close();
     }
 
     public function toggleMenu($id)
@@ -317,8 +311,22 @@ class Expedientes extends Component
         // Aplicar filtros en el método getExp()
         $this->render();
         $this->modal('modal-filtro')->close();
-        LivewireAlert::title('Filtros Aplicados!')
+        LivewireAlert::title('Filtro Aplicado!')
             ->success()
+            ->position('top-end')
+            ->timer(2500)
+            ->toast()
+            ->withOptions([
+                //'width' => '200px',
+                // 'height' => '20px',
+                'background' => '#f0f0f0',
+                'customClass' => [
+                    'popup' => 'animate_animated animate_bounceIn',
+                    'title' => 'scale-85', // texto más chico
+                    'icon' => 'scale-85', // ícono más chico (Tailwind),
+                ],
+                'allowOutsideClick' => true,
+            ])
             ->show();
     }
 
@@ -333,12 +341,5 @@ class Expedientes extends Component
     public function verDetalle($id)
     {
         $this->redirectRoute('expedientes.detalle', ['id' => $id]);
-    }
-
-    public function mostrar()
-    {
-        LivewireAlert::title('Changes saved!')
-            ->success()
-            ->show();
     }
 }

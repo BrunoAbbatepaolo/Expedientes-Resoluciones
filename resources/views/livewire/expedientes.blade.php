@@ -31,42 +31,42 @@
         <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
             <thead class="bg-gray-100 dark:bg-gray-800">
                 <tr>
-                    <x-th>Número</x-th>
-                    <x-th class="hidden 2xl:table-cell">Fojas</x-th>
-                    <x-th>Ingreso</x-th>
-                    <x-th>Causante</x-th>
-                    <x-th class="hidden 2xl:table-cell">Asunto</x-th>
-                    <x-th>Oficina Salida</x-th>
-                    <x-th>Salida</x-th>
-                    <x-th class="text-center">Acciones</x-th>
+                    <x-th class="min-w-[120px]">Número</x-th>
+                    <x-th class="hidden 2xl:table-cell min-w-[120px]">Fojas</x-th>
+                    <x-th class="min-w-[120px]">Ingreso</x-th>
+                    <x-th class="min-w-[120px]">Causante</x-th>
+                    <x-th class="hidden 2xl:table-cell min-w-[120px]">Asunto</x-th>
+                    <x-th class="min-w-[120px]">Oficina Salida</x-th>
+                    <x-th class="min-w-[120px]">Salida</x-th>
+                    <x-th class="text-center min-w-[120px]">Acciones</x-th>
                 </tr>
             </thead>
             <tbody class="bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-700">
                 @forelse ($expedientes as $expediente)
                 <tr class="hover:bg-gray-50 dark:hover:bg-gray-800/50">
-                    <x-td click="verDetalle({{ $expediente->id }})" class="cursor-pointer">
+                    <x-td click="verDetalle({{ $expediente->id }})" class="cursor-pointer min-w-[120px] text-center">
                         {{ $expediente->num_exp }}
                     </x-td>
-                    <x-td class="text-center hidden 2xl:table-cell">
+                    <x-td class="hidden 2xl:table-cell min-w-[120px] text-center">
                         {{ $expediente->folio }}
                     </x-td>
-                    <x-td>
+                    <x-td class="min-w-[120px] text-center">
                         {{ $this->obtenerDMY($expediente->fecha_ingreso) }}
                     </x-td>
-                    <x-td>
+                    <x-td class="min-w-[120px] text-center">
                         {{ $expediente->causante }}
                     </x-td>
-                    <x-td>
+                    <x-td class="min-w-[120px] text-center">
                         <div class="max-w-xs hidden 2xl:table-cell truncate">{{ $expediente->asunto }}</div>
                     </x-td>
 
-                    <x-td>
+                    <x-td class="min-w-[120px] text-center">
                         {{ $expediente->oficina->nombre ?? '-' }}
                     </x-td>
-                    <x-td>
-                        {{ $this->obtenerDMY($expediente->fecha_salida) }}
+                    <x-td class="min-w-[120px] text-centers">
+                        {{ $this->obtenerDMY($expediente->fecha_salida)}}
                     </x-td>
-                    <x-td class="text-right">
+                    <x-td class="min-w-[120px] text-center">
                         <!-- Contenedor del menú -->
                         <div class="relative" x-data="{ open: false }" @click.outside="open = false">
                             <button @click="open = !open"
@@ -84,22 +84,27 @@
                                 style="transform: translateX(-15%);" x-transition:enter="transition-none"
                                 x-transition:leave="transition-none">
                                 <!-- Contenido del menú -->
-                                <button wire:click="editar({{ $expediente->id }})"
-                                    class="w-full px-4 py-3 text-sm text-left text-gray-700 dark:text-gray-200 hover:bg-gradient-to-r hover:from-blue-500 hover:to-blue-600 hover:text-white dark:hover:from-blue-600 dark:hover:to-blue-700 transition-all duration-200 flex items-center gap-2">
-                                    <svg class="size-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                                    </svg>
-                                    Editar expediente
-                                </button>
-                                <button wire:click="confirmarBorrado({{ $expediente->id }})"
-                                    class="w-full px-4 py-3 text-sm text-left text-gray-700 dark:text-gray-200 hover:bg-gradient-to-r hover:from-red-500 hover:to-red-600 hover:text-white dark:hover:from-red-600 dark:hover:to-red-700 transition-all duration-200 flex items-center gap-2">
-                                    <svg class="size-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                    </svg>
-                                    Eliminar expediente
-                                </button>
+                                <flux:modal.trigger name="modal-editarExpediente">
+                                    <button wire:click="editar({{ $expediente->id }})"
+                                        class="w-full px-4 py-3 text-sm text-left text-gray-700 dark:text-gray-200 hover:bg-gradient-to-r hover:from-blue-500 hover:to-blue-600 hover:text-white dark:hover:from-blue-600 dark:hover:to-blue-700 transition-all duration-200 flex items-center gap-2">
+                                        <svg class="size-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                        </svg>
+                                        Editar expediente
+                                    </button>
+                                </flux:modal.trigger>
+                                <flux:modal.trigger name="modal-ConfirmarBorrado">
+                                    <button wire:click="confirmarBorrado({{ $expediente->id }})"
+                                        class="w-full px-4 py-3 text-sm text-left text-red-600 dark:text-red-400 hover:bg-gradient-to-r hover:from-red-500 hover:to-red-600 hover:text-white dark:hover:from-red-600 dark:hover:to-red-700 transition-all duration-200 flex items-center gap-2">
+                                        <svg class="size-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M6 18L18 6M6 6l12 12" />
+                                        </svg>
+                                        Eliminar expediente
+                                    </button>
+                                </flux:modal.trigger>
+
                             </div>
                         </div>
                     </x-td>
@@ -118,10 +123,10 @@
         {{ $expedientes->links() }}
     </div>
 
-    <div><button wire:click="mostrar">MOSTRAR</button></div>
     <!-- Modales -->
-    @include('livewire.modal-buscar-expediente')
     @include('livewire.modal-editar-expediente')
     @include('livewire.modal-filtros')
-    @include('livewire.modal-exp')
+    @include('livewire.modal-NuevoExpediente')
+    @include('livewire.modal-EditarExpediente')
+    @include('livewire.modal-ConfirmarBorrado')
 </div>
