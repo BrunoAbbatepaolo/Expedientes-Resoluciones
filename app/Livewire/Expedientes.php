@@ -213,7 +213,6 @@ class Expedientes extends Component
 
     public function editar($id)
     {
-        $this->modalEdit = true;
         $expediente = \App\Models\Expediente::find($id);
         $this->expedienteForm->loadExpMitiv($expediente);
         //Codigo para que la fecha aparezca como placeholder
@@ -227,29 +226,33 @@ class Expedientes extends Component
     public function actualizar()
     {
         try {
-            // Buscar la oficina directamente por ID usando el campo ofi_salida
-            $oficina = Oficina::on('mysql_legui')
-                ->find($this->expedienteForm->ofi_salida);
-            if (!$oficina) {
+            // Si hay una oficina seleccionada, actualiza los campos relacionados
+            if ($this->expedienteForm->ofi_salida) {
+                $oficina = Oficina::on('mysql_legui')
+                    ->find($this->expedienteForm->ofi_salida);
+
+                if ($oficina) {
+                    $this->expedienteForm->cod_area = $oficina->cod_area;
+                    $this->expedienteForm->cod_oficina = $oficina->codigo;
+                } else {
+                    // Manejar el caso donde el ID de oficina no existe
+                    $this->expedienteForm->cod_area = null;
+                    $this->expedienteForm->cod_oficina = null;
+                }
+            } else {
+                // Si no hay oficina seleccionada, establecer valores nulos
+                $this->expedienteForm->cod_area = null;
+                $this->expedienteForm->cod_oficina = null;
             }
-            // Actualizar los valores de cod_area y cod_oficina en el formulario
-            $this->expedienteForm->cod_area = $oficina->cod_area;
-            $this->expedienteForm->cod_oficina = $oficina->codigo;
 
             // Llamar al método update del formulario
             $resultado = $this->expedienteForm->update();
-
-            if ($resultado === 1) {
-                $this->modalEdit = false;
-
-
-                // Limpiar la búsqueda y la lista de oficinas
-                $this->query = '';
-                $this->oficinas = [];
-            } elseif ($resultado === -1) {
-            } else {
-            }
+            $this->modal('modal-editarExpediente')->close();
+            LivewireAlert::title('El Expediente se editó Correctamente')->success()->timer(2500)->toast()->position('top-end')->show();
+            // Resto de tu código...
         } catch (\Exception $e) {
+            // Manejar excepciones
+            LivewireAlert::title('El Expediente no se pudo Editar')->error()->timer(2500)->toast()->position('top-end')->show();
         }
     }
 
@@ -260,27 +263,18 @@ class Expedientes extends Component
         $this->expedienteId = $expedienteId;
     }
 
-    #[On('borrarExpediente')]
-    public function borrarExpediente()
+    public function eliminarExpediente()
     {
-        $expediente = \App\Models\Expediente::find($this->expedienteId);
-        if ($expediente) {
-            $expediente->delete(); //Eliminar el expediente
-        } else {
-        }
+        \App\Models\Expediente::findOrFail($this->expedienteId)->delete();
+        $this->modal('modal-ConfirmarBorrado')->close();
+        $this->reset('expedienteId');
+        LivewireAlert::title('Expediente eliminado')->success()->timer(2500)->toast()->position('top-end')->show();
     }
-
-    #[On('cancelarBorrado')]
-    public function cancelarBorrado()
-    {
-        $this->expedienteId = null;
-    }
-
 
     public static function obtenerDMY($fecha = null)
     {
         if (is_null($fecha)) {
-            return "";
+            return "-";
         } else {
             $fecha = Carbon::parse($fecha)->locale('es');
             return $fecha->format('d-m-Y');
@@ -297,6 +291,10 @@ class Expedientes extends Component
         $this->expedienteForm->causante = null;
         $this->expedienteForm->fecha_ingreso = null;
         $this->expedienteEncontrado = null;
+    }
+    public function cancelarModal()
+    {
+        $this->modal('modal-editarExpediente')->close();
     }
 
     public function toggleMenu($id)
@@ -317,8 +315,22 @@ class Expedientes extends Component
         // Aplicar filtros en el método getExp()
         $this->render();
         $this->modal('modal-filtro')->close();
-        LivewireAlert::title('Filtros Aplicados!')
+        LivewireAlert::title('Filtro Aplicado!')
             ->success()
+            ->position('top-end')
+            ->timer(2500)
+            ->toast()
+            ->withOptions([
+                //'width' => '200px',
+                // 'height' => '20px',
+                'background' => '#f0f0f0',
+                'customClass' => [
+                    'popup' => 'animate_animated animate_bounceIn',
+                    'title' => 'scale-85', // texto más chico
+                    'icon' => 'scale-85', // ícono más chico (Tailwind),
+                ],
+                'allowOutsideClick' => true,
+            ])
             ->show();
     }
 
@@ -335,10 +347,8 @@ class Expedientes extends Component
         $this->redirectRoute('expedientes.detalle', ['id' => $id]);
     }
 
-    public function mostrar()
+    public function formatearCausante($causante)
     {
-        LivewireAlert::title('Changes saved!')
-            ->success()
-            ->show();
+        return str_replace('DEPARTAMENTO ', 'DEPTO. ', $causante);
     }
 }
