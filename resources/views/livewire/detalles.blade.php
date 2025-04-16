@@ -15,19 +15,19 @@
     <!-- Tabs -->
     <div class="border-b border-gray-200 dark:border-gray-700 mb-6">
         <div class="flex space-x-4">
-            <button 
-                @click="activeTab = 'datos'" 
+            <button
+                @click="activeTab = 'datos'"
                 :class="{ 'border-blue-500 text-blue-600 dark:text-blue-400': activeTab === 'datos' }"
                 class="py-2 px-4 border-b-2 font-medium text-sm hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
                 Datos
             </button>
-            <button 
+            <button
                 @click="activeTab = 'pases'"
                 :class="{ 'border-blue-500 text-blue-600 dark:text-blue-400': activeTab === 'pases' }"
                 class="py-2 px-4 border-b-2 font-medium text-sm hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
                 Pases
             </button>
-            <button 
+            <button
                 @click="activeTab = 'adjuntos'"
                 :class="{ 'border-blue-500 text-blue-600 dark:text-blue-400': activeTab === 'adjuntos' }"
                 class="py-2 px-4 border-b-2 font-medium text-sm hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
@@ -67,7 +67,7 @@
                 <tr>
                     <td class="px-6 py-4 whitespace-nowrap text-gray-700 dark:text-gray-300">{{ $pase['oficina'] }}</td>
                     <td class="px-6 py-4 whitespace-nowrap text-gray-700 dark:text-gray-300">
-                        {{ \Carbon\Carbon::parse($pase['fecha'])->format('d/m/Y H:i') }}
+                        {{ \Carbon\Carbon::parse($pase['fecha'])->format('d/m/Y') }}
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap text-gray-700 dark:text-gray-300">{{ $pase['observaciones'] }}</td>
                     <td class="px-6 py-4 whitespace-nowrap">

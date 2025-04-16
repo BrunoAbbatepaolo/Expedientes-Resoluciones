@@ -14,21 +14,22 @@ class Detalles extends Component
     public $expediente;
     public $pases = [];
 
-    public function mount($id){
+    public function mount($id)
+    {
         $this->id = $id;
         $this->expediente = Expediente::find($id);
-        
+
         // Primer pase (siempre existe)
         $this->pases[] = [
             'oficina' => 'Computos',
             'fecha' => $this->expediente->fecha_ingreso,
-            'observaciones' => 'Carga inicial'
+            'observaciones' => 'Ingreso a la Oficina'
         ];
 
         // Segundo pase (solo si hay salida)
-        if($this->expediente->fecha_salida && $this->expediente->ofi_salida) {
+        if ($this->expediente->fecha_salida && $this->expediente->ofi_salida) {
             $oficina = Oficina::where('codigo', $this->expediente->ofi_salida)->first();
-            
+
             $this->pases[] = [
                 'oficina' => $oficina->nombre ?? 'Oficina desconocida',
                 'fecha' => $this->expediente->fecha_salida,
