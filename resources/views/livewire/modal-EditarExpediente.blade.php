@@ -102,7 +102,7 @@
         <!-- Botones -->
         <div class="flex flex-wrap justify-end gap-3 pt-4 border-t border-gray-200 dark:border-gray-700">
             <x-button
-                wire:click="editar"
+                wire:click="actualizar"
                 class="bg-sky-600 hover:bg-sky-700 text-white font-medium px-5 py-2 rounded-lg shadow-md focus:outline-none focus:ring-2 focus:ring-sky-500 focus:ring-offset-2 transition-all duration-200 dark:bg-sky-500 dark:hover:bg-sky-600 transform hover:scale-105">
                 Guardar
             </x-button>

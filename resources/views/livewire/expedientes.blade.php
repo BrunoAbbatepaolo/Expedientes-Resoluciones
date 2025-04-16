@@ -1,5 +1,5 @@
 <div class="space-y-4">
-    <div class="text-3xl font-bold text-center p-4 dark:bg-zinc-900 dark:text-white rounded-lg dark:shadow-md">
+    <div class="text-3xl font-bold text-center p-4 bg-blue-200 dark:bg-zinc-900 dark:text-white rounded-xl dark:shadow-md">
         Sistema de Carga de Expedientes
     </div>
     <!-- Barra de búsqueda y botones -->
@@ -18,10 +18,10 @@
         <!-- Grupo de botones simplificado -->
         <div class="flex gap-2">
             <flux:modal.trigger name="modal-filtro">
-                <flux:button>Filtrar</flux:button>
+                <flux:button class="cursor-pointer">Filtrar</flux:button>
             </flux:modal.trigger>
             <flux:modal.trigger name="modal-exp">
-                <flux:button>Nuevo Expediente</flux:button>
+                <flux:button class="cursor-pointer">Nuevo Expediente</flux:button>
             </flux:modal.trigger>
         </div>
     </div>
@@ -29,47 +29,47 @@
     <!-- Tabla simplificada -->
     <div class="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700">
         <table class="w-full table-fixed divide-y divide-gray-200 dark:divide-gray-700">
-            <thead class="bg-gray-100 dark:bg-gray-800 sticky top-0 z-10">
+            <thead class="bg-blue-300 dark:bg-gray-800 sticky top-0 z-10">
                 <tr>
-                    <x-th class="w-[120px]">Número</x-th>
-                    <x-th class="hidden 2xl:table-cell w-[120px]">Fojas</x-th>
-                    <x-th class="w-[120px]">Ingreso</x-th>
-                    <x-th class="w-[120px]">Causante</x-th>
-                    <x-th class="hidden 2xl:table-cell w-[150px]">Asunto</x-th>
-                    <x-th class="w-[150px]">Oficina Salida</x-th>
-                    <x-th class="w-[120px]">Salida</x-th>
-                    <x-th class="text-center w-[100px]">Acciones</x-th>
+                    <x-th class="w-[110px]">Número</x-th>
+                    <x-th class="hidden 2xl:table-cell w-[80px]">Fojas</x-th>
+                    <x-th class="w-[100px]">Ingreso</x-th>
+                    <x-th class="w-[180px]">Causante</x-th>
+                    <x-th class="hidden 2xl:table-cell w-[200px]">Asunto</x-th>
+                    <x-th class="w-[180px]">Oficina Salida</x-th>
+                    <x-th class="w-[100px]">Salida</x-th>
+                    <x-th class="text-center w-[80px]">Acciones</x-th>
                 </tr>
             </thead>
-            <tbody class="bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-700">
+            <tbody class="bg-blue-50 even:bg-blue-100 dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-700">
                 @forelse ($expedientes as $expediente)
-                <tr class="hover:bg-gray-50 dark:hover:bg-gray-800/50">
-                    <x-td click="verDetalle({{ $expediente->id }})" class="cursor-pointer text-center">
+                <tr class="hover:bg-violet-50 dark:hover:bg-gray-800/50">
+                    <x-td click="verDetalle({{ $expediente->id }})" class="cursor-pointer text-center overflow-hidden text-ellipsis whitespace-nowrap">
                         {{ $expediente->num_exp }}
                     </x-td>
-                    <x-td class="hidden 2xl:table-cell text-center">
+                    <x-td class="hidden 2xl:table-cell text-center overflow-hidden text-ellipsis whitespace-nowrap">
                         {{ $expediente->folio }}
                     </x-td>
-                    <x-td class="text-center">
+                    <x-td class="text-center overflow-hidden text-ellipsis whitespace-nowrap">
                         {{ $this->obtenerDMY($expediente->fecha_ingreso) }}
                     </x-td>
-                    <x-td class="text-center">
-                        {{ $expediente->causante }}
+                    <x-td class="text-center overflow-hidden text-ellipsis whitespace-nowrap">
+                        {{ $this->formatearCausante($expediente->causante) }}
                     </x-td>
                     <x-td class="hidden 2xl:table-cell text-center">
-                        <div class="truncate">{{ $expediente->asunto }}</div>
+                        <div class="overflow-hidden text-ellipsis whitespace-nowrap">{{ $expediente->asunto }}</div>
                     </x-td>
-                    <x-td class="text-center">
+                    <x-td class="text-center overflow-hidden text-ellipsis whitespace-nowrap">
                         {{ $expediente->oficina->nombre ?? '-' }}
                     </x-td>
-                    <x-td class="text-center">
+                    <x-td class="text-center overflow-hidden text-ellipsis whitespace-nowrap">
                         {{ $this->obtenerDMY($expediente->fecha_salida)}}
                     </x-td>
                     <x-td class="text-center">
                         <!-- Contenedor del menú -->
                         <div class="relative inline-block" x-data="{ open: false }" @click.outside="open = false">
                             <button @click="open = !open"
-                                class="p-2 rounded-lg bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 transition-colors duration-200">
+                                class="p-2 rounded-lg bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 transition-colors cursor-pointer duration-200">
                                 <svg class="size-5 text-gray-600 dark:text-gray-400" fill="currentColor"
                                     viewBox="0 0 24 24">
                                     <path

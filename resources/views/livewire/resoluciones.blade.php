@@ -42,7 +42,7 @@
                     <td class="p-4 border border-gray-600 text-center">{{ $resolucion->fecha }}</td>
                     <td class="p-4 border border-gray-600 text-center">{{ $resolucion->cod_barrio }}</td>
                     <td class="p-4 border border-gray-600 text-center">{{ $resolucion->cod_casa }}</td>
-                    <td class="p-4 border border-gray-600 text-center"><a href="{{ $resolucion->pdf }}" target="_blank">Ver PDF</a></td>
+                    <td class="p-4 border border-gray-600 text-center text-red-400"><a href="{{ $resolucion->pdf }}" target="_blank">Ver PDF</a></td>
 
                     <td class="p-4 border border-gray-600 flex justify-center gap-2">
                         <button wire:click=""

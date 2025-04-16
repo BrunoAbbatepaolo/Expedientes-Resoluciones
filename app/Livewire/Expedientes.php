@@ -226,29 +226,33 @@ class Expedientes extends Component
     public function actualizar()
     {
         try {
-            // Buscar la oficina directamente por ID usando el campo ofi_salida
-            $oficina = Oficina::on('mysql_legui')
-                ->find($this->expedienteForm->ofi_salida);
-            if (!$oficina) {
+            // Si hay una oficina seleccionada, actualiza los campos relacionados
+            if ($this->expedienteForm->ofi_salida) {
+                $oficina = Oficina::on('mysql_legui')
+                    ->find($this->expedienteForm->ofi_salida);
+
+                if ($oficina) {
+                    $this->expedienteForm->cod_area = $oficina->cod_area;
+                    $this->expedienteForm->cod_oficina = $oficina->codigo;
+                } else {
+                    // Manejar el caso donde el ID de oficina no existe
+                    $this->expedienteForm->cod_area = null;
+                    $this->expedienteForm->cod_oficina = null;
+                }
+            } else {
+                // Si no hay oficina seleccionada, establecer valores nulos
+                $this->expedienteForm->cod_area = null;
+                $this->expedienteForm->cod_oficina = null;
             }
-            // Actualizar los valores de cod_area y cod_oficina en el formulario
-            $this->expedienteForm->cod_area = $oficina->cod_area;
-            $this->expedienteForm->cod_oficina = $oficina->codigo;
 
             // Llamar al método update del formulario
             $resultado = $this->expedienteForm->update();
-
-            if ($resultado === 1) {
-                $this->modalEdit = false;
-
-
-                // Limpiar la búsqueda y la lista de oficinas
-                $this->query = '';
-                $this->oficinas = [];
-            } elseif ($resultado === -1) {
-            } else {
-            }
+            $this->modal('modal-editarExpediente')->close();
+            LivewireAlert::title('El Expediente se editó Correctamente')->success()->timer(2500)->toast()->position('top-end')->show();
+            // Resto de tu código...
         } catch (\Exception $e) {
+            // Manejar excepciones
+            LivewireAlert::title('El Expediente no se pudo Editar')->error()->timer(2500)->toast()->position('top-end')->show();
         }
     }
 
@@ -341,5 +345,10 @@ class Expedientes extends Component
     public function verDetalle($id)
     {
         $this->redirectRoute('expedientes.detalle', ['id' => $id]);
+    }
+
+    public function formatearCausante($causante)
+    {
+        return str_replace('DEPARTAMENTO ', 'DEPTO. ', $causante);
     }
 }
