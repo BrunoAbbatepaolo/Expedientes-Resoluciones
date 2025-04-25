@@ -1,6 +1,6 @@
 <div class="space-y-4">
     <!-- Título principal -->
-    <div class="text-3xl font-bold text-center p-4 dark:bg-zinc-900 dark:bg-black dark:text-white rounded-lg dark:shadow-md">
+    <div class="text-3xl font-bold text-center p-4 bg-blue-200 dark:bg-zinc-900 dark:text-white rounded-lg dark:shadow-md">
         Sistema de Gestión de Oficinas
     </div>
 
@@ -29,13 +29,13 @@
     <!-- Tabla de resultados -->
     <div class="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700">
         <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-            <thead class="bg-gray-100 dark:bg-gray-800">
+            <thead class="bg-blue-200 dark:bg-gray-800">
                 <tr>
                     <x-th>Nombre</x-th>
                     {{-- Podés agregar más columnas acá si hace falta --}}
                 </tr>
             </thead>
-            <tbody class="bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-700">
+            <tbody class="bg-blue-50 dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-700">
                 @forelse($oficinas as $oficina)
                 <tr class="hover:bg-gray-50 dark:hover:bg-gray-800/50">
                     <x-td>{{ $oficina->nombre }}</x-td>
