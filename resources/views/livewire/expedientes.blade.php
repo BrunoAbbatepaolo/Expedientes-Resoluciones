@@ -29,7 +29,7 @@
     <!-- Tabla simplificada -->
     <div class="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700">
         <table class="w-full table-fixed divide-y divide-gray-200 dark:divide-gray-700">
-            <thead class="bg-blue-300 dark:bg-gray-800 sticky top-0 z-10">
+            <thead class="bg-blue-300 dark:bg-gray-800 sticky top-0 z-10 text-black">
                 <tr>
                     <x-th class="w-[110px]">Número</x-th>
                     <x-th class="hidden 2xl:table-cell w-[80px]">Fojas</x-th>

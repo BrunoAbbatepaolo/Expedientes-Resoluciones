@@ -179,7 +179,10 @@ class Expedientes extends Component
             $this->expedienteForm->reset();
         }
     }
-
+    public function updatedSearch()
+    {
+        $this->resetPage();
+    }
 
 
     public function seleccionar()

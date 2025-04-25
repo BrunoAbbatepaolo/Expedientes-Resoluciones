@@ -1,5 +1,5 @@
 <div class="space-y-4">
-    <div class="text-3xl font-bold text-center p-4 dark:bg-zinc-900 dark:bg-black dark:text-white rounded-lg dark:shadow-md">
+    <div class="text-3xl font-bold text-center p-4 dark:bg-zinc-900 dark:text-white rounded-lg dark:shadow-md">
         Sistema de Carga de Resoluciones
     </div>
 

@@ -2,7 +2,6 @@
     <div class="space-y-6 p-5 rounded-lg">
         <div>
             <flux:heading size="lg" class="text-2xl text-center font-bold text-gray-800 dark:text-white">Carga de Nuevo Expediente</flux:heading>
-            <flux:text class="mt-2 text-gray-600 dark:text-gray-300">Ingrese el numero del Expediente.</flux:text>
         </div>
 
         <!-- Buscador de expediente -->
