@@ -10,7 +10,7 @@
                dark:bg-gray-800 dark:text-white dark:border-gray-600 dark:focus:ring-blue-500">
 
         <button wire:click="abrirModal"
-            class="px-4 py-2 bg-blue-600 text-white rounded-lg shadow-md hover:bg-blue-700 cursor-pointer transition">
+            class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 cursor-pointer transition">
             Cargar Resolución
         </button>
     </div>
@@ -45,14 +45,17 @@
                     <td class="p-4 border border-gray-600 text-center text-red-400"><a href="{{ $resolucion->pdf }}" target="_blank">Ver PDF</a></td>
 
                     <td class="p-4 border border-gray-600 flex justify-center gap-2">
-                        <button wire:click=""
-                            class="px-4 py-2 bg-green-600 text-white rounded-lg shadow-md hover:bg-green-700 cursor-pointer transition">
-                            Modificar
-                        </button>
-                        <button wire:click=""
-                            class="px-4 py-2 bg-red-600 text-white rounded-lg shadow-md hover:bg-red-700 cursor-pointer transition">
-                            Borrar
-                        </button>
+                        <flux:modal.trigger name="edit-profile">
+                            <flux:button class="dark:!bg-green-600 cursor-pointer" wire:click="cargarResolucion({{ $resolucion->id }})">Modificar</flux:button>
+                        </flux:modal.trigger>
+
+
+                        <flux:modal.trigger name="delete-profile">
+                            <flux:button variant="danger" class="cursor-pointer">Borrar</flux:button>
+
+                        </flux:modal.trigger>
+
+
                     </td>
                 </tr>
                 @endforeach
@@ -150,4 +153,51 @@
             </div>
         </div>
     </div>
+    <!-- modal para editar resoluciones -->
+    <flux:modal name="edit-profile" class="md:w-96">
+        <div class="space-y-6">
+            <div>
+                <flux:heading size="lg">Modificar Resolucion</flux:heading>
+                <flux:text class="mt-2">Modifique los cambios en la resolucion</flux:text>
+            </div>
+
+            <flux:input wire:model="resolucionForm.numero_exp" label="Nº de Expediente" placeholder="Ingrese el numero de Expediente" />
+
+            <flux:input wire:model="resolucionForm.numero_resolucion" label="Nº de Resolución" placeholder="Ingrese el Nº de Resolución" />
+
+            <flux:input type="date" wire:model="resolucionForm.fecha" label="Fecha" placeholder="Ingrese la fecha" />
+
+            <flux:input wire:model="resolucionForm.cod_barrio" label="Barrio" placeholder="Ingrese el Barrio" />
+
+            <flux:input wire:model="resolucionForm.cod_casa" label="Casa" placeholder="Ingrese el Nº de Casa" />
+
+            <div class="flex">
+                <flux:spacer />
+
+                <flux:button type="submit" variant="primary" class="cursor-pointer">Guardar Cambios</flux:button>
+            </div>
+        </div>
+    </flux:modal>
+    <flux:modal name="delete-profile" class="min-w-[22rem]">
+        <div class="space-y-6">
+            <div>
+                <flux:heading size="lg">Borrar resolucion?</flux:heading>
+
+                <flux:text class="mt-2">
+                    <p>Estas seguro que quieres borrarla?</p>
+
+                </flux:text>
+            </div>
+
+            <div class="flex gap-2">
+                <flux:spacer />
+
+                <flux:modal.close>
+                    <flux:button variant="ghost" class="cursor-pointer">Cancelar</flux:button>
+                </flux:modal.close>
+
+                <flux:button type="submit" variant="danger" class="cursor-pointer">Borrar</flux:button>
+            </div>
+        </div>
+    </flux:modal>
 </div>
