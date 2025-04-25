@@ -29,7 +29,7 @@
         <flux:spacer />
 
 
-
+        <flux:switch x-data x-model="$flux.dark" label="Modo Obscuro"  />
         <!-- Desktop User Menu -->
         <flux:dropdown position="bottom" align="start">
             <flux:profile

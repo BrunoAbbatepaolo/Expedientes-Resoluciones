@@ -41,7 +41,7 @@
                     <x-th class="text-center w-[80px]">Acciones</x-th>
                 </tr>
             </thead>
-            <tbody class="bg-blue-50 even:bg-blue-100 dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-700">
+            <tbody class="bg-blue-50 dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-700">
                 @forelse ($expedientes as $expediente)
                 <tr class="hover:bg-violet-50 dark:hover:bg-gray-800/50">
                     <x-td click="verDetalle({{ $expediente->id }})" class="cursor-pointer text-center overflow-hidden text-ellipsis whitespace-nowrap">
