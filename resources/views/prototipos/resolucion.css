@@ -1,0 +1,130 @@
+/* public/css/resolucion.css */
+
+/* Variables CSS para una fácil personalización */
+:root {
+    --font-family-base: 'Times New Roman', serif;
+    --color-text: #000;
+    --spacing-small: 0.5em;
+    --spacing-medium: 1em;
+    --spacing-large: 1.5em;
+    --spacing-extra-large: 2em;
+    --font-size-small: 14px;
+    --font-size-base: 16px;
+    --font-size-large: 18px;
+    --max-width-document: 21cm;
+    --padding-document: 2cm;
+}
+
+/* Estilos generales del documento */
+.resolucion {
+    font-family: var(--font-family-base);
+    line-height: 1.6;
+    color: var(--color-text);
+    max-width: var(--max-width-document);
+    margin: 0 auto;
+    padding: var(--padding-document);
+    background: white;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); /* Sombra para simular un documento físico */
+}
+
+/* Estilos de secciones principales */
+.resolucion__header {
+    margin-bottom: var(--spacing-extra-large);
+}
+
+.resolucion__body {
+    margin-bottom: var(--spacing-large);
+}
+
+.resolucion__footer {
+    margin-top: var(--spacing-extra-large);
+    page-break-inside: avoid; /* Evita que el pie de página se corte en la impresión */
+}
+
+/* Estilos de elementos específicos */
+.resolucion p {
+    margin-bottom: var(--spacing-medium);
+    text-align: justify;
+}
+
+.resolucion__fecha {
+    text-align: right;
+    margin-bottom: var(--spacing-extra-large);
+    font-size: var(--font-size-small);
+}
+
+.resolucion__expediente {
+    margin-bottom: var(--spacing-medium);
+    font-size: var(--font-size-small);
+}
+
+.resolucion__numero {
+    font-weight: bold;
+    font-size: var(--font-size-large);
+    text-align: center;
+    margin-bottom: var(--spacing-extra-large);
+}
+
+.resolucion__seccion {
+    margin-bottom: var(--spacing-extra-large);
+}
+
+.resolucion__etiqueta {
+    font-weight: bold;
+    text-transform: uppercase;
+}
+
+.resolucion__identificador,
+.resolucion__destinatario {
+    font-weight: bold;
+}
+
+.resolucion__placeholder {
+    color: #999;
+    font-style: italic;
+}
+
+.resolucion__encabezado {
+    text-align: center;
+    font-weight: bold;
+    text-transform: uppercase;
+    margin: var(--spacing-extra-large) 0;
+    line-height: 1.4;
+    font-size: var(--font-size-small);
+}
+
+.resolucion__accion {
+    font-size: var(--font-size-base);
+}
+
+.resolucion__articulo {
+    margin-bottom: var(--spacing-large);
+}
+
+.resolucion__articulo-titulo {
+    font-weight: bold;
+    display: inline;
+}
+
+.resolucion__firmas-titulo {
+    font-weight: bold;
+    margin-bottom: var(--spacing-medium);
+}
+
+.resolucion__firma {
+    margin-bottom: var(--spacing-large);
+}
+
+.resolucion__firma-linea {
+    border-bottom: 1px solid var(--color-text);
+    width: 300px;
+    display: inline-block;
+}
+
+/* Estilos específicos para impresión */
+@media print {
+    .resolucion {
+        box-shadow: none;
+        padding: 1cm;
+    }
+}

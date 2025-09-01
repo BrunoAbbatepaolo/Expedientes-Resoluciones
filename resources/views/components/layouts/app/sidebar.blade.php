@@ -9,9 +9,12 @@
     <flux:sidebar sticky stashable class="border-r border-zinc-200 bg-blue-200 dark:border-zinc-700 dark:bg-zinc-900">
         <flux:sidebar.toggle class="lg:hidden" icon="x-mark" />
 
-        <a href="{{ route('dashboard') }}" class="flex flex-col items-center space-y-2 bg-blue-50 dark:bg-zinc-800 rounded-full p-4" wire:navigate>
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M6.72 13.829c-.24.03-.48.062-.72.096m.72-.096a42.415 42.415 0 0 1 10.56 0m-10.56 0L6.34 18m10.94-4.171c.24.03.48.062.72.096m-.72-.096L17.66 18m0 0 .229 2.523a1.125 1.125 0 0 1-1.12 1.227H7.231c-.662 0-1.18-.568-1.12-1.227L6.34 18m11.318 0h1.091A2.25 2.25 0 0 0 21 15.75V9.456c0-1.081-.768-2.015-1.837-2.175a48.055 48.055 0 0 0-1.913-.247M6.34 18H5.25A2.25 2.25 0 0 1 3 15.75V9.456c0-1.081.768-2.015 1.837-2.175a48.041 48.041 0 0 1 1.913-.247m10.5 0a48.536 48.536 0 0 0-10.5 0m10.5 0V3.375c0-.621-.504-1.125-1.125-1.125h-8.25c-.621 0-1.125.504-1.125 1.125v3.659M18 10.5h.008v.008H18V10.5Zm-3 0h.008v.008H15V10.5Z" />
+        <a href="{{ route('dashboard') }}"
+            class="flex flex-col items-center space-y-2 bg-blue-50 dark:bg-zinc-800 rounded-full p-4" wire:navigate>
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                stroke="currentColor" class="size-6">
+                <path stroke-linecap="round" stroke-linejoin="round"
+                    d="M6.72 13.829c-.24.03-.48.062-.72.096m.72-.096a42.415 42.415 0 0 1 10.56 0m-10.56 0L6.34 18m10.94-4.171c.24.03.48.062.72.096m-.72-.096L17.66 18m0 0 .229 2.523a1.125 1.125 0 0 1-1.12 1.227H7.231c-.662 0-1.18-.568-1.12-1.227L6.34 18m11.318 0h1.091A2.25 2.25 0 0 0 21 15.75V9.456c0-1.081-.768-2.015-1.837-2.175a48.055 48.055 0 0 0-1.913-.247M6.34 18H5.25A2.25 2.25 0 0 1 3 15.75V9.456c0-1.081.768-2.015 1.837-2.175a48.041 48.041 0 0 1 1.913-.247m10.5 0a48.536 48.536 0 0 0-10.5 0m10.5 0V3.375c0-.621-.504-1.125-1.125-1.125h-8.25c-.621 0-1.125.504-1.125 1.125v3.659M18 10.5h.008v.008H18V10.5Zm-3 0h.008v.008H15V10.5Z" />
             </svg>
             <h1 class="text-xl font-bold">SiRex</h1>
         </a>
@@ -19,22 +22,93 @@
 
         <flux:navlist variant="outline">
             <flux:navlist.group :heading="__('')" class="grid">
-                <flux:navlist.item icon="home" :href="route('dashboard')" :current="request()->routeIs('dashboard')" class="!text-gray-800 dark:!text-white" wire:navigate>{{ __('Dashboard') }}</flux:navlist.item>
-                <flux:navlist.item icon="folder-open" :href="route('resoluciones')" :current="request()->routeIs('resoluciones')" class="!text-gray-800 dark:!text-white" wire:navigate>{{ __('Resoluciones') }}</flux:navlist.item>
-                <flux:navlist.item icon="document" :href="route('expedientes')" :current="request()->routeIs('expedientes')" class="!text-gray-800 dark:!text-white" wire:navigate>{{ __('Expedientes') }}</flux:navlist.item>
-                <flux:navlist.item icon="building-office" :href="route('oficinas')" :current="request()->routeIs('oficinas')" class="!text-gray-800 dark:!text-white" wire:navigate>{{ __('Oficinas') }}</flux:navlist.item>
+                <flux:navlist.item icon="home" :href="route('dashboard')" :current="request()->routeIs('dashboard')"
+                    class="!text-gray-800 dark:!text-white" wire:navigate>{{ __('Dashboard') }}</flux:navlist.item>
+
+                {{-- @if (auth()->user()->permiso('expediente_ver'))
+                    <flux:navlist.item icon="document" :href="route('expedientes')"
+                        :current="request()->routeIs('expedientes')" class="!text-gray-800 dark:!text-white"
+                        wire:navigate>{{ __('Expedientes') }}</flux:navlist.item>
+
+                @endif --}}
+                @if (auth()->user()->permiso('expediente_ver'))
+                    <div x-data="{
+                        open: {{ request()->routeIs('expedientes*') ? 'true' : 'false' }},
+                        toggle() { this.open = !this.open }
+                    }" class="space-y-1">
+
+                        <!-- Elemento principal que actúa como toggle -->
+                        <flux:navlist.item @click="toggle()" icon="folder"
+                            :current="request()->routeIs('expedientes*')"
+                            class="!text-gray-800 dark:!text-white cursor-pointer" as="button" type="button">
+                            <div class="flex items-center justify-between w-full">
+                                <span>{{ __('Expedientes') }}</span>
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"
+                                    class="w-4 h-4 transition-transform ml-auto" :class="{ 'rotate-180': open }">
+                                    <path fill-rule="evenodd"
+                                        d="M5.23 7.21a.75.75 0 0 1 1.06.02L10 10.94l3.71-3.71a.75.75 0 1 1 1.06 1.06l-4.24 4.25a.75.75 0 0 1-1.06 0L5.25 8.27a.75.75 0 0 1-.02-1.06Z"
+                                        clip-rule="evenodd" />
+                                </svg>
+                            </div>
+                        </flux:navlist.item>
+
+                        <!-- Submenú colapsable -->
+                        <div x-show="open" x-cloak x-transition:enter="transition ease-out duration-200"
+                            x-transition:enter-start="opacity-0 -translate-y-2"
+                            x-transition:enter-end="opacity-100 translate-y-0"
+                            x-transition:leave="transition ease-in duration-150"
+                            x-transition:leave-start="opacity-100 translate-y-0"
+                            x-transition:leave-end="opacity-0 -translate-y-2"
+                            class="ml-4 space-y-1 border-l-2 border-zinc-200 dark:border-zinc-700 pl-2">
+
+                            <flux:navlist.item icon="document" :href="route('expedientes')"
+                                :current="request()->routeIs('expedientes') && !request()->routeIs('expedientes.ingresados') && !request()->routeIs('expedientes.egresados')"
+                                wire:navigate class="!text-gray-700 dark:!text-gray-300 text-sm">
+                                {{ __('Todos') }}
+                            </flux:navlist.item>
+
+                            <flux:navlist.item icon="document-plus" :href="route('expedientes.ingresados')"
+                                :current="request()->routeIs('expedientes.ingresados')" wire:navigate
+                                class="!text-gray-700 dark:!text-gray-300 text-sm">
+                                {{ __('Ingresados') }}
+                            </flux:navlist.item>
+
+                            <flux:navlist.item icon="document-check" :href="route('expedientes.egresados')"
+                                :current="request()->routeIs('expedientes.egresados')" wire:navigate
+                                class="!text-gray-700 dark:!text-gray-300 text-sm">
+                                {{ __('Egresados') }}
+                            </flux:navlist.item>
+                        </div>
+                    </div>
+                @endif
+
+
+
+                @if (auth()->user()->permiso('resolucion_ver'))
+                    <flux:navlist.item icon="folder-open" :href="route('resoluciones')"
+                        :current="request()->routeIs('resoluciones')" class="!text-gray-800 dark:!text-white"
+                        wire:navigate>{{ __('Resoluciones') }}</flux:navlist.item>
+                @endif
+
+                <flux:navlist.item icon="building-office" :href="route('oficinas')"
+                    :current="request()->routeIs('oficinas')" class="!text-gray-800 dark:!text-white" wire:navigate>
+                    {{ __('Oficinas') }}</flux:navlist.item>
+                @if (auth()->user()->permiso('lista_usuario_ver'))
+                    <flux:navlist.item icon="user" :href="route('listausuarios')"
+                        :current="request()->routeIs('listausuario')" class="!text-gray-800 dark:!text-white"
+                        wire:navigate>{{ __('Usuarios') }}</flux:navlist.item>
+                @endif
             </flux:navlist.group>
         </flux:navlist>
 
         <flux:spacer />
 
 
-        <flux:switch x-data x-model="$flux.dark" label="Modo Obscuro"  />
+        <flux:switch x-data x-model="$flux.dark" label="Modo Obscuro" />
         <!-- Desktop User Menu -->
         <flux:dropdown position="bottom" align="start">
-            <flux:profile
-                :name="auth()->user()->nombre"
-                :initials="auth()->user()->initials()"
+            <flux:profile :name="auth()->user()->nombre" :initials="auth()->user()->initials()"
+                :image="auth()->user()->profile_photo_path ? Storage::url(auth()->user()->profile_photo_path) : null"
                 icon-trailing="chevrons-up-down" />
 
             <flux:menu class="w-[220px]">
@@ -42,10 +116,15 @@
                     <div class="p-0 text-sm font-normal">
                         <div class="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
                             <span class="relative flex h-8 w-8 shrink-0 overflow-hidden rounded-lg">
-                                <span
-                                    class="flex h-full w-full items-center justify-center rounded-lg bg-neutral-200 text-black dark:bg-neutral-700 dark:text-white">
-                                    {{ auth()->user()->initials() }}
-                                </span>
+                                @if (auth()->user()->profile_photo_path)
+                                    <img src="{{ Storage::url(auth()->user()->profile_photo_path) }}"
+                                        alt="{{ auth()->user()->name }}" class="h-full w-full object-cover">
+                                @else
+                                    <span
+                                        class="flex h-full w-full items-center justify-center rounded-lg bg-neutral-200 text-black dark:bg-neutral-700 dark:text-white">
+                                        {{ auth()->user()->initials() }}
+                                    </span>
+                                @endif
                             </span>
 
                             <div class="grid flex-1 text-left text-sm leading-tight">
@@ -59,7 +138,8 @@
                 <flux:menu.separator />
 
                 <flux:menu.radio.group>
-                    <flux:menu.item :href="route('settings.profile')" icon="cog" wire:navigate>{{ __('Settings') }}</flux:menu.item>
+                    <flux:menu.item :href="route('settings.profile')" icon="cog" wire:navigate>
+                        {{ __('Settings') }}</flux:menu.item>
                 </flux:menu.radio.group>
 
                 <flux:menu.separator />
@@ -81,9 +161,7 @@
         <flux:spacer />
 
         <flux:dropdown position="top" align="end">
-            <flux:profile
-                :initials="auth()->user()->initials()"
-                icon-trailing="chevron-down" />
+            <flux:profile :initials="auth()->user()->initials()" icon-trailing="chevron-down" />
 
             <flux:menu>
                 <flux:menu.radio.group>
@@ -107,7 +185,8 @@
                 <flux:menu.separator />
 
                 <flux:menu.radio.group>
-                    <flux:menu.item :href="route('settings.profile')" icon="cog" wire:navigate>{{ __('Settings') }}</flux:menu.item>
+                    <flux:menu.item :href="route('settings.profile')" icon="cog" wire:navigate>
+                        {{ __('Settings') }}</flux:menu.item>
                 </flux:menu.radio.group>
 
                 <flux:menu.separator />

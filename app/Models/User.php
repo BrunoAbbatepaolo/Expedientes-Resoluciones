@@ -58,7 +58,25 @@ class User extends Authenticatable
     {
         return Str::of($this->name)
             ->explode(' ')
-            ->map(fn (string $name) => Str::of($name)->substr(0, 1))
+            ->map(fn(string $name) => Str::of($name)->substr(0, 1))
             ->implode('');
+    }
+    public function permiso($permiso)
+    {
+        // Retorna true/false si el usuario tiene el permiso
+        return $this->permisos()->where('nombre', $permiso)->exists();
+    }
+
+    public function togglePermiso($permiso)
+    {
+        if ($this->permiso($permiso)) {
+            $this->permisos()->where('nombre', $permiso)->delete();
+        } else {
+            $this->permisos()->create(['nombre' => $permiso]);
+        }
+    }
+    public function permisos()
+    {
+        return $this->hasMany(\App\Models\Permiso::class, 'user_id');
     }
 }

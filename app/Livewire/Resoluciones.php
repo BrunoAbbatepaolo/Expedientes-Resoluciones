@@ -82,7 +82,7 @@ class Resoluciones extends Component
 
     /**
      * Carga los datos de una resolución en $resolucionForm dejándolos disponibles para su modificación.
-     * 
+     *
      */
     public function cargarResolucion($id)
     {

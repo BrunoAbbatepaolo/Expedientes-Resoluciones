@@ -2,12 +2,14 @@
 
 namespace App\Models;
 
+use App\Traits\Auditable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class Expediente extends Model
 {
+    use Auditable;
     use HasFactory;
     use SoftDeletes;
     protected $connection = 'mysql_admin'; // Usar la conexión nueva

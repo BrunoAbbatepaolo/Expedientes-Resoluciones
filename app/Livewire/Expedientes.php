@@ -74,28 +74,27 @@ class Expedientes extends Component
     public function render()
     {
         $expedientes = $this->getExp();
-        return view('livewire.expedientes', [
+        return view('livewire.expedientes.expedientes', [
             'expedientes' => $expedientes
         ]);
     }
 
-
     public function mount()
     {
         // Detectar la ruta actual y establecer el tipo de vista
-        $currentRoute = request()->route()->getName();
+        $currentRoute = request()->route()?->getName() ?? 'expedientes';
 
         switch ($currentRoute) {
-            case 'expediente.ingresados':
+            case 'expedientes.ingresados':
                 $this->tipoVista = 'ingresados';
                 break;
-            case 'expediente.egresados':
+            case 'expedientes.egresados':
                 $this->tipoVista = 'egresados';
                 break;
             default:
                 $this->tipoVista = 'todos';
         }
-        $this->mostrarBoton = request()->routeIs('expediente') || request()->routeIs('expediente.ingresados');
+        $this->mostrarBoton = request()->routeIs('expedientes') || request()->routeIs('expedientes.ingresados');
     }
 
     public function getExp()
@@ -137,6 +136,12 @@ class Expedientes extends Component
     }
 
 
+    public function updatedSearch()
+    {
+        $this->resetPage();
+    }
+
+
     public function buscar()
     {
         if (strlen($this->busquedaExp) > 0) {
@@ -152,16 +157,32 @@ class Expedientes extends Component
                     $this->asunto = null;
                     $this->causante = null;
                     $this->expedienteForm->reset();
+                    LivewireAlert::title('El expediente ya se encuentra cargado!')
+                        ->error()
+                        ->timer(2500)
+                        ->toast()
+                        ->position('top-end')
+                        ->show();
                     return;
                 }
 
-                // Si no existe, asignar valores
+                // Si no esta cargado, asignar valores
                 $this->asunto = !empty($this->expedienteEncontrado['asunto']) ? $this->expedienteEncontrado['asunto'] : $this->expedienteEncontrado['oficina'];
                 $this->causante = $this->expedienteEncontrado['causante'];
 
                 $this->expedienteForm->num_exp = $this->expedienteEncontrado['numero'];
                 $this->expedienteForm->asunto = $this->asunto;
-                $this->expedienteForm->folio = $this->expedienteEncontrado['folio'];
+                if (!empty($this->expedienteEncontrado['folio'])) {
+                    $this->expedienteForm->folio = $this->expedienteEncontrado['folio'];
+                } else {
+                    $this->expedienteForm->folio = 0;
+                    LivewireAlert::title('El expediente no tiene numero de fojas!')
+                        ->error()
+                        ->timer(2500)
+                        ->toast()
+                        ->position('top-end')
+                        ->show();
+                }
                 $this->expedienteForm->causante = $this->causante;
                 $this->expedienteForm->fecha_ingreso = now()->format('Y-m-d');
             } else {
@@ -200,6 +221,12 @@ class Expedientes extends Component
         } else {
             $this->validate();
             $resultado = $this->expedienteForm->store();
+            LivewireAlert::title('El expediente se cargo correctamente!')
+                ->success()
+                ->timer(2500)
+                ->toast()
+                ->position('top-end')
+                ->show();
         }
         $this->modal('modal-exp')->close();
         $this->expedienteForm->num_exp = null;
@@ -214,13 +241,23 @@ class Expedientes extends Component
     public function editar($id)
     {
         $expediente = \App\Models\Expediente::find($id);
+
         $this->expedienteForm->loadExpMitiv($expediente);
-        //Codigo para que la fecha aparezca como placeholder
-        $this->expedienteForm->fecha_ingreso = Carbon::parse($expediente->fecha_ingreso)->format('Y-m-d'); // Esto está de más
+
+        // Fechas
+        $this->expedienteForm->fecha_ingreso = Carbon::parse($expediente->fecha_ingreso)->format('Y-m-d');
         $this->expedienteForm->fecha_salida = $expediente->fecha_salida
             ? Carbon::parse($expediente->fecha_salida)->format('Y-m-d')
             : null;
+
+        // Oficina
+        $this->expedienteForm->ofi_salida = $expediente->ofi_salida ?? null;
+
+        // 🔹 Limpiar el campo de búsqueda visible
+        $this->query = '';
     }
+
+
 
 
     public function actualizar()
@@ -321,8 +358,6 @@ class Expedientes extends Component
             ->timer(2500)
             ->toast()
             ->withOptions([
-                //'width' => '200px',
-                // 'height' => '20px',
                 'background' => '#f0f0f0',
                 'customClass' => [
                     'popup' => 'animate_animated animate_bounceIn',
@@ -350,5 +385,10 @@ class Expedientes extends Component
     public function formatearCausante($causante)
     {
         return str_replace('DEPARTAMENTO ', 'DEPTO. ', $causante);
+    }
+
+    public function limpiarBusqueda()
+    {
+        $this->busquedaExp = '';
     }
 }
