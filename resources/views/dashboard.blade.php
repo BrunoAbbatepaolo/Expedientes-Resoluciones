@@ -3,8 +3,11 @@
         <div class="grid auto-rows-min gap-4 md:grid-cols-3">
             <div
                 class="relative aspect-video overflow-hidden rounded-xl border border-neutral-200 dark:border-neutral-700">
-                <x-placeholder-pattern
-                    class="absolute inset-0 size-full stroke-gray-900/20 dark:stroke-neutral-100/20" />
+                <div
+                    class="bg-neutral-50/70 dark:bg-neutral-900/70 absolute inset-0 flex flex-col items-center justify-center p-4 text-center">
+                    <p>Hola, {{ Auth::user()->nombre }} Bienvenido de nuevo!</p>
+                    <p>Te mostraremos aqui las novedades de tu sistema pronto!</p>
+                </div>
             </div>
             <div
                 class="relative aspect-video overflow-hidden rounded-xl border border-neutral-200 dark:border-neutral-700">

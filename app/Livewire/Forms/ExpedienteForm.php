@@ -36,6 +36,9 @@ class ExpedienteForm extends Form
     #[Validate('nullable')]
     public $fecha_salida;
 
+    #[Validate('required')]
+    public $oficina_id;
+
     public $campos = [
         'num_exp',
         'folio',
@@ -46,6 +49,7 @@ class ExpedienteForm extends Form
         'cod_area',
         'cod_oficina',
         'fecha_salida',
+        'oficina_id',
     ];
 
     public function loadExpMitiv($expediente)

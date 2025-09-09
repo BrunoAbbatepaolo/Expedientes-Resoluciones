@@ -2,7 +2,7 @@
     @if (auth()->user()->permiso('expediente_ver'))
         <div
             class="text-3xl font-bold text-center p-4 bg-blue-200 dark:bg-zinc-900 dark:text-white rounded-xl dark:shadow-md">
-            Sistema de Carga de Expedientes
+            Sistema de Expedientes - {{ $oficinaUsuario->nombre ?? 'Sin oficina asignada' }}
         </div>
         <div class="flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center">
             <div class="relative w-full sm:w-1/3">
