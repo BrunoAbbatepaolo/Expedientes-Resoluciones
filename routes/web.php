@@ -3,6 +3,15 @@
 use Illuminate\Support\Facades\Route;
 use Livewire\Volt\Volt;
 
+Livewire::setUpdateRoute(function ($handle) {
+    return Route::post('/expedientes/public/livewire/update', $handle);
+});
+
+Livewire::setScriptRoute(function ($handle) {
+    return Route::get('/expedientes/public/livewire/livewire.js', $handle);
+});
+// Redirigir la ruta principal al login
+Route::redirect('/', '/expedientes/public/login');
 Route::get('/', function () {
     return view('welcome');
 })->name('home');
