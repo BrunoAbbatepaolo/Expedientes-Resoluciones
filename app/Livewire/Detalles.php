@@ -31,7 +31,7 @@ class Detalles extends Component
             $oficina = Oficina::where('codigo', $this->expediente->ofi_salida)->first();
 
             $this->pases[] = [
-                'oficina' => $oficina->nombre ?? 'Oficina desconocida',
+                'oficina' => $this->expediente->oficina->nombre ?? 'Oficina desconocida',
                 'fecha' => $this->expediente->fecha_salida,
                 'observaciones' => 'Traslado de expediente'
             ];

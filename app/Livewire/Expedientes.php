@@ -3,13 +3,13 @@
 namespace App\Livewire;
 
 use Livewire\Component;
-use App\Livewire\Flux;
 use Livewire\WithPagination;
 use App\Livewire\Forms\ExpedienteForm;
-use \Livewire\Attributes\On;
 use Carbon\Carbon;
 use App\Models\Oficina;
+use App\Models\Expediente;
 use Jantinnerezo\LivewireAlert\Facades\LivewireAlert;
+use App\Models\User;
 
 class Expedientes extends Component
 {
@@ -26,10 +26,13 @@ class Expedientes extends Component
     public $expedienteId;
     public $modalFiltro;
     public $search = '';
+    public $sinPermiso = false;
+    public $sinOficina = false;
+    public $oficinaUsuario;
 
     public ExpedienteForm $expedienteForm;
 
-    public $menuVisible = null; // Para controlar el menú desplegable
+    public $menuVisible = null;
 
     public $filtro = [
         'fechaDesde' => null,
@@ -39,10 +42,10 @@ class Expedientes extends Component
     public $tipoVista = 'todos';
     public $mostrarBoton = false;
 
-    // Para el autocompletar de oficinas
-    public $query = ''; // Texto de búsqueda
-    public $oficinas = []; // Resultados de la búsqueda
-    // Métodos para la funcionalidad de oficina de salida
+    // Autocomplete oficinas
+    public $query = '';
+    public $oficinas = [];
+
     public function updatedQuery()
     {
         if (empty($this->query)) {
@@ -61,48 +64,70 @@ class Expedientes extends Component
         $oficina = Oficina::find($id);
         if ($oficina) {
             $this->expedienteForm->fill([
-                'ofi_salida' => $id, // Aquí almacenamos la ID de la oficina
-                'cod_area' => $oficina->cod_area,
-                'cod_oficina' => $oficina->codigo,
+                'ofi_salida'   => $id,
+                'cod_area'     => $oficina->cod_area,
+                'cod_oficina'  => $oficina->codigo,
             ]);
 
-            $this->query = $oficina->nombre; // Mostrar el nombre en el input
-            $this->oficinas = []; // Limpiar resultados del autocompletado
+            $this->query = $oficina->nombre;
+            $this->oficinas = [];
         }
     }
 
     public function render()
     {
         $expedientes = $this->getExp();
-        return view('livewire.expedientes', [
+        return view('livewire.expedientes.expedientes', [
             'expedientes' => $expedientes
         ]);
     }
 
-
     public function mount()
     {
-        // Detectar la ruta actual y establecer el tipo de vista
-        $currentRoute = request()->route()->getName();
+        $currentRoute = request()->route()?->getName() ?? 'expedientes';
 
         switch ($currentRoute) {
-            case 'expediente.ingresados':
+            case 'expedientes.ingresados':
                 $this->tipoVista = 'ingresados';
                 break;
-            case 'expediente.egresados':
+            case 'expedientes.egresados':
                 $this->tipoVista = 'egresados';
                 break;
             default:
                 $this->tipoVista = 'todos';
         }
-        $this->mostrarBoton = request()->routeIs('expediente') || request()->routeIs('expediente.ingresados');
+        $this->mostrarBoton = request()->routeIs('expedientes') || request()->routeIs('expedientes.ingresados');
+        $oficinaId = auth()->user()->oficinaAsignadaId()
+            ?? auth()->user()->oficinaIdPara('expediente_ver');
+
+        if ($oficinaId) {
+            $this->oficinaUsuario = Oficina::find($oficinaId);
+        }
     }
 
     public function getExp()
     {
-        $query = \App\Models\Expediente::query();
+        $query = Expediente::query();
 
-        // Filtro por tipo de vista
+        // 1) Permiso base
+        if (!auth()->user()->permiso('expediente_ver')) {
+            $this->sinPermiso = true;
+            return Expediente::whereRaw('1=0')->paginate(10);
+        }
+
+        // 2) Oficina desde 'oficina_asignada' (fallback a 'expediente_ver' si no existiera)
+        $oficinaId = auth()->user()->oficinaAsignadaId()
+            ?? auth()->user()->oficinaIdPara('expediente_ver');
+
+        if (!$oficinaId) {
+            $this->sinOficina = true;
+            return Expediente::whereRaw('1=0')->paginate(10);
+        }
+
+        // 3) Filtrar por oficina del usuario
+        $query->deOficina((int) $oficinaId);
+
+        // 4) Tipo de vista
         switch ($this->tipoVista) {
             case 'ingresados':
                 $query->whereNull('fecha_salida');
@@ -112,28 +137,37 @@ class Expedientes extends Component
                 break;
         }
 
-        // Tus filtros existentes
+        // 5) Búsqueda libre
         if (!empty($this->search)) {
-            $query->where(function ($q) {
-                $q->where('num_exp', 'LIKE', '%' . $this->search . '%')
-                    ->orWhere('asunto', 'LIKE', '%' . $this->search . '%')
-                    ->orWhere('causante', 'LIKE', '%' . $this->search . '%')
-                    ->orWhere('cod_area', 'LIKE', '%' . $this->search . '%')
-                    ->orWhere('cod_oficina', 'LIKE', '%' . $this->search . '%');
+            $search = $this->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('num_exp', 'LIKE', "%{$search}%")
+                    ->orWhere('asunto', 'LIKE', "%{$search}%")
+                    ->orWhere('causante', 'LIKE', "%{$search}%")
+                    ->orWhere('cod_area', 'LIKE', "%{$search}%")
+                    ->orWhere('cod_oficina', 'LIKE', "%{$search}%");
             });
         }
 
+        // 6) Filtros de fecha
         if (!empty($this->filtro['fechaDesde'])) {
-            $fechaDesde = Carbon::parse($this->filtro['fechaDesde'])->startOfDay();
+            $fechaDesde = \Carbon\Carbon::parse($this->filtro['fechaDesde'])->startOfDay();
             $query->where('created_at', '>=', $fechaDesde);
         }
 
         if (!empty($this->filtro['fechaHasta'])) {
-            $fechaHasta = Carbon::parse($this->filtro['fechaHasta'])->endOfDay();
+            $fechaHasta = \Carbon\Carbon::parse($this->filtro['fechaHasta'])->endOfDay();
             $query->where('created_at', '<=', $fechaHasta);
         }
 
-        return $query->orderBy('created_at', 'desc')->paginate(10);
+        // 7) Orden y paginación
+        return $query->orderByDesc('created_at')->paginate(10);
+    }
+
+
+    public function updatedSearch()
+    {
+        $this->resetPage();
     }
 
 
@@ -142,30 +176,48 @@ class Expedientes extends Component
         if (strlen($this->busquedaExp) > 0) {
             $this->expedienteEncontrado = \App\Models\VistaExpedientes::where('numero', 'ILIKE', '%' . $this->busquedaExp . '%')->first();
 
-            if (!is_null($this->expedienteEncontrado)) {
+            if (!is_null($this->expedienteEncontrado)) { //Si el expediente se encuentra cargado en el 95 trae los datos necesarios.
                 // Verificar si el expediente ya existe en la base de datos
-                $expedienteExistente = \App\Models\Expediente::where('num_exp', $this->expedienteEncontrado['numero'])->first();
-
-                if ($expedienteExistente) {
-                    // Si el expediente ya existe, limpiar los valores y mostrar mensaje de error
+                $expedienteExistente = \App\Models\Expediente::with(['oficina', 'oficinaById'])
+                    ->where('num_exp', $this->expedienteEncontrado['numero'])
+                    ->first();
+                if ($expedienteExistente) { // Si el expediente ya existe, limpiar los valores y mostrar mensaje de error
                     $this->expedienteEncontrado = null;
                     $this->asunto = null;
                     $this->causante = null;
                     $this->expedienteForm->reset();
+                    $oficinaName = $expedienteExistente->oficinaById->nombre
+                        ?? $expedienteExistente->oficina->nombre
+                        ?? 'Oficina no encontrada';
+                    LivewireAlert::title('El expediente ya se encuentra cargado en la oficina: ' . $oficinaName . '!')
+                        ->error()
+                        ->timer(2500)
+                        ->toast()
+                        ->position('top-end')
+                        ->show();
                     return;
                 }
 
-                // Si no existe, asignar valores
+                // Si no esta cargado, asignar valores
                 $this->asunto = !empty($this->expedienteEncontrado['asunto']) ? $this->expedienteEncontrado['asunto'] : $this->expedienteEncontrado['oficina'];
                 $this->causante = $this->expedienteEncontrado['causante'];
 
                 $this->expedienteForm->num_exp = $this->expedienteEncontrado['numero'];
                 $this->expedienteForm->asunto = $this->asunto;
-                $this->expedienteForm->folio = $this->expedienteEncontrado['folio'];
+                if (!empty($this->expedienteEncontrado['folio'])) {
+                    $this->expedienteForm->folio = $this->expedienteEncontrado['folio'];
+                } else {
+                    $this->expedienteForm->folio = 0;
+                    LivewireAlert::title('El expediente no tiene numero de fojas!')
+                        ->error()
+                        ->timer(2500)
+                        ->toast()
+                        ->position('top-end')
+                        ->show();
+                }
                 $this->expedienteForm->causante = $this->causante;
                 $this->expedienteForm->fecha_ingreso = now()->format('Y-m-d');
-            } else {
-                // Si no se encuentra, limpiar los datos
+            } else { // Si no se encuentra, limpiar los datos del imput.
                 $this->expedienteEncontrado = null;
                 $this->asunto = null;
                 $this->causante = null;
@@ -197,10 +249,32 @@ class Expedientes extends Component
         $expedienteExistente = \App\Models\Expediente::where('num_exp', $this->expedienteEncontrado['numero'])->first();
 
         if ($expedienteExistente) {
+            // El expediente ya existe - no hacer nada
         } else {
+            // Obtener la oficina del usuario antes de guardar
+            $oficinaId = auth()->user()->oficinaAsignadaId()
+                ?? auth()->user()->oficinaIdPara('expediente_ver');
+
+            if ($oficinaId) {
+                // Buscar la oficina para obtener los códigos
+                $oficina = Oficina::find($oficinaId);
+
+                if ($oficina) {
+                    // Asignar la oficina del usuario al formulario
+                    $this->expedienteForm->oficina_id = $oficinaId; // o como se llame el campo
+                }
+            }
+
             $this->validate();
             $resultado = $this->expedienteForm->store();
+            LivewireAlert::title('El expediente se cargo correctamente!')
+                ->success()
+                ->timer(2500)
+                ->toast()
+                ->position('top-end')
+                ->show();
         }
+
         $this->modal('modal-exp')->close();
         $this->expedienteForm->num_exp = null;
         $this->expedienteForm->asunto = null;
@@ -214,13 +288,23 @@ class Expedientes extends Component
     public function editar($id)
     {
         $expediente = \App\Models\Expediente::find($id);
+
         $this->expedienteForm->loadExpMitiv($expediente);
-        //Codigo para que la fecha aparezca como placeholder
-        $this->expedienteForm->fecha_ingreso = Carbon::parse($expediente->fecha_ingreso)->format('Y-m-d'); // Esto está de más
+
+        // Fechas
+        $this->expedienteForm->fecha_ingreso = Carbon::parse($expediente->fecha_ingreso)->format('Y-m-d');
         $this->expedienteForm->fecha_salida = $expediente->fecha_salida
             ? Carbon::parse($expediente->fecha_salida)->format('Y-m-d')
             : null;
+
+        // Oficina
+        $this->expedienteForm->ofi_salida = $expediente->ofi_salida ?? null;
+
+        // Limpiar el campo de búsqueda visible
+        $this->query = '';
     }
+
+
 
 
     public function actualizar()
@@ -321,8 +405,6 @@ class Expedientes extends Component
             ->timer(2500)
             ->toast()
             ->withOptions([
-                //'width' => '200px',
-                // 'height' => '20px',
                 'background' => '#f0f0f0',
                 'customClass' => [
                     'popup' => 'animate_animated animate_bounceIn',
@@ -350,5 +432,10 @@ class Expedientes extends Component
     public function formatearCausante($causante)
     {
         return str_replace('DEPARTAMENTO ', 'DEPTO. ', $causante);
+    }
+
+    public function limpiarBusqueda()
+    {
+        $this->busquedaExp = '';
     }
 }

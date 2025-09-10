@@ -36,6 +36,9 @@ class ExpedienteForm extends Form
     #[Validate('nullable')]
     public $fecha_salida;
 
+    #[Validate('required')]
+    public $oficina_id;
+
     public $campos = [
         'num_exp',
         'folio',
@@ -46,13 +49,15 @@ class ExpedienteForm extends Form
         'cod_area',
         'cod_oficina',
         'fecha_salida',
+        'oficina_id',
     ];
 
     public function loadExpMitiv($expediente)
     {
         $this->expediente = $expediente;
         foreach ($this->campos as $campo) {
-            $this->{$campo} = $expediente->{$campo};
+            // Si no existe el atributo o es null, limpiar el campo
+            $this->{$campo} = $expediente->{$campo} ?? null;
         }
     }
 
@@ -89,13 +94,13 @@ class ExpedienteForm extends Form
 
     public function delete($expediente)
     {
-    DB::beginTransaction();
-    try {
-          $expediente->delete();
+        DB::beginTransaction();
+        try {
+            $expediente->delete();
             DB::commit();
             return 1;
         } catch (\Exception $exception) {
-         DB::rollBack();
+            DB::rollBack();
             return 0;
         }
     }
@@ -116,5 +121,4 @@ class ExpedienteForm extends Form
             }
         }
     }
-    
 }

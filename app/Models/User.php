@@ -2,24 +2,17 @@
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
-use Illuminate\Support\Str;
 
 class User extends Authenticatable
 {
-    /** @use HasFactory<\Database\Factories\UserFactory> */
     use HasFactory, Notifiable;
 
-    /**
-     * The attributes that are mass assignable.
-     *
-     * @var list<string>
-     */
-    protected $connection = 'mysql_admin'; // Usar la conexión nueva
+    protected $connection = 'mysql_admin';
     protected $table = 'users';
+
     protected $fillable = [
         'nombre',
         'apellido',
@@ -28,21 +21,8 @@ class User extends Authenticatable
         'profile_photo_path',
     ];
 
-    /**
-     * The attributes that should be hidden for serialization.
-     *
-     * @var list<string>
-     */
-    protected $hidden = [
-        'password',
-        'remember_token',
-    ];
+    protected $hidden = ['password', 'remember_token'];
 
-    /**
-     * Get the attributes that should be cast.
-     *
-     * @return array<string, string>
-     */
     protected function casts(): array
     {
         return [
@@ -51,14 +31,56 @@ class User extends Authenticatable
         ];
     }
 
+    // --- Permisos ---
+    public function permisos()
+    {
+        return $this->hasMany(\App\Models\Permiso::class, 'user_id');
+    }
+
+    public function permiso(string $permiso): bool
+    {
+        return $this->permisos()->where('nombre', $permiso)->exists();
+    }
+
+    public function togglePermiso(string $permiso): void
+    {
+        if ($this->permiso($permiso)) {
+            $this->permisos()->where('nombre', $permiso)->delete();
+        } else {
+            $this->permisos()->create(['nombre' => $permiso]);
+        }
+    }
+
     /**
-     * Get the user's initials
+     * Devuelve la oficina asignada desde el permiso 'oficina_asignada'.
      */
+    public function oficinaAsignadaId(): ?int
+    {
+        return $this->permisos()
+            ->where('nombre', 'oficina_asignada')
+            ->value('oficina_id');
+    }
+
+    /**
+     * Mantengo este método por compatibilidad.
+     * Primero busca 'oficina_asignada'; si no, intenta en el permiso indicado.
+     */
+    public function oficinaIdPara(string $permisoNombre = 'expediente_ver'): ?int
+    {
+        $oficina = $this->oficinaAsignadaId();
+        if ($oficina) {
+            return (int) $oficina;
+        }
+
+        return $this->permisos()
+            ->where('nombre', $permisoNombre)
+            ->value('oficina_id');
+    }
     public function initials(): string
     {
-        return Str::of($this->name)
-            ->explode(' ')
-            ->map(fn (string $name) => Str::of($name)->substr(0, 1))
-            ->implode('');
+        $iniNombre   = $this->nombre   ? mb_substr($this->nombre, 0, 1)   : '';
+        $iniApellido = $this->apellido ? mb_substr($this->apellido, 0, 1) : '';
+
+        return strtoupper($iniNombre . $iniApellido);
     }
 }

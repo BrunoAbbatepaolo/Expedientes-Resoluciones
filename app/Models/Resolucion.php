@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
@@ -11,6 +13,7 @@ class Resolucion extends Model
     use HasFactory, SoftDeletes;
 
     protected $table = 'resoluciones';
+    public $timestamps = true;
 
     protected $fillable = [
         'numero_exp',

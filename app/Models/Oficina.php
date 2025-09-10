@@ -24,4 +24,5 @@ class Oficina extends Model
         return $this->hasMany(Expediente::class, 'cod_oficina', 'codigo')
             ->where('cod_area', $this->cod_area);
     }
+
 }

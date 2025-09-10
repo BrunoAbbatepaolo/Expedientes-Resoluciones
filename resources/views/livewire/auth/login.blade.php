@@ -73,14 +73,15 @@ new #[Layout('components.layouts.auth')] class extends Component {
     }
 }; ?>
 
-<div class="flex flex-col gap-6">
-    <x-auth-header :title="__('Log in to your account')" :description="__('Enter your email and password below to log in')" />
+<div class="max-w-md w-full mx-auto bg-white dark:bg-zinc-900 shadow-2xl dark:shadow-zinc-800/40 rounded-2xl p-8 border border-zinc-200 dark:border-zinc-800 flex flex-col gap-6">
+    <div class="text-center">
+        <h1 class="text-2xl font-semibold text-zinc-900 dark:text-white">{{ __('Log in to your account') }}</h1>
+        <p class="text-sm text-zinc-600 dark:text-zinc-400">{{ __('Enter your email and password below to log in') }}</p>
+    </div>
 
-    <!-- Session Status -->
     <x-auth-session-status class="text-center" :status="session('status')" />
 
     <form wire:submit="login" class="flex flex-col gap-6">
-        <!-- Email Address -->
         <flux:input
             wire:model="email"
             :label="__('Email address')"
@@ -91,7 +92,6 @@ new #[Layout('components.layouts.auth')] class extends Component {
             placeholder="email@example.com"
         />
 
-        <!-- Password -->
         <div class="relative">
             <flux:input
                 wire:model="password"
@@ -101,7 +101,6 @@ new #[Layout('components.layouts.auth')] class extends Component {
                 autocomplete="current-password"
                 :placeholder="__('Password')"
             />
-
             @if (Route::has('password.request'))
                 <flux:link class="absolute right-0 top-0 text-sm" :href="route('password.request')" wire:navigate>
                     {{ __('Forgot your password?') }}
@@ -109,11 +108,12 @@ new #[Layout('components.layouts.auth')] class extends Component {
             @endif
         </div>
 
-        <!-- Remember Me -->
         <flux:checkbox wire:model="remember" :label="__('Remember me')" />
 
         <div class="flex items-center justify-end">
-            <flux:button variant="primary" type="submit" class="w-full">{{ __('Log in') }}</flux:button>
+        <flux:button wire:loading.attr="disabled" variant="primary" type="submit" class="w-full transition-transform hover:scale-105">
+              {{ __('Log in') }}
+        </flux:button>
         </div>
     </form>
 
@@ -124,3 +124,4 @@ new #[Layout('components.layouts.auth')] class extends Component {
         </div>
     @endif
 </div>
+
