@@ -133,8 +133,8 @@
         </div>
 
         @include('livewire.modal-filtros')
-        @include('livewire.Expedientes.modal-NuevoExpediente')
-        @include('livewire.Expedientes.modal-EditarExpediente')
+        @include('livewire.expedientes.modal-NuevoExpediente')
+        @include('livewire.expedientes.modal-EditarExpediente')
         @include('livewire.modal-ConfirmarBorrado')
     @endif
 </div>
