@@ -25,13 +25,13 @@
                 <flux:navlist.item icon="home" :href="route('dashboard')" :current="request()->routeIs('dashboard')"
                     class="!text-gray-800 dark:!text-white" wire:navigate>{{ __('Dashboard') }}</flux:navlist.item>
 
-                {{-- @if (auth()->user()->permiso('expediente_ver'))
+                <!-- {{-- @if (auth()->user()->permiso('expediente_ver')) -->
                     <flux:navlist.item icon="document" :href="route('expedientes')"
                         :current="request()->routeIs('expedientes')" class="!text-gray-800 dark:!text-white"
                         wire:navigate>{{ __('Expedientes') }}</flux:navlist.item>
 
-                @endif --}}
-                @if (auth()->user()->permiso('expediente_ver'))
+                <!-- @endif --}} -->
+                <!-- @if (auth()->user()->permiso('expediente_ver')) -->
                     <div x-data="{
                         open: {{ request()->routeIs('expedientes*') ? 'true' : 'false' }},
                         toggle() { this.open = !this.open }
@@ -80,24 +80,22 @@
                             </flux:navlist.item>
                         </div>
                     </div>
-                @endif
+                <!-- @endif -->
 
 
 
-                @if (auth()->user()->permiso('resolucion_ver'))
+                <!-- @if (auth()->user()->permiso('resolucion_ver')) -->
                     <flux:navlist.item icon="folder-open" :href="route('resoluciones')"
                         :current="request()->routeIs('resoluciones')" class="!text-gray-800 dark:!text-white"
                         wire:navigate>{{ __('Resoluciones') }}</flux:navlist.item>
-                @endif
+                <!-- @endif -->
 
                 <flux:navlist.item icon="building-office" :href="route('oficinas')"
                     :current="request()->routeIs('oficinas')" class="!text-gray-800 dark:!text-white" wire:navigate>
                     {{ __('Oficinas') }}</flux:navlist.item>
-                @if (auth()->user()->permiso('lista_usuario_ver'))
                     <flux:navlist.item icon="user" :href="route('listausuarios')"
                         :current="request()->routeIs('listausuario')" class="!text-gray-800 dark:!text-white"
                         wire:navigate>{{ __('Usuarios') }}</flux:navlist.item>
-                @endif
             </flux:navlist.group>
         </flux:navlist>
 

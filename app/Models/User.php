@@ -83,4 +83,8 @@ class User extends Authenticatable
 
         return strtoupper($iniNombre . $iniApellido);
     }
+    public function getNameAttribute(): string
+{
+    return trim(($this->nombre ?? '') . ' ' . ($this->apellido ?? ''));
+}
 }

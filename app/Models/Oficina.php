@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 class Oficina extends Model
 {
     use HasFactory;
-    protected $connection = "mysql_legui";
+    protected $connection = "mysql_admin";
     protected $table = "oficinas";
     protected $fillable = [
         'cod_area',

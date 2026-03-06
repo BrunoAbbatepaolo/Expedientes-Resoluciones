@@ -21,7 +21,6 @@ class Permiso extends Model
 
     public function user(): BelongsTo
     {
-        // Asume que User también usa mysql_admin
         return $this->belongsTo(User::class);
     }
 
