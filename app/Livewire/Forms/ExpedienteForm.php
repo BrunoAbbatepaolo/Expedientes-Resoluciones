@@ -24,6 +24,7 @@ class ExpedienteForm extends Form
 
     #[Validate('required')]
     public $fecha_ingreso;
+
     #[Validate('nullable')]
     public $ofi_salida;
 
@@ -56,21 +57,31 @@ class ExpedienteForm extends Form
     {
         $this->expediente = $expediente;
         foreach ($this->campos as $campo) {
-            // Si no existe el atributo o es null, limpiar el campo
             $this->{$campo} = $expediente->{$campo} ?? null;
         }
     }
 
     public function store()
     {
-        DB::beginTransaction();
+        DB::connection('mysql_admin')->beginTransaction();
         try {
-            \App\Models\Expediente::create($this->except('campos'));
-            DB::commit();
+            $data = collect($this->campos)
+                ->mapWithKeys(fn($campo) => [$campo => $this->{$campo}])
+                ->map(fn($valor) => $valor === '' ? null : $valor)
+                ->toArray();
+
+            // Agregar timestamps manualmente
+            $data['created_at'] = now();
+            $data['updated_at'] = now();
+
+            DB::connection('mysql_admin')
+                ->table('expedientes')
+                ->insert($data);
+
+            DB::connection('mysql_admin')->commit();
             return 1;
         } catch (\Exception $exception) {
-            dd($exception);
-            DB::rollBack();
+            DB::connection('mysql_admin')->rollBack();
             return 0;
         }
     }
@@ -78,47 +89,50 @@ class ExpedienteForm extends Form
     public function update()
     {
         if ($this->hayCambios()) {
-            DB::beginTransaction();
+            DB::connection('mysql_admin')->beginTransaction();
             try {
-                $this->expediente->update($this->except('campos'));
-                DB::commit();
+                $data = collect($this->campos)
+                    ->mapWithKeys(fn($campo) => [$campo => $this->{$campo}])
+                    ->map(fn($valor) => $valor === '' ? null : $valor)
+                    ->toArray();
+
+                DB::connection('mysql_admin')
+                    ->table('expedientes')
+                    ->where('id', $this->expediente->id)
+                    ->update($data);
+
+                DB::connection('mysql_admin')->commit();
                 return 1;
             } catch (\Exception $exception) {
-                DB::rollBack();
+                DB::connection('mysql_admin')->rollBack();
                 return 0;
             }
-        } else {
-            return -1;
         }
+        return -1;
     }
 
     public function delete($expediente)
     {
-        DB::beginTransaction();
+        DB::connection('mysql_admin')->beginTransaction();
         try {
             $expediente->delete();
-            DB::commit();
+            DB::connection('mysql_admin')->commit();
             return 1;
         } catch (\Exception $exception) {
-            DB::rollBack();
+            DB::connection('mysql_admin')->rollBack();
             return 0;
         }
     }
-    private function hayCambios()
+
+    public function hayCambios()
     {
         foreach ($this->campos as $campo) {
-            if ($this->{$campo} != $this->expediente->{$campo}) {
+            $valorForm = $this->{$campo} === '' ? null : $this->{$campo};
+            $valorModelo = $this->expediente->{$campo};
+            if ($valorForm != $valorModelo) {
                 return true;
             }
         }
         return false;
-    }
-    public function fill($data)
-    {
-        foreach ($data as $key => $value) {
-            if (property_exists($this, $key)) {
-                $this->{$key} = $value;
-            }
-        }
     }
 }

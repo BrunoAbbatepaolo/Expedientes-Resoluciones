@@ -6,8 +6,8 @@ use Illuminate\Database\Eloquent\Model;
 
 class Audit extends Model
 {
-    protected $connection = 'mysql_admin';
-    protected $table = 'audits_expedientes';
+    protected $connection = 'mysql'; 
+    protected $table = 'audits';
     protected $fillable = [
         'auditable_type',
         'auditable_id',

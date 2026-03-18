@@ -46,4 +46,8 @@ class Expediente extends Model
     {
         return $this->belongsTo(Oficina::class, 'oficina_id', 'id');
     }
+    public function pases()
+    {
+        return $this->hasMany(Pase::class)->orderBy('fecha')->orderBy('hora');
+    }
 }
