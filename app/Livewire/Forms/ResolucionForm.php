@@ -10,30 +10,30 @@ class ResolucionForm extends Form
 {
     public ?Resolucion $resolucion;
 
-    #[Validate('required')]
+    #[Validate('required|string')]
     public $numero_exp;
 
-    #[Validate('required')]
+    #[Validate('required|string')]
     public $numero_resolucion;
 
-    #[Validate('required')]
+    #[Validate('required|date')]
     public $fecha;
 
-    #[Validate('required')]
+    #[Validate('required|date')]
+    public $fecha_ingreso;
+
+    #[Validate('required|string')]
     public $cod_barrio;
 
-    #[Validate('required')]
+    #[Validate('nullable|string')]
     public $cod_casa;
 
-    #[Validate('required')]
+    #[Validate('nullable|file|mimes:pdf,jpg,jpeg|max:2048')]
     public $pdf;
 
     public $campos = [
-        'numero_exp',
-        'numero_resolucion',
-        'fecha',
-        'cod_barrio',
-        'cod_casa',
+        'resolucion',
+        'campos',
         'pdf',
     ];
 
@@ -44,20 +44,29 @@ class ResolucionForm extends Form
         $this->numero_exp = $resolucion->numero_exp;
         $this->numero_resolucion = $resolucion->numero_resolucion;
         $this->fecha = $resolucion->fecha;
+        $this->fecha_ingreso = $resolucion->fecha_ingreso;
         $this->cod_barrio = $resolucion->cod_barrio;
         $this->cod_casa = $resolucion->cod_casa;
-        $this->pdf = $resolucion->pdf;
     }
 
     public function store()
     {
         $this->validate();
-        Resolucion::create($this->except('campos'));
+        Resolucion::create($this->except($this->campos));
     }
 
     public function update()
     {
         $this->validate();
-        Resolucion::update($this->except('campos'));
+
+        if ($this->pdf) {
+            $pdfPath = $this->pdf->store('resoluciones', 'public');
+            $this->resolucion->update([
+                'pdf' => $pdfPath
+            ]);
+        }
+        $this->resolucion->update(
+            $this->except($this->campos)
+        );
     }
 }
