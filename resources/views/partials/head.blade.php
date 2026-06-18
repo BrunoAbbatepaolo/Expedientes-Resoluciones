@@ -5,22 +5,23 @@
 <title>
     @if (request()->routeIs('dashboard'))
         Panel de Control
-    @elseif(request()->routeIs('expedientes*'))
+    @elseif(	request()->routeIs('expedientes*'))
         Gestion de Expedientes
-    @elseif(request()->routeIs('resoluciones*'))
+    @elseif(	request()->routeIs('resoluciones*'))
         Gestion de Resoluciones
-    @elseif(request()->routeIs('listausuarios*'))
+    @elseif(	request()->routeIs('listausuarios*'))
         Gestion de Usuarios
-    @elseif (request()->routeIs('oficinas*'))
+    @elseif (	request()->routeIs('oficinas*'))
         Lista de Oficinas
     @else
         {{ 'Instituto Provincial de la Vivienda' ?? config('app.name') }}
     @endif
 </title>
 
-<link rel="preconnect" href="https://fonts.bunny.net">
+<link rel="preconnect" href="https://fonts.bunny.net" />
 <link href="https://fonts.bunny.net/css?family=instrument-sans:400,500,600" rel="stylesheet" />
-
 @vite(['resources/css/app.css', 'resources/js/app.js'])
 @fluxAppearance
-<script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.all.min.js"></script>
+<script src="https://cdn.quilljs.com/1.3.7/quill.min.js"></script>
+<script src="{{ asset('js/quill-init.js') }}"></script>

@@ -3,9 +3,9 @@
 namespace App\Livewire;
 
 use App\Livewire\Forms\ResolucionForm;
+use App\Models\Resolucion;
 use Livewire\Component;
 use Livewire\WithFileUploads;
-use App\Models\Resolucion;
 
 class Resoluciones extends Component
 {
@@ -13,7 +13,18 @@ class Resoluciones extends Component
 
     public ResolucionForm $resolucionForm;
 
-    public $numero_exp, $numero_resolucion, $fecha, $cod_barrio, $cod_casa, $pdf;
+    public $numero_exp;
+
+    public $numero_resolucion;
+
+    public $fecha;
+
+    public $cod_barrio;
+
+    public $cod_casa;
+
+    public $pdf;
+
     public $showModal = false; // Cambiado de modalOpen a showModal para mayor claridad con Alpine
 
     protected $rules = [
@@ -24,9 +35,6 @@ class Resoluciones extends Component
         'cod_casa' => 'required|string',
         'pdf' => 'required|file|mimes:pdf|max:2048', // Máx 2MB
     ];
-
-
-
 
     public function abrirModal()
     {
@@ -48,7 +56,7 @@ class Resoluciones extends Component
 
     public function guardar()
     {
-        //$this->validate();
+        // $this->validate();
 
         $pdfPath = $this->pdf->store('resoluciones', 'public'); // Guarda en storage/app/public/resoluciones
 
@@ -64,7 +72,6 @@ class Resoluciones extends Component
         /*$this->resolucionForm->pdf = $this->pdf->store('resoluciones', 'public'); // Guarda en storage/app/public/resoluciones
         $this->resolucionForm->store();*/
 
-
         $this->reset(); // Limpia los campos
         $this->cerrarModal();
         session()->flash('message', 'Resolución subida con éxito');
@@ -76,13 +83,12 @@ class Resoluciones extends Component
         $resolucionesConExpediente = Resolucion::with('expediente')->get();
 
         return view('livewire.resoluciones', [
-            'resolucionesConExpediente' => $resolucionesConExpediente
+            'resolucionesConExpediente' => $resolucionesConExpediente,
         ]);
     }
 
     /**
      * Carga los datos de una resolución en $resolucionForm dejándolos disponibles para su modificación.
-     *
      */
     public function cargarResolucion($id)
     {

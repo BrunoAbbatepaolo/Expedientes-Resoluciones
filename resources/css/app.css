@@ -1,5 +1,6 @@
 @import 'tailwindcss';
 @import '../../vendor/livewire/flux/dist/flux.css';
+@import 'quill/dist/quill.snow.css';
 
 @source '../views';
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
@@ -18,9 +19,9 @@
     --color-zinc-400: #a3a3a3;
     --color-zinc-500: #737373;
     --color-zinc-600: #525252;
-    --color-zinc-700: #404040;
-    --color-zinc-800: #262626;
-    --color-zinc-900: #171717;
+    --color-zinc-700: #40 40;
+    --color-zinc-800: #26 26;
+    --color-zinc-900: #17 17;
     --color-zinc-950: #0a0a0a;
 
     --color-accent: var(--color-neutral-800);
@@ -37,12 +38,7 @@
 }
 
 @layer base {
-
-    *,
-    ::after,
-    ::before,
-    ::backdrop,
-    ::file-selector-button {
+    *, ::after, ::before, ::backdrop, ::file-selector-button {
         border-color: var(--color-gray-200, currentColor);
     }
 }
@@ -52,7 +48,7 @@
 }
 
 [data-flux-label] {
-    @apply  !mb-0 !leading-tight;
+    @apply !mb-0 !leading-tight;
 }
 
 input:focus[data-flux-control],
@@ -61,6 +57,57 @@ select:focus[data-flux-control] {
     @apply outline-hidden ring-2 ring-accent ring-offset-2 ring-offset-accent-foreground;
 }
 
-/* \[:where(&)\]:size-4 {
-    @apply size-4;
-} */
+/* Quill dark mode overrides */
+.dark .ql-toolbar.ql-snow,
+.dark .ql-container.ql-snow {
+    border-color: #3f3f46 !important;
+}
+.dark .ql-toolbar.ql-snow {
+    background: #27272a;
+}
+.dark .ql-toolbar.ql-snow .ql-stroke {
+    stroke: #a1a1aa;
+}
+.dark .ql-toolbar.ql-snow .ql-fill {
+    fill: #a1a1aa;
+}
+.dark .ql-toolbar.ql-snow button:hover .ql-stroke,
+.dark .ql-toolbar.ql-snow button.ql-active .ql-stroke {
+    stroke: #60a5fa;
+}
+.dark .ql-toolbar.ql-snow button:hover .ql-fill,
+.dark .ql-toolbar.ql-snow button.ql-active .ql-fill {
+    fill: #60a5fa;
+}
+.dark .ql-editor.ql-blank {
+    color: #e4e4e7;
+}
+.dark .ql-snow .ql-picker-label {
+    color: #a1a1aa;
+}
+.dark .ql-snow .ql-picker-options {
+    background: #3f3f46;
+    border-color: #3f3f46;
+}
+.dark .ql-tooltip {
+    background: #3f3f46;
+    color: #e4e4e7;
+    border-color: #52525b;
+}
+
+/* Quill editor — documento resolucion */
+.documento-ql-editor {
+    font-family: 'Times New Roman', Times, serif;
+    font-size: 14px;
+    line-height: 1.35;
+    text-align: justify;
+    padding: 50px 60px;
+    min-height: 1100px;
+}
+.documento-ql-editor p { margin-bottom: 0.5em; }
+.documento-ql-editor p:empty::after { content: ' '; white-space: pre; }
+.documento-ql-editor h1,
+.documento-ql-editor h2,
+.documento-ql-editor h3 { font-weight: bold; margin-bottom: 0.5em; }
+.documento-ql-editor h2 { font-size: 16px; }
+.documento-ql-editor h3 { font-size: 15px; }

@@ -20,7 +20,7 @@ return new class extends Migration
             $table->integer('cod_casa')->nullable();
             $table->string('pdf');
             $table->timestamps();
-            $table->softDeletes(); 
+            $table->softDeletes();
         });
     }
 

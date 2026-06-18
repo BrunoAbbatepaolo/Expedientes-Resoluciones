@@ -2,11 +2,14 @@
 
 namespace App\Livewire;
 
+use Livewire\Attributes\Computed;
 use Livewire\Component;
 
 class ElegirResolucion extends Component
 {
     public array $tipos = [];
+
+    public string $busqueda = '';
 
     public function mount()
     {
@@ -16,13 +19,30 @@ class ElegirResolucion extends Component
             ['nombre' => 'Transferencias'],
             ['nombre' => 'Transferencia-Cancelacion'],
             ['nombre' => 'Rectificacion'],
+            ['nombre' => 'AplicarPagos'],
+            ['nombre' => 'ReconocimientoCuotaPagadaDosVeces', 'display' => 'Reconocimiento de Cuota Pagada Dos Veces'],
+            ['nombre' => 'ReconocimientoCuotaPagadaNoCargada', 'display' => 'Recon. de cta. pagadas y no cargadas'],
             ['nombre' => 'Otros'],
         ];
     }
 
+    #[Computed]
+    public function getTiposFiltradosProperty(): array
+    {
+        if (empty($this->busqueda)) {
+            return $this->tipos;
+        }
+
+        return array_filter($this->tipos, function ($tipo) {
+            return str_contains(
+                strtolower($tipo['nombre']),
+                strtolower($this->busqueda)
+            );
+        });
+    }
+
     public function seleccionar($tipo)
     {
-        // Redirigí a una vista de creación con ese prototipo
         return redirect()->route('resoluciones.crear', ['tipo' => $tipo]);
     }
 

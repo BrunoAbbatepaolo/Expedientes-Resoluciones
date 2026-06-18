@@ -7,15 +7,18 @@ use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration {
+return new class extends Migration
+{
     private string $conn = 'mysql_admin';
+
     private string $table = 'permisos';
+
     private string $uniqueName = 'permisos_user_nombre_unique';
 
     public function up(): void
     {
         // 1) Agregar columna oficina_id SOLO si no existe
-        if (!Schema::connection($this->conn)->hasColumn($this->table, 'oficina_id')) {
+        if (! Schema::connection($this->conn)->hasColumn($this->table, 'oficina_id')) {
             Schema::connection($this->conn)->table($this->table, function (Blueprint $table) {
                 // NO usamos ->constrained() porque 'oficinas' está en otra conexión (mysql_legui)
                 $table->unsignedBigInteger('oficina_id')->nullable()->after('nombre');
@@ -41,7 +44,7 @@ return new class extends Migration {
             "SHOW INDEX FROM `{$this->table}` WHERE Key_name = ?",
             [$this->uniqueName]
         );
-        if (!empty($exists)) {
+        if (! empty($exists)) {
             Schema::connection($this->conn)->table($this->table, function (Blueprint $table) {
                 $table->dropUnique($this->uniqueName);
             });

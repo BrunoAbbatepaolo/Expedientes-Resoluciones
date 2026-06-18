@@ -11,6 +11,7 @@ class User extends Authenticatable
     use HasFactory, Notifiable;
 
     protected $connection = 'mysql_admin';
+
     protected $table = 'users';
 
     protected $fillable = [
@@ -76,15 +77,17 @@ class User extends Authenticatable
             ->where('nombre', $permisoNombre)
             ->value('oficina_id');
     }
+
     public function initials(): string
     {
-        $iniNombre   = $this->nombre   ? mb_substr($this->nombre, 0, 1)   : '';
+        $iniNombre = $this->nombre ? mb_substr($this->nombre, 0, 1) : '';
         $iniApellido = $this->apellido ? mb_substr($this->apellido, 0, 1) : '';
 
-        return strtoupper($iniNombre . $iniApellido);
+        return strtoupper($iniNombre.$iniApellido);
     }
+
     public function getNameAttribute(): string
-{
-    return trim(($this->nombre ?? '') . ' ' . ($this->apellido ?? ''));
-}
+    {
+        return trim(($this->nombre ?? '').' '.($this->apellido ?? ''));
+    }
 }

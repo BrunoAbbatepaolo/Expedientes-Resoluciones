@@ -2,9 +2,9 @@
 
 namespace App\Livewire\Forms;
 
+use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\Validate;
 use Livewire\Form;
-use Illuminate\Support\Facades\DB;
 
 class ExpedienteForm extends Form
 {
@@ -24,6 +24,7 @@ class ExpedienteForm extends Form
 
     #[Validate('required')]
     public $fecha_ingreso;
+
     #[Validate('nullable')]
     public $ofi_salida;
 
@@ -67,10 +68,12 @@ class ExpedienteForm extends Form
         try {
             \App\Models\Expediente::create($this->except('campos'));
             DB::commit();
+
             return 1;
         } catch (\Exception $exception) {
             dd($exception);
             DB::rollBack();
+
             return 0;
         }
     }
@@ -82,9 +85,11 @@ class ExpedienteForm extends Form
             try {
                 $this->expediente->update($this->except('campos'));
                 DB::commit();
+
                 return 1;
             } catch (\Exception $exception) {
                 DB::rollBack();
+
                 return 0;
             }
         } else {
@@ -98,12 +103,15 @@ class ExpedienteForm extends Form
         try {
             $expediente->delete();
             DB::commit();
+
             return 1;
         } catch (\Exception $exception) {
             DB::rollBack();
+
             return 0;
         }
     }
+
     private function hayCambios()
     {
         foreach ($this->campos as $campo) {
@@ -111,8 +119,10 @@ class ExpedienteForm extends Form
                 return true;
             }
         }
+
         return false;
     }
+
     public function fill($data)
     {
         foreach ($data as $key => $value) {

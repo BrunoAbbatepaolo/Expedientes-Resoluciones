@@ -2,16 +2,16 @@
 
 namespace App\Livewire;
 
-use Livewire\Component;
 use App\Models\Expediente;
-use Illuminate\Support\Facades\App;
-
 use App\Models\Oficina;
+use Livewire\Component;
 
 class Detalles extends Component
 {
     public $id;
+
     public $expediente;
+
     public $pases = [];
 
     public function mount($id)
@@ -23,7 +23,7 @@ class Detalles extends Component
         $this->pases[] = [
             'oficina' => 'Computos',
             'fecha' => $this->expediente->fecha_ingreso,
-            'observaciones' => 'Ingreso a la Oficina'
+            'observaciones' => 'Ingreso a la Oficina',
         ];
 
         // Segundo pase (solo si hay salida)
@@ -33,7 +33,7 @@ class Detalles extends Component
             $this->pases[] = [
                 'oficina' => $this->expediente->oficina->nombre ?? 'Oficina desconocida',
                 'fecha' => $this->expediente->fecha_salida,
-                'observaciones' => 'Traslado de expediente'
+                'observaciones' => 'Traslado de expediente',
             ];
         }
     }

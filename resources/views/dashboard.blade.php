@@ -9,7 +9,7 @@
 
                     <!-- Bienvenida mejorada -->
                     <div
-                        class="relative md:aspect-video aspect-[4/3] overflow-hidden rounded-xl border border-neutral-200 dark:border-neutral-700 bg-gradient-to-br from-blue-600 to-indigo-700 text-white shadow-lg min-w-0">
+                        class="relative min-h-[400px] xl:min-h-[450px] overflow-hidden rounded-xl border border-neutral-200 dark:border-neutral-700 bg-gradient-to-br from-blue-600 to-indigo-700 text-white shadow-lg min-w-0">
                         <div class="absolute inset-0 flex flex-col items-center justify-center p-6 text-center">
                             <div class="mb-2">
                                 <div class="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center mb-3">
@@ -47,7 +47,7 @@
 
                     <!-- Próximos Cumpleaños -->
                     <div
-                        class="relative md:aspect-video aspect-[4/3] overflow-hidden rounded-xl border border-neutral-200 dark:border-neutral-700 bg-gradient-to-br from-pink-50 to-rose-100 dark:from-pink-900/20 dark:to-rose-800/20 min-w-0">
+                        class="relative min-h-[400px] xl:min-h-[450px] overflow-hidden rounded-xl border border-neutral-200 dark:border-neutral-700 bg-gradient-to-br from-pink-50 to-rose-100 dark:from-pink-900/20 dark:to-rose-800/20 min-w-0">
                         <div class="absolute inset-0 p-4">
                             <div class="flex items-center mb-3 min-w-0">
                                 <svg class="w-6 h-6 text-pink-600 mr-2 shrink-0" fill="currentColor" viewBox="0 0 20 20"
@@ -117,34 +117,8 @@
                         </div>
                     </div>
 
-                    <!-- Resumen de Estadísticas -->
-                    <div
-                        class="relative md:aspect-video aspect-[4/3] overflow-hidden rounded-xl border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-gray-800 min-w-0">
-                        <div class="absolute inset-0 p-4">
-                            <h3
-                                class="mb-4 text-gray-800 dark:text-gray-200 font-semibold text-[clamp(1rem,2.5vw,1.125rem)]">
-                                Resumen General</h3>
-                            <div class="grid grid-cols-2 gap-3 text-center">
-                                <div class="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-                                    <div class="text-xl font-bold text-blue-600">{{ $expedientesActivos ?? 0 }}</div>
-                                    <div class="text-xs text-blue-700 dark:text-blue-300">Expedientes</div>
-                                </div>
-                                <div class="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-                                    <div class="text-xl font-bold text-blue-600">{{ $resolucionesPendientes ?? 0 }}
-                                    </div>
-                                    <div class="text-xs text-blue-700 dark:text-blue-300">Resoluciones</div>
-                                </div>
-                                <div class="p-3 bg-orange-50 dark:bg-orange-900/20 rounded-lg">
-                                    <div class="text-xl font-bold text-orange-600">{{ $faltasMes ?? 0 }}</div>
-                                    <div class="text-xs text-orange-700 dark:text-orange-300">Faltas/Mes</div>
-                                </div>
-                                <div class="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-                                    <div class="text-xl font-bold text-blue-600">{{ $informesPendientes ?? 0 }}</div>
-                                    <div class="text-xs text-blue-700 dark:text-blue-300">Informes</div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+                    <!-- Resumen de Estadísticas / Calendario -->
+                    <livewire:dashboard-calendar />
                 </div>
 
                 <!-- Sección inferior grande -->

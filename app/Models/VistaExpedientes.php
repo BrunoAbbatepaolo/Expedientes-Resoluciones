@@ -8,8 +8,11 @@ use Illuminate\Database\Eloquent\Model;
 class VistaExpedientes extends Model
 {
     use HasFactory;
-    protected $connection = "pgsql_mitiv";
-    protected $table = "vista_expedientes";
+
+    protected $connection = 'pgsql_mitiv';
+
+    protected $table = 'vista_expedientes';
+
     protected $fillable = [
         'numero',
         'fecha',

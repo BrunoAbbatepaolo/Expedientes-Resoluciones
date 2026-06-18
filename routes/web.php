@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Storage;
 use Livewire\Volt\Volt;
 
 Livewire::setUpdateRoute(function ($handle) {
@@ -41,6 +42,23 @@ Route::middleware(['auth'])->group(function () {
     Volt::route('/resoluciones/crear/{tipo}', 'CrearResolucion')
         ->middleware('auth')
         ->name('resoluciones.crear');
+
+    // Ruta para mostrar PDFs de resoluciones (sin descargar)
+    Route::get('/resoluciones/descargar-pdf/{index}', function ($index) {
+        $archivos = session()->get('archivos_pdf_resolucion', []);
+
+        if (isset($archivos[$index]) && Storage::disk('public')->exists($archivos[$index])) {
+            $ruta = $archivos[$index];
+            $contenido = Storage::disk('public')->get($ruta);
+
+            return response($contenido, 200, [
+                'Content-Type' => 'application/pdf',
+                'Content-Disposition' => 'inline',
+            ]);
+        }
+
+        abort(404, 'Archivo no encontrado');
+    })->name('resoluciones.descargarPdf');
 });
 
-require __DIR__ . '/auth.php';
+require __DIR__.'/auth.php';

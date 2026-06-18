@@ -11,6 +11,7 @@ class Permiso extends Model
 {
     // Importante: esta tabla vive en mysql_admin
     protected $connection = 'mysql_admin';
+
     protected $table = 'permisos';
 
     protected $fillable = [
@@ -33,7 +34,9 @@ class Permiso extends Model
 
     public static function oficinaAsignada(?int $userId): ?self
     {
-        if (!$userId) return null;
+        if (! $userId) {
+            return null;
+        }
 
         return static::query()
             ->where('user_id', $userId)

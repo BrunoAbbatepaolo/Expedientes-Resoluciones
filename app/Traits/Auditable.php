@@ -4,7 +4,6 @@ namespace App\Traits;
 
 use App\Models\Audit;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Request;
 
 trait Auditable
 {

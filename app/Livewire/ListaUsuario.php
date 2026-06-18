@@ -18,6 +18,7 @@ class ListaUsuario extends Component
     use WithPagination;
 
     public string $search = '';
+
     public ?User $usuarioSeleccionado = null;
 
     public array $permisos = [
@@ -30,7 +31,9 @@ class ListaUsuario extends Component
     ];
 
     public ?int $editingUserId = null;
+
     public ?int $oficina_id = null;
+
     public array $oficinas = [];
 
     protected array $queryString = ['search'];
@@ -43,7 +46,7 @@ class ListaUsuario extends Component
                 'integer',
                 function ($attribute, $value, $fail) {
                     $existe = Oficina::query()->where('id', $value)->exists();
-                    if (!$existe) {
+                    if (! $existe) {
                         $fail('La oficina seleccionada no es válida.');
                     }
                 },
@@ -82,8 +85,9 @@ class ListaUsuario extends Component
     {
         $this->usuarioSeleccionado = User::on('mysql_admin')->find($id);
 
-        if (!$this->usuarioSeleccionado) {
+        if (! $this->usuarioSeleccionado) {
             $this->dispatch('toast', type: 'error', message: 'Usuario no encontrado.');
+
             return;
         }
 
@@ -97,8 +101,9 @@ class ListaUsuario extends Component
 
     public function editarOficina(int $userId): void
     {
-        if (!auth()->user()?->permiso('lista_usuario_editar')) {
+        if (! auth()->user()?->permiso('lista_usuario_editar')) {
             $this->dispatch('toast', type: 'error', message: 'No tenés permiso para editar usuarios.');
+
             return;
         }
 
@@ -111,13 +116,15 @@ class ListaUsuario extends Component
 
     public function guardarOficina(): void
     {
-        if (!auth()->user()?->permiso('lista_usuario_editar')) {
+        if (! auth()->user()?->permiso('lista_usuario_editar')) {
             $this->dispatch('toast', type: 'error', message: 'No tenés permiso para guardar.');
+
             return;
         }
 
-        if (!$this->editingUserId) {
+        if (! $this->editingUserId) {
             $this->dispatch('toast', type: 'error', message: 'No hay usuario seleccionado.');
+
             return;
         }
 
@@ -134,7 +141,7 @@ class ListaUsuario extends Component
             throw $ve;
         } catch (\Throwable $e) {
             \Log::error('Error en guardarOficina()', [
-                'msg'  => $e->getMessage(),
+                'msg' => $e->getMessage(),
                 'file' => $e->getFile(),
                 'line' => $e->getLine(),
             ]);
@@ -145,13 +152,15 @@ class ListaUsuario extends Component
 
     public function guardarPermisos(): void
     {
-        if (!auth()->user()?->permiso('lista_usuario_editar')) {
+        if (! auth()->user()?->permiso('lista_usuario_editar')) {
             $this->dispatch('toast', type: 'error', message: 'No tenés permiso para editar usuarios.');
+
             return;
         }
 
-        if (!$this->usuarioSeleccionado) {
+        if (! $this->usuarioSeleccionado) {
             $this->dispatch('toast', type: 'error', message: 'No hay usuario seleccionado.');
+
             return;
         }
 
@@ -180,7 +189,7 @@ class ListaUsuario extends Component
             $this->dispatch('close-modal', 'modal-permisos');
         } catch (\Throwable $e) {
             \Log::error('Error en guardarPermisos()', [
-                'msg'  => $e->getMessage(),
+                'msg' => $e->getMessage(),
                 'file' => $e->getFile(),
                 'line' => $e->getLine(),
             ]);
@@ -193,8 +202,9 @@ class ListaUsuario extends Component
     {
         $usuario = User::on('mysql_admin')->find($usuarioId);
 
-        if (!$usuario) {
+        if (! $usuario) {
             $this->dispatch('toast', type: 'error', message: 'Usuario no encontrado.');
+
             return;
         }
 
@@ -279,9 +289,9 @@ class ListaUsuario extends Component
         }
 
         return view('livewire.lista-usuario', [
-            'usuarios'          => $usuarios,
+            'usuarios' => $usuarios,
             'oficinaPorUsuario' => $oficinaPorUsuario,
-            'oficinas'          => $this->oficinas,
+            'oficinas' => $this->oficinas,
         ]);
     }
 }
