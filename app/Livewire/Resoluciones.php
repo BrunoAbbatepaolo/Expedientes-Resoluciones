@@ -14,55 +14,8 @@ class Resoluciones extends Component
 
     public ResolucionForm $resolucionForm;
 
-    // Propiedades para la creación
-    public $numero_exp, $numero_resolucion, $fecha, $fecha_ingreso, $cod_barrio, $cod_casa, $pdf;
-
     // Propiedad para saber qué registro eliminar
     public $resolucionIdParaBorrar;
-
-    protected $rules = [
-        'numero_exp' => 'required|string',
-        'numero_resolucion' => 'required|string',
-        'fecha' => 'required|date',
-        'fecha_ingreso' => 'required|date',
-        'cod_barrio' => 'required|string',
-        'cod_casa' => 'nullable|string', // Cambiado a nullable porque dijiste que es opcional
-        'pdf' => 'required|file|mimes:pdf,jpg,jpeg|max:2048', // Soporta PDF y JPG
-    ];
-
-    public function abrirModal()
-    {
-        $this->resetValidation();
-        $this->reset(['numero_exp', 'numero_resolucion', 'fecha', 'cod_barrio', 'cod_casa', 'pdf']);
-
-        // Asignamos la fecha y hora actual automáticamente (formato requerido por datetime-local)
-        $this->fecha_ingreso = now()->format('Y-m-d\TH:i');
-    }
-
-    /**
-     * Guarda una NUEVA resolución
-     */
-    public function guardar()
-    {
-        // $this->validate();
-
-        $pdfPath = $this->pdf->store('resoluciones', 'public');
-
-        Resolucion::create([
-            'numero_exp' => $this->numero_exp,
-            'numero_resolucion' => $this->numero_resolucion,
-            'fecha' => $this->fecha,
-            'fecha_ingreso' => $this->fecha_ingreso,
-            'cod_barrio' => $this->cod_barrio,
-            'cod_casa' => $this->cod_casa,
-            'pdf' => $pdfPath,
-        ]);
-
-        $this->reset(['numero_exp', 'numero_resolucion', 'fecha', 'fecha_ingreso', 'cod_barrio', 'cod_casa', 'pdf']);
-
-        Flux::modal('add-resolucion')->close();
-        Flux::toast('Resolución subida con éxito', variant: 'success');
-    }
 
     /**
      * Prepara el modal de Edición cargando los datos

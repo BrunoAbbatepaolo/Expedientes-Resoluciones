@@ -24,7 +24,8 @@
     margin: 0 auto;
     padding: var(--padding-document);
     background: white;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); /* Sombra para simular un documento físico */
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    /* Sombra para simular un documento físico */
 }
 
 /* Estilos de secciones principales */
@@ -38,7 +39,8 @@
 
 .resolucion__footer {
     margin-top: var(--spacing-extra-large);
-    page-break-inside: avoid; /* Evita que el pie de página se corte en la impresión */
+    page-break-inside: avoid;
+    /* Evita que el pie de página se corte en la impresión */
 }
 
 /* Estilos de elementos específicos */

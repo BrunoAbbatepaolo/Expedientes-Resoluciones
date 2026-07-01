@@ -87,7 +87,7 @@ class Expedientes extends Component
     {
         $expedientes = $this->getExp();
 
-        return view('livewire.expedientes.expedientes', [
+        return view('livewire.Expedientes.expedientes', [
             'expedientes' => $expedientes,
         ]);
     }
