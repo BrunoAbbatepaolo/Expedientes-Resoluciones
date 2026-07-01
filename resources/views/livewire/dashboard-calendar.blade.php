@@ -33,9 +33,7 @@ new class extends Component {
     #[Computed]
     public function availableNames()
     {
-        return [
-            'Lucas Carbone', 'Sebastian Carabajal', 'Josefina Katz', 'Carolina San Juan', 
-            'Luis Leguisamon', 'Leo Ocaranza', 'Diego Martin', 'Jorge Debbo'
+        return [ 'Luis Leguizamon', 'Leo Ocaranza', 'Bruno Abbatepaolo', 'Mariana Remis', 'Luis Castro', 'Diego Martin', 'Jorge Debbo'
         ];
     }
 

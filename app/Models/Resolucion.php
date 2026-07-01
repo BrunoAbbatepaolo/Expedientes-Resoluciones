@@ -21,6 +21,7 @@ class Resolucion extends Model
         'numero_exp',
         'numero_resolucion',
         'fecha',
+        'fecha_ingreso',
         'cod_barrio',
         'cod_casa',
         'pdf',

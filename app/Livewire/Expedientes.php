@@ -15,35 +15,20 @@ class Expedientes extends Component
     use WithPagination;
 
     public $modalExp = false;
-
     public $modalEdit = false;
-
     public $busquedaExp = '';
-
     public $expedienteEncontrado;
-
     public $expedienteExistente;
-
     public $selectedExpediente;
-
     public $asunto;
-
     public $causante;
-
     public $expedienteId;
-
     public $modalFiltro;
-
     public $search = '';
-
     public $sinPermiso = false;
-
     public $sinOficina = false;
-
     public $oficinaUsuario;
-
     public ExpedienteForm $expedienteForm;
-
     public $menuVisible = null;
 
     public $filtro = [
@@ -52,24 +37,33 @@ class Expedientes extends Component
     ];
 
     public $tipoVista = 'todos';
-
     public $mostrarBoton = false;
 
     // Autocomplete oficinas
     public $query = '';
-
     public $oficinas = [];
 
     public function updatedQuery()
     {
         if (empty($this->query)) {
             $this->oficinas = [];
-
+            $this->expedienteForm->ofi_salida = null;
+            $this->expedienteForm->cod_area = null;
+            $this->expedienteForm->cod_oficina = null;
             return;
         }
 
-        $this->oficinas = Oficina::where('nombre', 'like', '%'.$this->query.'%')
-            ->orWhere('codigo', 'like', '%'.$this->query.'%')
+        // Si el query coincide exactamente con la oficina ya seleccionada, no buscar
+        if ($this->expedienteForm->ofi_salida) {
+            $oficinaActual = Oficina::find($this->expedienteForm->ofi_salida);
+            if ($oficinaActual && $this->query === $oficinaActual->nombre) {
+                $this->oficinas = [];
+                return;
+            }
+        }
+
+        $this->oficinas = Oficina::where('nombre', 'like', '%' . $this->query . '%')
+            ->orWhere('codigo', 'like', '%' . $this->query . '%')
             ->take(10)
             ->get();
     }
@@ -263,7 +257,7 @@ class Expedientes extends Component
         $expedienteExistente = \App\Models\Expediente::where('num_exp', $this->expedienteEncontrado['numero'])->first();
 
         if ($expedienteExistente) {
-            // El expediente ya existe - no hacer nada
+
         } else {
             // Obtener la oficina del usuario antes de guardar
             $oficinaId = auth()->user()->oficinaAsignadaId()
@@ -310,42 +304,37 @@ class Expedientes extends Component
             ? Carbon::parse($expediente->fecha_salida)->format('Y-m-d')
             : null;
 
-        // Oficina
-        $this->expedienteForm->ofi_salida = $expediente->ofi_salida ?? null;
-
-        // Limpiar el campo de búsqueda visible
-        $this->query = '';
+        // Oficina - cargar el nombre en el campo visible
+        if ($expediente->ofi_salida) {
+            $oficina = Oficina::find($expediente->ofi_salida);
+            $this->query = $oficina?->nombre ?? '';
+        } else {
+            $this->query = '';
+        }
     }
 
     public function actualizar()
     {
         try {
-            // Si hay una oficina seleccionada, actualiza los campos relacionados
             if ($this->expedienteForm->ofi_salida) {
-                $oficina = Oficina::on('mysql_legui')
-                    ->find($this->expedienteForm->ofi_salida);
+                $oficina = Oficina::find($this->expedienteForm->ofi_salida);
 
                 if ($oficina) {
                     $this->expedienteForm->cod_area = $oficina->cod_area;
                     $this->expedienteForm->cod_oficina = $oficina->codigo;
                 } else {
-                    // Manejar el caso donde el ID de oficina no existe
                     $this->expedienteForm->cod_area = null;
                     $this->expedienteForm->cod_oficina = null;
                 }
             } else {
-                // Si no hay oficina seleccionada, establecer valores nulos
                 $this->expedienteForm->cod_area = null;
                 $this->expedienteForm->cod_oficina = null;
             }
 
-            // Llamar al método update del formulario
             $resultado = $this->expedienteForm->update();
             $this->modal('modal-editarExpediente')->close();
             LivewireAlert::title('El Expediente se editó Correctamente')->success()->timer(2500)->toast()->position('top-end')->show();
-            // Resto de tu código...
         } catch (\Exception $e) {
-            // Manejar excepciones
             LivewireAlert::title('El Expediente no se pudo Editar')->error()->timer(2500)->toast()->position('top-end')->show();
         }
     }

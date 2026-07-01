@@ -8,7 +8,7 @@
             <span class="font-semibold">Asunto:</span> {{ $expediente->asunto }}
         </div>
         <div class="text-gray-600 dark:text-gray-300">
-            <span class="font-semibold">Oficina:</span> Computos
+            <span class="font-semibold">Oficina:</span> {{ $expediente->oficinaById->nombre ?? 'Sin oficina' }}
         </div>
     </div>
 
@@ -33,11 +33,12 @@
         </div>
     </div>
 
-    <!-- Contenido de Datos -->
+    <!-- Datos -->
     <div x-show="activeTab === 'datos'" class="space-y-4">
         <div class="grid grid-cols-2 gap-4">
             <div class="bg-gray-50 dark:bg-gray-800 p-4 rounded">
-                <span class="font-semibold">Fecha:</span> {{ $expediente->fecha_ingreso }}
+                <span class="font-semibold">Fecha ingreso:</span>
+                {{ \Carbon\Carbon::parse($expediente->fecha_ingreso)->format('d/m/Y') }}
             </div>
             <div class="bg-gray-50 dark:bg-gray-800 p-4 rounded">
                 <span class="font-semibold">Folios:</span> {{ $expediente->folio }}
@@ -45,46 +46,60 @@
             <div class="bg-gray-50 dark:bg-gray-800 p-4 rounded col-span-2">
                 <span class="font-semibold">Causante:</span> {{ $expediente->causante }}
             </div>
+            @if($expediente->fecha_salida)
+            <div class="bg-gray-50 dark:bg-gray-800 p-4 rounded col-span-2">
+                <span class="font-semibold">Fecha salida:</span>
+                {{ \Carbon\Carbon::parse($expediente->fecha_salida)->format('d/m/Y') }}
+            </div>
+            @endif
         </div>
     </div>
 
-    <!-- Contenido de Pases -->
+    <!-- Pases -->
     <div x-show="activeTab === 'pases'" class="overflow-x-auto">
-        <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-            <thead class="bg-gray-50 dark:bg-gray-800">
-                <tr>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">
-                        Oficina</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Fecha
-                    </th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">
-                        Observaciones</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">
-                        Acciones</th>
+    <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+        <thead class="bg-gray-50 dark:bg-gray-800">
+            <tr>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Origen</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Destino</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Fecha</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Hora</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Observaciones</th>
+            </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
+            @forelse ($pases as $pase)
+                <tr class="{{ !$pase['importado'] ? 'bg-blue-50 dark:bg-blue-900/20' : 'bg-white dark:bg-gray-900' }}">
+                    <td class="px-6 py-4 text-gray-700 dark:text-gray-300">
+                        {{ $pase['origen'] }}
+                    </td>
+                    <td class="px-6 py-4 text-gray-700 dark:text-gray-300">
+                        {{ $pase['destino'] }}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-gray-700 dark:text-gray-300">
+                        {{ $pase['fecha']->format('d/m/Y') }}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-gray-700 dark:text-gray-300">
+                        {{ $pase['hora'] ? substr($pase['hora'], 0, 5) : '-' }}
+                    </td>
+                    <td class="px-6 py-4 text-gray-700 dark:text-gray-300">
+                        {{ $pase['observacion'] ?? '-' }}
+                    </td>
                 </tr>
-            </thead>
-            <tbody class="bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-700">
-                @foreach ($pases as $pase)
-                    <tr>
-                        <td class="px-6 py-4 whitespace-nowrap text-gray-700 dark:text-gray-300">{{ $pase['oficina'] }}
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-gray-700 dark:text-gray-300">
-                            {{ \Carbon\Carbon::parse($pase['fecha'])->format('d/m/Y') }}
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-gray-700 dark:text-gray-300">
-                            {{ $pase['observaciones'] }}</td>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <!-- Botones de acciones si son necesarios -->
-                        </td>
-                    </tr>
-                @endforeach
-            </tbody>
-        </table>
-    </div>
+            @empty
+                <tr>
+                    <td colspan="5" class="px-6 py-4 text-center text-gray-500">
+                        Sin historial de pases.
+                    </td>
+                </tr>
+            @endforelse
+        </tbody>
+    </table>
+</div>
 
-    <!-- Contenido de Adjuntos -->
+    <!-- Adjuntos -->
     <div x-show="activeTab === 'adjuntos'" class="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
         <h3 class="font-semibold text-lg mb-4 text-gray-800 dark:text-gray-200">Adjuntos</h3>
-        <!-- Aquí va el contenido de adjuntos -->
+        <p class="text-gray-500 text-sm">Sin adjuntos por el momento.</p>
     </div>
 </div>

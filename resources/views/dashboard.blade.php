@@ -1,6 +1,5 @@
 <x-layouts.app :title="__('Dashboard')">
     <div class="w-full">
-        <!-- Contenedor fluido con padding responsivo -->
         <div class="container mx-auto max-w-7xl px-3 sm:px-4 lg:px-6">
             <div class="flex h-full w-full flex-1 flex-col gap-4 rounded-xl min-w-0">
 
