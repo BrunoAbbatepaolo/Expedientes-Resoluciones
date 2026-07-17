@@ -4,6 +4,7 @@ namespace App\Livewire;
 
 use App\Models\Expediente;
 use App\Models\Oficina;
+use Livewire\Component;
 
 class Detalles extends Component
 {
