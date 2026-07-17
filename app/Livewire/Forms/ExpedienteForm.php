@@ -87,11 +87,9 @@ class ExpedienteForm extends Form
 
         try {
             return DB::connection('mysql_admin')->transaction(function () {
-                // lockForUpdate: si dos usuarios pasan el mismo expediente a la vez, el
-                // segundo espera a que termine el primero y ve la oficina_id ya actualizada
-                // (antes se leía del modelo ya hidratado, potencialmente desactualizado).
+                // lockForUpdate: si dos usuarios editan el mismo expediente a la vez, el
+                // segundo espera a que termine el primero.
                 $expediente = \App\Models\Expediente::lockForUpdate()->findOrFail($this->expediente->id);
-                $oficinaOrigenId = $expediente->oficina_id;
 
                 $data = collect($this->campos)
                     ->mapWithKeys(fn ($campo) => [$campo => $this->{$campo}])
@@ -101,22 +99,9 @@ class ExpedienteForm extends Form
                 $expediente->update($data);
                 $this->expediente = $expediente;
 
-                // Si se eligió una oficina de destino distinta de la actual, es un pase real:
-                // dejar registro en el historial (antes solo se pisaban los campos del expediente).
-                if ($this->ofi_salida && (int) $this->ofi_salida !== (int) $oficinaOrigenId) {
-                    \App\Models\Pase::create([
-                        'expediente_id' => $expediente->id,
-                        'oficina_id' => $this->ofi_salida,
-                        'oficina_origen_id' => $oficinaOrigenId,
-                        'oficina_destino_id' => $this->ofi_salida,
-                        'fecha' => $this->fecha_salida ?: now()->toDateString(),
-                        'user_id' => auth()->id(),
-                        'importado' => false,
-                        'firmado' => false,
-                        'estado' => 'pendiente',
-                    ]);
-                }
-
+                // Iniciar un pase (elegir oficina de destino) es una acción aparte,
+                // ver Expedientes::confirmarPase() — este método solo edita los datos
+                // propios del expediente, no crea historial de traslados.
                 return 1;
             });
         } catch (\Exception $exception) {

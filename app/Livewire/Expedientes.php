@@ -36,6 +36,8 @@ class Expedientes extends Component
 
     public $expedienteId;
 
+    public $expedientePaseId;
+
     public $modalFiltro;
 
     public $search = '';
@@ -395,14 +397,6 @@ class Expedientes extends Component
         $this->expedienteForm->fecha_salida = $expediente->fecha_salida
             ? Carbon::parse($expediente->fecha_salida)->format('Y-m-d')
             : null;
-
-        // Oficina - cargar el nombre en el campo visible
-        if ($expediente->ofi_salida) {
-            $oficina = Oficina::find($expediente->ofi_salida);
-            $this->query = $oficina?->nombre ?? '';
-        } else {
-            $this->query = '';
-        }
     }
 
     public function actualizar()
@@ -412,27 +406,86 @@ class Expedientes extends Component
         }
 
         try {
-            if ($this->expedienteForm->ofi_salida) {
-                $oficina = Oficina::find($this->expedienteForm->ofi_salida);
-
-                if ($oficina) {
-                    $this->expedienteForm->cod_area = $oficina->cod_area;
-                    $this->expedienteForm->cod_oficina = $oficina->codigo;
-                } else {
-                    $this->expedienteForm->cod_area = null;
-                    $this->expedienteForm->cod_oficina = null;
-                }
-            } else {
-                $this->expedienteForm->cod_area = null;
-                $this->expedienteForm->cod_oficina = null;
-            }
-
             $resultado = $this->expedienteForm->update();
             $this->modal('modal-editarExpediente')->close();
             LivewireAlert::title('El Expediente se editó Correctamente')->success()->timer(2500)->toast()->position('top-end')->show();
         } catch (\Exception $e) {
             LivewireAlert::title('El Expediente no se pudo Editar')->error()->timer(2500)->toast()->position('top-end')->show();
         }
+    }
+
+    /**
+     * Abre el modal para iniciar un pase (traspaso a otra oficina), separado de
+     * "Editar" para no volver a mezclar datos del expediente con el traslado.
+     */
+    public function abrirPase($id)
+    {
+        $expediente = \App\Models\Expediente::findOrFail($id);
+        $this->autorizarExpediente($expediente, 'expediente_editar');
+
+        $this->expedientePaseId = $expediente->id;
+        $this->query = '';
+        $this->oficinas = [];
+        $this->expedienteForm->ofi_salida = null;
+        $this->expedienteForm->cod_area = null;
+        $this->expedienteForm->cod_oficina = null;
+    }
+
+    public function confirmarPase()
+    {
+        if (! $this->expedienteForm->ofi_salida) {
+            LivewireAlert::title('Elegí una oficina de destino')->error()->timer(2500)->toast()->position('top-end')->show();
+
+            return;
+        }
+
+        $expediente = \App\Models\Expediente::findOrFail($this->expedientePaseId);
+        $this->autorizarExpediente($expediente, 'expediente_editar');
+
+        if (Pase::where('expediente_id', $expediente->id)->where('estado', 'pendiente')->exists()) {
+            LivewireAlert::title('Este expediente ya tiene un pase pendiente de aceptación')->error()->timer(2500)->toast()->position('top-end')->show();
+
+            return;
+        }
+
+        $oficina = Oficina::findOrFail($this->expedienteForm->ofi_salida);
+
+        DB::connection('mysql_admin')->transaction(function () use ($expediente, $oficina) {
+            $expediente->update([
+                'ofi_salida' => $oficina->id,
+                'cod_area' => $oficina->cod_area,
+                'cod_oficina' => $oficina->codigo,
+            ]);
+
+            Pase::create([
+                'expediente_id' => $expediente->id,
+                'oficina_id' => $oficina->id,
+                'oficina_origen_id' => $expediente->oficina_id,
+                'oficina_destino_id' => $oficina->id,
+                'fecha' => now()->toDateString(),
+                'user_id' => auth()->id(),
+                'importado' => false,
+                'firmado' => false,
+                'estado' => 'pendiente',
+            ]);
+        });
+
+        $this->cancelarPase();
+
+        LivewireAlert::title('Pase iniciado, pendiente de aceptación en '.$oficina->nombre)
+            ->success()
+            ->timer(2500)
+            ->toast()
+            ->position('top-end')
+            ->show();
+    }
+
+    public function cancelarPase()
+    {
+        $this->modal('modal-realizarPase')->close();
+        $this->expedientePaseId = null;
+        $this->query = '';
+        $this->oficinas = [];
     }
 
     public function confirmarBorrado($expedienteId)

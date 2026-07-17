@@ -46,56 +46,6 @@
                     <x-input-error for="expedienteForm.fecha_salida" />
                 </div>
             </div>
-
-            <div class="mb-4 relative">
-                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Oficina de Salida</label>
-                <div class="relative">
-                    <input
-                        type="text"
-                        wire:model.live="query"
-                        class="w-full border border-gray-300 dark:border-gray-600 rounded-md shadow-sm px-3 py-2
-                  bg-white dark:bg-zinc-700 text-gray-900 dark:text-gray-100"
-                        placeholder="Ingrese oficina de salida"
-                        autocomplete="off" />
-
-                    @if(!empty($query))
-                    <button type="button"
-                        wire:click="$set('query', '')"
-                        class="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
-                        </svg>
-                    </button>
-                    @endif
-                </div>
-
-                @if(!empty($oficinas))
-                <ul class="absolute bg-white dark:bg-zinc-700 border border-gray-200 dark:border-gray-700 
-               rounded-md shadow-lg w-full z-10 max-h-48 overflow-y-auto mt-1
-               scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600">
-                    @foreach($oficinas as $oficina)
-                    <li wire:key="oficina-{{ $oficina->id }}"
-                        class="px-4 py-2.5 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 
-                   text-gray-800 dark:text-gray-200 transition-colors duration-150"
-                        wire:click="selectOficina({{ $oficina->id }})">
-                        <div class="flex justify-between items-center">
-                            <span class="font-medium">{{ $oficina->nombre }}</span>
-                            <span class="text-xs text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-700 px-2 py-0.5 rounded">
-                                {{ $oficina->codigo }}
-                            </span>
-                        </div>
-                    </li>
-                    @endforeach
-                </ul>
-                @endif
-
-                <!-- Campo oculto para mantener el ID de la oficina -->
-                <input type="hidden" wire:model="expedienteForm.ofi_salida">
-
-                @error('expedienteForm.ofi_salida')
-                <p class="mt-1.5 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
-                @enderror
-            </div>
         </div>
 
 

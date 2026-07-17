@@ -144,6 +144,18 @@
                                                     Editar expediente
                                                 </button>
                                             </flux:modal.trigger>
+                                            <flux:modal.trigger name="modal-realizarPase">
+                                                <button wire:click="abrirPase({{ $expediente->id }})" @click="open = false"
+                                                    class="w-full px-4 py-3 text-sm text-left text-gray-700 dark:text-gray-200 hover:bg-gradient-to-r hover:from-emerald-500 hover:to-emerald-600 hover:text-white dark:hover:from-emerald-600 dark:hover:to-emerald-700 transition-all duration-200 flex items-center gap-2 cursor-pointer">
+                                                    <svg class="size-4" fill="none" stroke="currentColor"
+                                                        viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                                            stroke-width="2"
+                                                            d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                                                    </svg>
+                                                    Realizar pase
+                                                </button>
+                                            </flux:modal.trigger>
                                             <flux:modal.trigger name="modal-ConfirmarBorrado">
                                                 <button wire:click="confirmarBorrado({{ $expediente->id }})"
                                                     @click="open = false"
@@ -179,6 +191,7 @@
         @include('livewire.modal-filtros')
         @include('livewire.Expedientes.modal-NuevoExpediente')
         @include('livewire.Expedientes.modal-EditarExpediente')
+        @include('livewire.Expedientes.modal-RealizarPase')
         @include('livewire.modal-ConfirmarBorrado')
     @endif
 </div>
