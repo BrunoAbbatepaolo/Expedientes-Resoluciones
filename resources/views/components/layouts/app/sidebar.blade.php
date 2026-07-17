@@ -82,7 +82,16 @@
                             <flux:navlist.item icon="inbox" :href="route('expedientes.entrantes')"
                                 :current="request()->routeIs('expedientes.entrantes')" wire:navigate
                                 class="!text-gray-700 dark:!text-gray-300 text-sm">
-                                {{ __('Entrantes') }}
+                                <div class="flex items-center justify-between w-full">
+                                    <span>{{ __('Entrantes') }}</span>
+                                    @php $pasesPendientes = auth()->user()->pasesPendientesCount(); @endphp
+                                    @if ($pasesPendientes > 0)
+                                        <span
+                                            class="inline-flex items-center justify-center min-w-[1.25rem] h-5 px-1 rounded-full bg-red-500 text-white text-xs font-semibold">
+                                            {{ $pasesPendientes }}
+                                        </span>
+                                    @endif
+                                </div>
                             </flux:navlist.item>
                         </div>
                     </div>

@@ -78,6 +78,22 @@ class User extends Authenticatable
             ->value('oficina_id');
     }
 
+    /**
+     * Pases pendientes de aceptar en la bandeja de "Entrantes" de mi oficina.
+     */
+    public function pasesPendientesCount(): int
+    {
+        $oficinaId = $this->oficinaAsignadaId();
+
+        if (! $oficinaId) {
+            return 0;
+        }
+
+        return Pase::where('oficina_destino_id', $oficinaId)
+            ->where('estado', 'pendiente')
+            ->count();
+    }
+
     public function initials(): string
     {
         $iniNombre = $this->nombre ? mb_substr($this->nombre, 0, 1) : '';

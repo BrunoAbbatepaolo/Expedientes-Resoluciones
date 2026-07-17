@@ -167,17 +167,28 @@ class Expedientes extends Component
             return $this->getEntrantes((int) $oficinaId);
         }
 
-        // 3) Filtrar por oficina del usuario
-        $query->deOficina((int) $oficinaId);
+        // 3) Filtrar por oficina del usuario + 4) tipo de vista.
+        // 'egresados' es un caso especial: un expediente pasado a otra oficina deja
+        // de tener oficina_id = la mía (ver Expedientes::aceptarPase()), así que no
+        // puedo filtrarlo con deOficina() como las demás vistas o desaparecería de mi
+        // listado apenas la oficina destino lo acepta. Lo resuelvo con un OR: sigue
+        // contando como "egresado mío" si (a) lo tengo yo con fecha_salida cargada a
+        // mano (cierre sin pase), o (b) hay un pase aceptado cuyo origen soy yo,
+        // sin importar dónde esté ahora.
+        if ($this->tipoVista === 'egresados') {
+            $query->where(function ($q) use ($oficinaId) {
+                $q->where(function ($q2) use ($oficinaId) {
+                    $q2->deOficina($oficinaId)->whereNotNull('fecha_salida');
+                })->orWhereHas('pases', function ($q2) use ($oficinaId) {
+                    $q2->where('oficina_origen_id', $oficinaId)->where('estado', 'aceptado');
+                });
+            });
+        } else {
+            $query->deOficina((int) $oficinaId);
 
-        // 4) Tipo de vista
-        switch ($this->tipoVista) {
-            case 'ingresados':
+            if ($this->tipoVista === 'ingresados') {
                 $query->whereNull('fecha_salida');
-                break;
-            case 'egresados':
-                $query->whereNotNull('fecha_salida');
-                break;
+            }
         }
 
         // 5) Búsqueda libre
@@ -239,7 +250,13 @@ class Expedientes extends Component
             abort_unless($pase->estado === 'pendiente', 403);
 
             $pase->update(['estado' => 'aceptado']);
-            Expediente::where('id', $pase->expediente_id)->update(['oficina_id' => $pase->oficina_destino_id]);
+            // fecha_salida se limpia porque quedaba seteada desde el envío en la
+            // oficina de origen: si no se resetea, el expediente entra a mi oficina
+            // ya marcado como "egresado" (ver 'egresados' en Expedientes::getExp()).
+            Expediente::where('id', $pase->expediente_id)->update([
+                'oficina_id' => $pase->oficina_destino_id,
+                'fecha_salida' => null,
+            ]);
         });
 
         LivewireAlert::title('Expediente aceptado en tu oficina')
