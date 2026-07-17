@@ -71,6 +71,12 @@ Entorno de trabajo: contenedor Docker MySQL aislado (`exp-res-mysql`, puerto 330
   - **3.9** Ya resuelto como parte de 1.4/1.5 (la reescritura de `Detalles::mount()` eliminó esa variable junto con el resto de la lógica vieja).
   - **3.11** Se agregaron factories para `Area`, `Oficina`, `Expediente`, `Resolucion` y `Pase` (a este último le faltaba también el trait `HasFactory`). Validadas contra el contenedor de prueba (tablas legacy creadas ad-hoc solo para el test, luego eliminadas).
   - **No se tocó (1.7):** `CrearResolucion::agregarArchivos()` vacío — su propio comentario ya aclara que es intencional (se usa `tempArchivos` con `wire:model` en su lugar).
+- ✅ **3.1** (duplicación número→letras/formateo) — resuelto. Los 5 métodos duplicados en `CrearResolucion` (`formatearFecha`, `formatearFechaLarga`, `formatearMoneda`, `num2letras`, `convertNumberToLetters`) se eliminaron; los 3 lugares que pasaban `[$this, 'formatearFecha']` a las vistas ahora pasan el string `'formatearFecha'` (nombre de función global, callable válido en PHP), delegando directamente en `app/Helpers/fecha.php`. De paso se limpiaron los imports `Carbon` y `Cache` que quedaron sin uso. Validado: las plantillas siguen renderizando igual y las funciones globales responden igual que los métodos eliminados.
+- ✅ **2.2** (concurrencia) — resuelto en el punto de mayor riesgo (`ExpedienteForm`). Detalle:
+  - `store()` y `update()` pasaron de `beginTransaction()/commit()/rollBack()` manual a `DB::transaction()`.
+  - `update()` ahora relee el expediente con `lockForUpdate()` **dentro** de la transacción antes de comparar `oficina_id`, en vez de confiar en el modelo ya hidratado (potencialmente desactualizado). Si dos usuarios pasan el mismo expediente a la vez, el segundo espera a que termine el primero y ve la oficina ya actualizada, en vez de generar un `Pase` con un `oficina_origen_id` incorrecto.
+  - Validado contra el contenedor de prueba: el pase se sigue creando con los datos correctos tras el cambio.
+  - **No se tocó** la creación/edición de `Resolucion` (`CrearResolucion`, `ResolucionForm`): no hay ahí un patrón leer-modificar-escribir sobre un mismo registro compartido entre oficinas como en `Expediente`, así que el riesgo de condición de carrera es mucho menor.
 
 ---
 

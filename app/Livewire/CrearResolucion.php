@@ -5,8 +5,6 @@ namespace App\Livewire;
 use App\Models\Resolucion;
 use App\Models\ResolucionArchivo;
 use App\Traits\AuthorizesOficina;
-use Carbon\Carbon;
-use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\View;
 use Livewire\Component;
@@ -231,10 +229,10 @@ class CrearResolucion extends Component
             ];
 
             $datosConFunciones = array_merge($datosEjemplo, [
-                'formatearFecha' => [$this, 'formatearFecha'],
-                'formatearFechaLarga' => [$this, 'formatearFechaLarga'],
-                'formatearMoneda' => [$this, 'formatearMoneda'],
-                'num2letras' => [$this, 'num2letras'],
+                'formatearFecha' => 'formatearFecha',
+                'formatearFechaLarga' => 'formatearFechaLarga',
+                'formatearMoneda' => 'formatearMoneda',
+                'num2letras' => 'num2letras',
             ]);
 
             $this->plantilla = View::make("prototipos.{$this->tipo}", $datosConFunciones)->render();
@@ -426,10 +424,10 @@ class CrearResolucion extends Component
 
         try {
             $html = View::make("prototipos.{$this->tipo}", array_merge($this->datos, [
-                'formatearFecha' => [$this, 'formatearFecha'],
-                'formatearFechaLarga' => [$this, 'formatearFechaLarga'],
-                'formatearMoneda' => [$this, 'formatearMoneda'],
-                'num2letras' => [$this, 'num2letras'],
+                'formatearFecha' => 'formatearFecha',
+                'formatearFechaLarga' => 'formatearFechaLarga',
+                'formatearMoneda' => 'formatearMoneda',
+                'num2letras' => 'num2letras',
             ]))->render();
 
             $cantidadArchivos = count($this->archivosPDF);
@@ -496,10 +494,10 @@ class CrearResolucion extends Component
     {
         try {
             $datos = array_merge($this->datos, [
-                'formatearFecha' => [$this, 'formatearFecha'],
-                'formatearFechaLarga' => [$this, 'formatearFechaLarga'],
-                'formatearMoneda' => [$this, 'formatearMoneda'],
-                'num2letras' => [$this, 'num2letras'],
+                'formatearFecha' => 'formatearFecha',
+                'formatearFechaLarga' => 'formatearFechaLarga',
+                'formatearMoneda' => 'formatearMoneda',
+                'num2letras' => 'num2letras',
                 'numero_tramite' => $this->generarNumeroTramite(),
             ]);
 
@@ -582,150 +580,6 @@ class CrearResolucion extends Component
         $texto = str_replace(['. ', ':', 'Resolución Nº'], [".\n\n", ":\n", "\nResolución Nº"], $texto);
 
         return trim($texto);
-    }
-
-    /**
-     * Helper para formatear fechas a d-m-Y.
-     * Retorna la fecha en formato d-m-Y o un string vacío si la fecha no es válida.
-     */
-    public function formatearFecha($fecha): string
-    {
-        if (empty($fecha)) {
-            return '';
-        }
-        try {
-            return Carbon::parse($fecha)->format('d-m-Y');
-        } catch (\Exception $e) {
-            return '';
-        }
-    }
-
-    public function formatearFechaLarga($fecha): string
-    {
-        if (empty($fecha)) {
-            return '';
-        }
-        try {
-            return Carbon::parse($fecha)->locale('es')->translatedFormat('j \d\e F \d\e\l Y');
-        } catch (\Exception $e) {
-            return '';
-        }
-    }
-
-    public function formatearMoneda($monto): string
-    {
-        if (empty($monto)) {
-            return '';
-        }
-        try {
-            return number_format((float) str_replace(['$', ','], '', $monto), 2, ',', '.');
-        } catch (\Exception $e) {
-            return $monto;
-        }
-    }
-
-    public function num2letras($numero): string
-    {
-        if (empty($numero)) {
-            return '';
-        }
-        $numero = str_replace(['$', ',', ' '], '', $numero);
-        $numero = (float) $numero;
-        if ($numero == 0) {
-            return 'CERO';
-        }
-
-        $integerPart = floor($numero);
-        $decimalPart = round(($numero - $integerPart) * 100);
-
-        $letters = $this->convertNumberToLetters($integerPart);
-        $result = $letters.' con '.str_pad($decimalPart, 2, '0', STR_PAD_LEFT).'/100';
-
-        return $result;
-    }
-
-    private function convertNumberToLetters(int $number): string
-    {
-        if ($number < 0) {
-            return 'MENOS '.$this->convertNumberToLetters(-$number);
-        }
-        if ($number == 0) {
-            return '';
-        }
-        if ($number < 20) {
-            $units = ['', 'UNO', 'DOS', 'TRES', 'CUATRO', 'CINCO', 'SEIS', 'SIETE', 'OCHO', 'NUEVE', 'DIEZ', 'ONCE', 'DOCE', 'TRECE', 'CATORCE', 'QUINCE', 'DIECISÉIS', 'DIECISIETE', 'DIECIOCHO', 'DIECINUEVE'];
-
-            return $units[$number];
-        }
-        if ($number < 30) {
-            return 'VEINTI'.($number == 21 ? 'UNO' : $this->convertNumberToLetters($number - 20));
-        }
-        if ($number < 40) {
-            return 'TREINTA Y '.$this->convertNumberToLetters($number - 30);
-        }
-        if ($number < 50) {
-            return 'CUARENTA Y '.$this->convertNumberToLetters($number - 40);
-        }
-        if ($number < 60) {
-            return 'CINCUENTA Y '.$this->convertNumberToLetters($number - 50);
-        }
-        if ($number < 70) {
-            return 'SESENTA Y '.$this->convertNumberToLetters($number - 60);
-        }
-        if ($number < 80) {
-            return 'SETENTA Y '.$this->convertNumberToLetters($number - 70);
-        }
-        if ($number < 90) {
-            return 'OCHENTA Y '.$this->convertNumberToLetters($number - 80);
-        }
-        if ($number < 100) {
-            return 'NOVENTA Y '.$this->convertNumberToLetters($number - 90);
-        }
-        if ($number < 200) {
-            return 'CIENTO '.$this->convertNumberToLetters($number - 100);
-        }
-        if ($number < 300) {
-            return 'DOSCIENTOS '.$this->convertNumberToLetters($number - 200);
-        }
-        if ($number < 400) {
-            return 'TRESCIENTOS '.$this->convertNumberToLetters($number - 300);
-        }
-        if ($number < 500) {
-            return 'CUATROCIENTOS '.$this->convertNumberToLetters($number - 400);
-        }
-        if ($number < 600) {
-            return 'QUINIENTOS '.$this->convertNumberToLetters($number - 500);
-        }
-        if ($number < 700) {
-            return 'SEISCIENTOS '.$this->convertNumberToLetters($number - 600);
-        }
-        if ($number < 800) {
-            return 'SETECIENTOS '.$this->convertNumberToLetters($number - 700);
-        }
-        if ($number < 900) {
-            return 'OCHOCIENTOS '.$this->convertNumberToLetters($number - 800);
-        }
-        if ($number < 1000) {
-            return 'NOVECIENTOS '.$this->convertNumberToLetters($number - 900);
-        }
-        if ($number < 2000) {
-            return 'MIL '.$this->convertNumberToLetters($number - 1000);
-        }
-        if ($number < 1000000) {
-            $thousands = floor($number / 1000);
-            $remainder = $number % 1000;
-            $thousandsWord = $thousands == 1 ? 'MIL' : $this->convertNumberToLetters($thousands);
-
-            return $thousandsWord.($remainder > 0 ? ' '.$this->convertNumberToLetters($remainder) : '');
-        }
-        if ($number < 2000000) {
-            return 'UN MILLÓN '.$this->convertNumberToLetters($number - 1000000);
-        }
-
-        $millions = floor($number / 1000000);
-        $remainder = $number % 1000000;
-
-        return $this->convertNumberToLetters($millions).' MILLONES'.($remainder > 0 ? ' '.$this->convertNumberToLetters($remainder) : '');
     }
 
     public function generarNumeroTramite(): string
