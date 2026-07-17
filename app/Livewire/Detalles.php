@@ -4,13 +4,17 @@ namespace App\Livewire;
 
 use App\Models\Expediente;
 use App\Models\Oficina;
+use App\Traits\AuthorizesOficina;
 use Livewire\Component;
 
 class Detalles extends Component
 {
+    use AuthorizesOficina;
+
     public $id;
 
     public $expediente;
+
     public $pases = [];
 
     public function mount($id)
@@ -19,14 +23,15 @@ class Detalles extends Component
         $this->expediente = Expediente::with([
             'pases.oficina',
             'pases.oficinaOrigen',
-            'oficinaById'
+            'oficinaById',
         ])->findOrFail($id);
+        $this->autorizarExpediente($this->expediente, 'expediente_ver');
 
         // Primer pase (siempre existe)
         $this->pases[] = [
             'oficina' => 'Computos',
             'fecha' => $this->expediente->fecha_ingreso,
-            'observaciones' => 'Ingreso a la Oficina'
+            'observaciones' => 'Ingreso a la Oficina',
         ];
 
         // Pase de salida si existe
@@ -37,7 +42,7 @@ class Detalles extends Component
             $this->pases[] = [
                 'oficina' => $this->expediente->oficina->nombre ?? 'Oficina desconocida',
                 'fecha' => $this->expediente->fecha_salida,
-                'observaciones' => 'Traslado de expediente'
+                'observaciones' => 'Traslado de expediente',
             ];
         }
     }

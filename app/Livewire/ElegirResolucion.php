@@ -2,17 +2,22 @@
 
 namespace App\Livewire;
 
+use App\Traits\AuthorizesOficina;
 use Livewire\Attributes\Computed;
 use Livewire\Component;
 
 class ElegirResolucion extends Component
 {
+    use AuthorizesOficina;
+
     public array $tipos = [];
 
     public string $busqueda = '';
 
     public function mount()
     {
+        $this->autorizarPermiso('resolucion_editar');
+
         $this->tipos = [
             ['nombre' => 'Cancelaciones'],
             ['nombre' => 'Resciciones'],

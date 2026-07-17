@@ -2,14 +2,16 @@
 
 namespace App\Livewire;
 
-use Livewire\Component;
-use Livewire\WithFileUploads;
-use App\Models\Resolucion;
 use App\Livewire\Forms\ResolucionForm;
-use Flux\Flux; // Importante para controlar los modales desde el backend
+use App\Models\Resolucion;
+use App\Traits\AuthorizesOficina;
+use Flux\Flux;
+use Livewire\Component;
+use Livewire\WithFileUploads; // Importante para controlar los modales desde el backend
 
 class Resoluciones extends Component
 {
+    use AuthorizesOficina;
     use WithFileUploads;
 
     public ResolucionForm $resolucionForm;
@@ -22,6 +24,8 @@ class Resoluciones extends Component
      */
     public function cargarResolucion($id)
     {
+        $this->autorizarPermiso('resolucion_editar');
+
         $this->resetValidation();
         $resolucion = Resolucion::findOrFail($id);
 
@@ -34,6 +38,8 @@ class Resoluciones extends Component
      */
     public function guardarEdicion()
     {
+        $this->autorizarPermiso('resolucion_editar');
+
         // Ejecuta el método update de tu Form Object
         $this->resolucionForm->update();
 
@@ -55,6 +61,8 @@ class Resoluciones extends Component
      */
     public function borrar()
     {
+        $this->autorizarPermiso('resolucion_editar');
+
         if ($this->resolucionIdParaBorrar) {
             Resolucion::destroy($this->resolucionIdParaBorrar);
             $this->resolucionIdParaBorrar = null;

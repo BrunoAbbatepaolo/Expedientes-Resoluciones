@@ -4,6 +4,7 @@ namespace App\Livewire;
 
 use App\Models\Resolucion;
 use App\Models\ResolucionArchivo;
+use App\Traits\AuthorizesOficina;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Storage;
@@ -13,6 +14,7 @@ use Livewire\WithFileUploads;
 
 class CrearResolucion extends Component
 {
+    use AuthorizesOficina;
     use WithFileUploads;
 
     public string $tipo;
@@ -137,6 +139,8 @@ class CrearResolucion extends Component
 
     public function mount($tipo)
     {
+        $this->autorizarPermiso('resolucion_editar');
+
         $this->tipo = $tipo;
         // Establecer la fecha inicial en el formato correcto
         $this->datos['fecha_res'] = date('Y-m-d');

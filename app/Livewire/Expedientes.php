@@ -5,6 +5,7 @@ namespace App\Livewire;
 use App\Livewire\Forms\ExpedienteForm;
 use App\Models\Expediente;
 use App\Models\Oficina;
+use App\Traits\AuthorizesOficina;
 use Carbon\Carbon;
 use Jantinnerezo\LivewireAlert\Facades\LivewireAlert;
 use Livewire\Component;
@@ -12,23 +13,39 @@ use Livewire\WithPagination;
 
 class Expedientes extends Component
 {
+    use AuthorizesOficina;
     use WithPagination;
 
     public $modalExp = false;
+
     public $modalEdit = false;
+
     public $busquedaExp = '';
+
     public $expedienteEncontrado;
+
     public $expedienteExistente;
+
     public $selectedExpediente;
+
     public $asunto;
+
     public $causante;
+
     public $expedienteId;
+
     public $modalFiltro;
+
     public $search = '';
+
     public $sinPermiso = false;
+
     public $sinOficina = false;
+
     public $oficinaUsuario;
+
     public ExpedienteForm $expedienteForm;
+
     public $menuVisible = null;
 
     public $filtro = [
@@ -37,10 +54,12 @@ class Expedientes extends Component
     ];
 
     public $tipoVista = 'todos';
+
     public $mostrarBoton = false;
 
     // Autocomplete oficinas
     public $query = '';
+
     public $oficinas = [];
 
     public function updatedQuery()
@@ -50,6 +69,7 @@ class Expedientes extends Component
             $this->expedienteForm->ofi_salida = null;
             $this->expedienteForm->cod_area = null;
             $this->expedienteForm->cod_oficina = null;
+
             return;
         }
 
@@ -58,12 +78,13 @@ class Expedientes extends Component
             $oficinaActual = Oficina::find($this->expedienteForm->ofi_salida);
             if ($oficinaActual && $this->query === $oficinaActual->nombre) {
                 $this->oficinas = [];
+
                 return;
             }
         }
 
-        $this->oficinas = Oficina::where('nombre', 'like', '%' . $this->query . '%')
-            ->orWhere('codigo', 'like', '%' . $this->query . '%')
+        $this->oficinas = Oficina::where('nombre', 'like', '%'.$this->query.'%')
+            ->orWhere('codigo', 'like', '%'.$this->query.'%')
             ->take(10)
             ->get();
     }
@@ -107,8 +128,8 @@ class Expedientes extends Component
                 $this->tipoVista = 'todos';
         }
         $this->mostrarBoton = request()->routeIs('expedientes') || request()->routeIs('expedientes.ingresados');
-        $oficinaId = auth()->user()->oficinaAsignadaId()
-            ?? auth()->user()->oficinaIdPara('expediente_ver');
+        $oficinaId = auth()->user()?->oficinaAsignadaId()
+            ?? auth()->user()?->oficinaIdPara('expediente_ver');
 
         if ($oficinaId) {
             $this->oficinaUsuario = Oficina::find($oficinaId);
@@ -120,15 +141,15 @@ class Expedientes extends Component
         $query = Expediente::query();
 
         // 1) Permiso base
-        if (! auth()->user()->permiso('expediente_ver')) {
+        if (! auth()->user()?->permiso('expediente_ver')) {
             $this->sinPermiso = true;
 
             return Expediente::whereRaw('1=0')->paginate(10);
         }
 
         // 2) Oficina desde 'oficina_asignada' (fallback a 'expediente_ver' si no existiera)
-        $oficinaId = auth()->user()->oficinaAsignadaId()
-            ?? auth()->user()->oficinaIdPara('expediente_ver');
+        $oficinaId = auth()->user()?->oficinaAsignadaId()
+            ?? auth()->user()?->oficinaIdPara('expediente_ver');
 
         if (! $oficinaId) {
             $this->sinOficina = true;
@@ -294,7 +315,8 @@ class Expedientes extends Component
 
     public function editar($id)
     {
-        $expediente = \App\Models\Expediente::find($id);
+        $expediente = \App\Models\Expediente::findOrFail($id);
+        $this->autorizarExpediente($expediente, 'expediente_editar');
 
         $this->expedienteForm->loadExpMitiv($expediente);
 
@@ -315,6 +337,10 @@ class Expedientes extends Component
 
     public function actualizar()
     {
+        if ($this->expedienteForm->expediente) {
+            $this->autorizarExpediente($this->expedienteForm->expediente, 'expediente_editar');
+        }
+
         try {
             if ($this->expedienteForm->ofi_salida) {
                 $oficina = Oficina::find($this->expedienteForm->ofi_salida);
@@ -346,7 +372,10 @@ class Expedientes extends Component
 
     public function eliminarExpediente()
     {
-        \App\Models\Expediente::findOrFail($this->expedienteId)->delete();
+        $expediente = \App\Models\Expediente::findOrFail($this->expedienteId);
+        $this->autorizarExpediente($expediente, 'expediente_editar');
+
+        $expediente->delete();
         $this->modal('modal-ConfirmarBorrado')->close();
         $this->reset('expedienteId');
         LivewireAlert::title('Expediente eliminado')->success()->timer(2500)->toast()->position('top-end')->show();
