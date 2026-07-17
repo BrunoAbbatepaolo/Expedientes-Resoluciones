@@ -24,10 +24,9 @@ class Resoluciones extends Component
      */
     public function cargarResolucion($id)
     {
-        $this->autorizarPermiso('resolucion_editar');
-
         $this->resetValidation();
         $resolucion = Resolucion::findOrFail($id);
+        $this->autorizarResolucion($resolucion, 'resolucion_editar');
 
         // Pasamos la data al Form Object
         $this->resolucionForm->loadResolucion($resolucion);
@@ -38,7 +37,7 @@ class Resoluciones extends Component
      */
     public function guardarEdicion()
     {
-        $this->autorizarPermiso('resolucion_editar');
+        $this->autorizarResolucion($this->resolucionForm->resolucion, 'resolucion_editar');
 
         // Ejecuta el método update de tu Form Object
         $this->resolucionForm->update();
@@ -61,10 +60,11 @@ class Resoluciones extends Component
      */
     public function borrar()
     {
-        $this->autorizarPermiso('resolucion_editar');
-
         if ($this->resolucionIdParaBorrar) {
-            Resolucion::destroy($this->resolucionIdParaBorrar);
+            $resolucion = Resolucion::findOrFail($this->resolucionIdParaBorrar);
+            $this->autorizarResolucion($resolucion, 'resolucion_editar');
+
+            $resolucion->delete();
             $this->resolucionIdParaBorrar = null;
 
             Flux::modal('delete-profile')->close();
