@@ -20,6 +20,7 @@ class Resolucion extends Model
     protected $fillable = [
         'numero_exp',
         'numero_resolucion',
+        'plantilla',
         'fecha',
         'fecha_ingreso',
         'cod_barrio',

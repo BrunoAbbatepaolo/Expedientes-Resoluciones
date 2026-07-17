@@ -239,8 +239,13 @@ class CrearResolucion extends Component
             $this->plantilla = View::make("prototipos.{$this->tipo}", $datosConFunciones)->render();
 
         } catch (\Exception $e) {
-            $this->plantilla = "Error al cargar la plantilla: {$e->getMessage()}";
+            $this->plantilla = $this->mensajePlantillaNoDisponible();
         }
+    }
+
+    private function mensajePlantillaNoDisponible(): string
+    {
+        return "Todavía no hay una plantilla completa para \"{$this->tipo}\". Podés escribir el contenido en el modo \"Personalizado\".";
     }
 
     public function cargarPlantillaConDatos(): void
@@ -249,7 +254,7 @@ class CrearResolucion extends Component
             $contenidoHTML = View::make("prototipos.{$this->tipo}", $this->datos)->render();
             $this->plantilla = $this->convertirHTMLaTexto($contenidoHTML);
         } catch (\Exception $e) {
-            $this->plantilla = "Error al cargar la plantilla: {$e->getMessage()}";
+            $this->plantilla = $this->mensajePlantillaNoDisponible();
         }
     }
 
@@ -271,48 +276,72 @@ class CrearResolucion extends Component
         ]);
 
         try {
-            // Generar número de trámite único
-            $numeroTramite = $this->datos['numero_tramite'] ?? $this->generarNumeroTramite();
+            $numeroTramite = $this->siguienteNumeroTramite();
+            $cantidadArchivos = count($this->archivosPDF);
 
-            // Verificar si el número ya existe, si existe generar otro
-            while (\App\Models\Resolucion::where('numero_exp', $numeroTramite)->exists()) {
-                $numeroTramite = $this->generarNumeroTramite();
-            }
+            $this->persistirResolucion(
+                numeroExp: $numeroTramite,
+                numeroResolucion: $this->datos['num_res'] ?? null,
+                fecha: $this->datos['fecha_res'] ?? now()->toDateString(),
+                codBarrio: $this->datos['manzana'] ?? null,
+                codCasa: $this->datos['lote'] ?? null,
+                plantilla: $this->plantilla,
+            );
 
-            // Crear la resolución
-            $resolucion = Resolucion::create([
-                'numero_exp' => $numeroTramite,
-                'numero_resolucion' => $this->datos['num_res'] ?? null,
-                'fecha' => $this->datos['fecha_res'] ?? now()->toDateString(),
-                'cod_barrio' => $this->datos['manzana'] ?? null,
-                'cod_casa' => $this->datos['lote'] ?? null,
-                'plantilla' => $this->plantilla,
-            ]);
-
-            // Guardar los PDFs si hay archivos cargados
-            if (! empty($this->archivosPDF)) {
-                foreach ($this->archivosPDF as $archivo) {
-                    $nombreArchivo = uniqid('resolucion_').'_'.$archivo->getClientOriginalName();
-                    $ruta = $archivo->storeAs('resoluciones', $nombreArchivo, 'public');
-
-                    ResolucionArchivo::create([
-                        'resolucion_id' => $resolucion->id,
-                        'nombre_original' => $archivo->getClientOriginalName(),
-                        'nombre_archivo' => $nombreArchivo,
-                        'ruta' => $ruta,
-                        'tipo' => $archivo->getMimeType(),
-                        'tamano' => $archivo->getSize(),
-                    ]);
-                }
-            }
-
-            // Limpiar archivos temporales
-            $this->archivosPDF = [];
-
-            session()->flash('message', 'Resolución guardada exitosamente con '.count($this->archivosPDF).' archivo(s)');
+            session()->flash('message', 'Resolución guardada exitosamente'.($cantidadArchivos ? " con {$cantidadArchivos} archivo(s)" : ''));
         } catch (\Exception $e) {
             session()->flash('error', 'Error al guardar: '.$e->getMessage());
         }
+    }
+
+    private function siguienteNumeroTramite(): string
+    {
+        $numeroTramite = $this->datos['numero_tramite'] ?? $this->generarNumeroTramite();
+
+        while (\App\Models\Resolucion::where('numero_exp', $numeroTramite)->exists()) {
+            $numeroTramite = $this->generarNumeroTramite();
+        }
+
+        return $numeroTramite;
+    }
+
+    private function persistirResolucion(
+        string $numeroExp,
+        ?string $numeroResolucion,
+        string $fecha,
+        ?string $codBarrio,
+        ?string $codCasa,
+        string $plantilla
+    ): Resolucion {
+        $resolucion = Resolucion::create([
+            'numero_exp' => $numeroExp,
+            'numero_resolucion' => $numeroResolucion,
+            'fecha' => $fecha,
+            // cod_barrio/cod_casa son integer: los tipos que no usan manzana/lote
+            // llegan como '' (string vacío) y no como null, lo que rompe el insert
+            // en modo estricto de MySQL.
+            'cod_barrio' => $codBarrio !== '' ? $codBarrio : null,
+            'cod_casa' => $codCasa !== '' ? $codCasa : null,
+            'plantilla' => $plantilla,
+        ]);
+
+        foreach ($this->archivosPDF as $archivo) {
+            $nombreArchivo = uniqid('resolucion_').'_'.$archivo->getClientOriginalName();
+            $ruta = $archivo->storeAs('resoluciones', $nombreArchivo, 'public');
+
+            ResolucionArchivo::create([
+                'resolucion_id' => $resolucion->id,
+                'nombre_original' => $archivo->getClientOriginalName(),
+                'nombre_archivo' => $nombreArchivo,
+                'ruta' => $ruta,
+                'tipo' => $archivo->getMimeType(),
+                'tamano' => $archivo->getSize(),
+            ]);
+        }
+
+        $this->archivosPDF = [];
+
+        return $resolucion;
     }
 
     public function removeArchivo($index)
@@ -383,17 +412,35 @@ class CrearResolucion extends Component
 
     public function guardar()
     {
+        if (! View::exists("prototipos.{$this->tipo}")) {
+            session()->flash('error', $this->mensajePlantillaNoDisponible());
+
+            return;
+        }
+
         $this->validate($this->rules(), $this->messages());
 
         try {
-            // Lógica para guardar la resolución
-            // Ejemplo: ResolucionService::crear($this->datos, $this->tipo);
+            $html = View::make("prototipos.{$this->tipo}", array_merge($this->datos, [
+                'formatearFecha' => [$this, 'formatearFecha'],
+                'formatearFechaLarga' => [$this, 'formatearFechaLarga'],
+                'formatearMoneda' => [$this, 'formatearMoneda'],
+                'num2letras' => [$this, 'num2letras'],
+            ]))->render();
 
-            session()->flash('message', 'Resolución guardada exitosamente');
+            $cantidadArchivos = count($this->archivosPDF);
 
-            // Opcional: redireccionar o limpiar formulario
+            $this->persistirResolucion(
+                numeroExp: $this->datos['num_exp'],
+                numeroResolucion: $this->datos['num_res'] ?? null,
+                fecha: $this->datos['fecha_res'],
+                codBarrio: $this->datos['manzana'] ?? null,
+                codCasa: $this->datos['lote'] ?? null,
+                plantilla: $html,
+            );
+
+            session()->flash('message', 'Resolución guardada exitosamente'.($cantidadArchivos ? " con {$cantidadArchivos} archivo(s)" : ''));
             $this->resetFormulario();
-
         } catch (\Exception $e) {
             session()->flash('error', 'Error al guardar: '.$e->getMessage());
         }
@@ -406,7 +453,19 @@ class CrearResolucion extends Component
         ]);
 
         try {
-            session()->flash('message', 'Resolución guardada exitosamente');
+            $numeroTramite = $this->siguienteNumeroTramite();
+            $cantidadArchivos = count($this->archivosPDF);
+
+            $this->persistirResolucion(
+                numeroExp: $numeroTramite,
+                numeroResolucion: $this->datos['num_res'] ?? null,
+                fecha: $this->datos['fecha_res'] ?? now()->toDateString(),
+                codBarrio: $this->datos['manzana'] ?? null,
+                codCasa: $this->datos['lote'] ?? null,
+                plantilla: $this->plantilla,
+            );
+
+            session()->flash('message', 'Resolución guardada exitosamente'.($cantidadArchivos ? " con {$cantidadArchivos} archivo(s)" : ''));
         } catch (\Exception $e) {
             session()->flash('error', 'Error al guardar: '.$e->getMessage());
         }
@@ -491,7 +550,9 @@ class CrearResolucion extends Component
             $this->plantilla = $this->convertirHTMLaTexto($contenidoHTML);
 
         } catch (\Exception $e) {
-            $this->plantilla = "Error al cargar la plantilla: {$e->getMessage()}";
+            // Sin plantilla base: se deja vacío para que la persona escriba desde cero
+            // en vez de precargar un mensaje de error que podría guardarse por accidente.
+            $this->plantilla = '';
         }
     }
 

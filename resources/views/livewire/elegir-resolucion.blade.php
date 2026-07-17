@@ -41,12 +41,17 @@
                     <!-- Overlay hover -->
                     <div class="absolute inset-0 bg-blue-500 opacity-0 group-hover:opacity-10 transition-opacity duration-200"></div>
                 </div>
-                
+
                 <!-- Información del tipo -->
                 <div class="p-4">
                     <h3 class="text-lg font-bold text-gray-900 dark:text-white leading-tight">
 {{ $tipo['display'] ?? $tipo['nombre'] }}
                     </h3>
+                    @unless ($tipo['plantillaDisponible'])
+                        <span class="mt-1 inline-block text-xs font-medium text-amber-700 bg-amber-100 dark:text-amber-300 dark:bg-amber-900/40 rounded px-2 py-0.5">
+                            Sin plantilla completa · usá "Personalizado"
+                        </span>
+                    @endunless
                 </div>
             </div>
         @endforeach

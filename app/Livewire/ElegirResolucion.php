@@ -3,6 +3,7 @@
 namespace App\Livewire;
 
 use App\Traits\AuthorizesOficina;
+use Illuminate\Support\Facades\View;
 use Livewire\Attributes\Computed;
 use Livewire\Component;
 
@@ -18,7 +19,7 @@ class ElegirResolucion extends Component
     {
         $this->autorizarPermiso('resolucion_editar');
 
-        $this->tipos = [
+        $tipos = [
             ['nombre' => 'Cancelaciones'],
             ['nombre' => 'Resciciones'],
             ['nombre' => 'Transferencias'],
@@ -29,6 +30,14 @@ class ElegirResolucion extends Component
             ['nombre' => 'ReconocimientoCuotaPagadaNoCargada', 'display' => 'Recon. de cta. pagadas y no cargadas'],
             ['nombre' => 'Otros'],
         ];
+
+        // 6 de los 9 tipos no tienen plantilla en resources/views/prototipos/ todavía;
+        // se muestran igual (el modo "Personalizado" no depende de la plantilla) pero
+        // marcados para no sorprender al usuario. Ver implementacion_futuro.md 1.3.
+        $this->tipos = array_map(
+            fn (array $tipo) => $tipo + ['plantillaDisponible' => View::exists("prototipos.{$tipo['nombre']}")],
+            $tipos
+        );
     }
 
     #[Computed]
