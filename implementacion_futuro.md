@@ -47,6 +47,12 @@ Entorno de trabajo: contenedor Docker MySQL aislado (`exp-res-mysql`, puerto 330
     2. `pdf` y `fecha_ingreso` eran `NOT NULL` sin default en la tabla, pero ningún flujo de creación las completa (los PDFs van por `resolucion_archivos`) — cualquier alta fallaba con `SQLSTATE[HY000]: 1366`. Se hicieron `nullable`.
     3. `cod_barrio`/`cod_casa` son columnas `integer`, pero llegan como `''` (string vacío) cuando el tipo de resolución no usa manzana/lote — rompía el insert en modo estricto de MySQL. Se normaliza `''` a `null` en `persistirResolucion()`.
   - Validado extremo a extremo contra el contenedor de prueba: tipo con plantilla → se guarda con el HTML completo; tipo sin plantilla en modo "completo" → bloqueado con mensaje claro; modo "Personalizado" → se guarda igual sin depender de la plantilla.
+- ✅ **2.3** (sanitización XSS del editor Quill) — resuelto. Detalle:
+  - Se agregó la dependencia `mews/purifier` (wrapper de HTMLPurifier para Laravel) y se publicó `config/purifier.php`.
+  - Allowlist ajustada a lo que produce Quill (negrita/cursiva/subrayado/tachado, títulos, listas, citas, enlaces, imágenes, alineación/color vía `style`) sin permitir `<script>`, atributos de evento (`onclick`, `onerror`, etc.) ni esquemas peligrosos (`javascript:`).
+  - `Purifier::clean()` se aplica en `persistirResolucion()` — el único punto donde `plantilla` se escribe a la base, así que cubre los 3 flujos de guardado (`guardarPlantilla`, `guardar`, `guardarPersonalizado`) con un solo cambio.
+  - Validado con casos concretos: `<script>`, `onclick`, `onerror` y `href="javascript:..."` se eliminan; negrita/cursiva/color se conservan intactos.
+  - **Nota:** no se tocó el render `{!! $this->plantilla !!}` en `crear-resolucion.blade.php:776` porque es la vista previa en vivo del propio usuario mientras escribe (no hay riesgo de XSS contra terceros ahí); el vector real era el contenido ya guardado, que ahora sale sanitizado desde el punto de escritura.
 
 ---
 

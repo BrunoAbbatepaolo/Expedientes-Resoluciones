@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\View;
 use Livewire\Component;
 use Livewire\WithFileUploads;
+use Mews\Purifier\Facades\Purifier;
 
 class CrearResolucion extends Component
 {
@@ -322,7 +323,10 @@ class CrearResolucion extends Component
             // en modo estricto de MySQL.
             'cod_barrio' => $codBarrio !== '' ? $codBarrio : null,
             'cod_casa' => $codCasa !== '' ? $codCasa : null,
-            'plantilla' => $plantilla,
+            // Sanitizado antes de guardar: 'plantilla' llega del editor Quill en modo
+            // personalizado (HTML libre del usuario) y podría contener HTML/JS
+            // malicioso si se muestra sin escapar a otros usuarios/oficinas.
+            'plantilla' => Purifier::clean($plantilla),
         ]);
 
         foreach ($this->archivosPDF as $archivo) {
