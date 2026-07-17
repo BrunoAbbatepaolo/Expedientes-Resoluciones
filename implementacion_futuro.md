@@ -53,6 +53,24 @@ Entorno de trabajo: contenedor Docker MySQL aislado (`exp-res-mysql`, puerto 330
   - `Purifier::clean()` se aplica en `persistirResolucion()` — el único punto donde `plantilla` se escribe a la base, así que cubre los 3 flujos de guardado (`guardarPlantilla`, `guardar`, `guardarPersonalizado`) con un solo cambio.
   - Validado con casos concretos: `<script>`, `onclick`, `onerror` y `href="javascript:..."` se eliminan; negrita/cursiva/color se conservan intactos.
   - **Nota:** no se tocó el render `{!! $this->plantilla !!}` en `crear-resolucion.blade.php:776` porque es la vista previa en vivo del propio usuario mientras escribe (no hay riesgo de XSS contra terceros ahí); el vector real era el contenido ya guardado, que ahora sale sanitizado desde el punto de escritura.
+- ✅ **Sección 1 (🟢) y sección 3 (refactor/código muerto)** — resuelto lo que era seguro tocar sin datos reales; ver detalle de lo que quedó afuera y por qué.
+  - **1.6** `Oficinas::inputBusqueda()` (método vacío que colisionaba de nombre con la propiedad) — eliminado.
+  - **1.9** `welcome.blade.php`: los 3 `@keyframes` con `...` como cuerpo ahora tienen animaciones reales (fade/pulse/float).
+  - **1.10** `AppServiceProvider`: quitados el `require_once` de `fecha.php` (ya autoloaded vía `composer.json` → `autoload.files`, era doble carga) y los imports de `Livewire`/`DashboardPanel` sin usar.
+  - **1.11** `app/Console/Commands/TestConexion.php` — comando de debug olvidado (oficina hardcodeada, sin manejo de errores), eliminado. `ImportarPases` ya cubre el caso real de alta de oficinas nuevas.
+  - **1.8** `ResolucionForm::store()` y `ExpedienteForm::delete($expediente)` — confirmados sin ningún caller en toda la app, eliminados. (`ExpedienteForm::store()` sí se usa, no se tocó.)
+  - **2.7 (resto)** `resoluciones.numero_exp`/`numero_resolucion` no tenían índice: se agregó `unique` en `numero_exp` (la app ya asume que es único vía el loop de `generarNumeroTramite()`) e índice en `numero_resolucion`.
+  - **2.8 (resto)** Verificado: los 3 formularios de logout (`sidebar.blade.php` x2, `header.blade.php`) sí tienen `@csrf`. Sin cambios necesarios.
+  - **3.2 + 3.10** Los ~280 líneas de `<style>` duplicadas en los 3 prototipos se extrajeron a `resources/views/prototipos/_estilos.blade.php` (`@include`d desde cada uno); de paso se eliminó el bloque CSS huérfano (`font-weight: inherit; color: inherit; }` sin selector) que estaba repetido en los 3 archivos.
+  - **3.3** `resources/views/prototipos/resolucion.css` — eliminado. Al revisar su contenido se confirmó que usa nomenclatura BEM (`.resolucion__header`, etc.) que no coincide con ninguna clase de los prototipos actuales (`.documento-resolucion`, `.sheet`, `.header`...) — es un diseño anterior abandonado, no algo que faltara "conectar".
+  - **3.4** `button-blue.blade.php` y `placeholder-pattern.blade.php` — sin referencias en ninguna vista, eliminados.
+  - **3.5** `layouts/auth/card.blade.php` y `layouts/auth/split.blade.php` — sin referencias, eliminados (`auth/simple.blade.php` sigue siendo el layout activo).
+  - **3.6** Conexiones `pgsql`/`mariadb`/`sqlsrv` en `config/database.php` — son boilerplate del starter kit de Laravel (no algo que el equipo haya agregado a mano), se documentaron con un comentario en vez de eliminarlas, para no perder la plantilla por si se necesita una conexión rápida a futuro.
+  - **3.7** `Permiso::oficina()` — eliminada. Al revisar de nuevo se confirmó que el comentario "NO usarla" era **incorrecto**: `Oficina` vive en la misma conexión `mysql_admin` que `Permiso`, no en otra conexión distinta como decía el comentario. Igual se eliminó por estar sin uso en toda la app.
+  - **3.8** `User::oficinaIdPara()` — **no se tocó**: al revisar, resultó estar activamente en uso (la propia sección 2.1 de este plan la usa en `AuthorizesOficina` y en 3 lugares de `Expedientes.php` como fallback de `oficinaAsignadaId()`). El hallazgo original quedó desactualizado; no es código muerto.
+  - **3.9** Ya resuelto como parte de 1.4/1.5 (la reescritura de `Detalles::mount()` eliminó esa variable junto con el resto de la lógica vieja).
+  - **3.11** Se agregaron factories para `Area`, `Oficina`, `Expediente`, `Resolucion` y `Pase` (a este último le faltaba también el trait `HasFactory`). Validadas contra el contenedor de prueba (tablas legacy creadas ad-hoc solo para el test, luego eliminadas).
+  - **No se tocó (1.7):** `CrearResolucion::agregarArchivos()` vacío — su propio comentario ya aclara que es intencional (se usa `tempArchivos` con `wire:model` en su lugar).
 
 ---
 

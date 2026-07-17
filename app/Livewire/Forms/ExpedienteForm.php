@@ -122,21 +122,6 @@ class ExpedienteForm extends Form
         return -1;
     }
 
-    public function delete($expediente)
-    {
-        DB::connection('mysql_admin')->beginTransaction();
-        try {
-            $expediente->delete();
-            DB::connection('mysql_admin')->commit();
-
-            return 1;
-        } catch (\Exception $exception) {
-            DB::connection('mysql_admin')->rollBack();
-
-            return 0;
-        }
-    }
-
     public function hayCambios()
     {
         foreach ($this->campos as $campo) {

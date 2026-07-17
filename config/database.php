@@ -8,6 +8,11 @@ return [
 
     'connections' => [
 
+        // 'mariadb', 'pgsql' y 'sqlsrv' son boilerplate del starter kit de Laravel,
+        // sin uso real en la app (las conexiones reales del negocio son mysql,
+        // mysql_admin, mysql_legui y pgsql_mitiv). Se dejan por si hace falta
+        // una conexión rápida a futuro. Ver implementacion_futuro.md 3.6.
+
         // Conexión principal (ajustá si usás otra como default)
         'mysql' => [
             'driver' => 'mysql',

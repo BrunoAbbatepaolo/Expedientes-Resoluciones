@@ -2,10 +2,13 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class Pase extends Model
 {
+    use HasFactory;
+
     protected $connection = 'mysql_admin';
 
     protected $table = 'pases';

@@ -49,12 +49,6 @@ class ResolucionForm extends Form
         $this->cod_casa = $resolucion->cod_casa;
     }
 
-    public function store()
-    {
-        $this->validate();
-        Resolucion::create($this->except($this->campos));
-    }
-
     public function update()
     {
         $this->validate();
