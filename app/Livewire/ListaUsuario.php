@@ -7,6 +7,7 @@ namespace App\Livewire;
 use App\Models\Oficina;
 use App\Models\Permiso;
 use App\Models\User;
+use App\Traits\AuthorizesOficina;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Support\Collection;
@@ -15,6 +16,7 @@ use Livewire\WithPagination;
 
 class ListaUsuario extends Component
 {
+    use AuthorizesOficina;
     use WithPagination;
 
     public string $search = '';
@@ -56,6 +58,8 @@ class ListaUsuario extends Component
 
     public function mount(): void
     {
+        $this->autorizarPermiso('lista_usuario_ver');
+
         $this->oficinas = Oficina::query()
             ->orderBy('nombre')
             ->get(['id', 'nombre'])
@@ -200,6 +204,12 @@ class ListaUsuario extends Component
 
     public function togglePermiso(int $usuarioId, string $permiso): void
     {
+        if (! auth()->user()?->permiso('lista_usuario_editar')) {
+            $this->dispatch('toast', type: 'error', message: 'No tenés permiso para editar usuarios.');
+
+            return;
+        }
+
         $usuario = User::on('mysql_admin')->find($usuarioId);
 
         if (! $usuario) {

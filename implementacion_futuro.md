@@ -8,6 +8,31 @@ Generado a partir de análisis estático del código (sin `composer install`/`np
 
 Entorno de trabajo: contenedor Docker MySQL aislado (`exp-res-mysql`, puerto 3309) con datos de prueba descartables — no es la base de producción/legacy.
 
+## Auditoría de seguridad y UI/UX (2026-07-17)
+
+Pedido explícito del usuario: revisar el sistema completo a nivel seguridad, UI, interfaz e interacción usuario-sistema. Se corrigieron los hallazgos de seguridad con evidencia clara de explotabilidad; los de UI/producto quedan listados para que el usuario decida.
+
+### 🔴 Corregido: escalación de privilegios en `ListaUsuario::togglePermiso()`
+El método `togglePermiso($usuarioId, $permiso)` no tenía **ningún** chequeo de permiso (a diferencia de `guardarOficina()`/`guardarPermisos()`, que sí lo tenían). Como los métodos públicos de un componente Livewire son invocables directamente desde el navegador (`Livewire.find(id).call('togglePermiso', ...)`) independientemente de qué botones muestre el HTML, cualquier usuario autenticado —incluso sin ningún permiso— podía otorgarse `lista_usuario_editar` (o cualquier otro permiso) a sí mismo o a otro usuario. Encima, el método no se usa desde ningún botón del blade: es código muerto que además era una puerta de escalación de privilegios. Fix: se agregó el mismo chequeo `lista_usuario_editar` que ya tenían los métodos hermanos, y se agregó `autorizarPermiso('lista_usuario_ver')` en `mount()` (antes la vista ocultaba el contenido con un `@if`, pero el componente Livewire se montaba igual y quedaba con un snapshot válido y callable). Validado con Playwright: usuario sin el permiso → 403 al entrar a `/usuarios`; usuario con el permiso → sigue funcionando normal.
+
+### 🔴 Corregido: subida de archivos sin restricción de tipo + path traversal en `CrearResolucion`
+`updatedTempArchivos()` guardaba cualquier archivo subido (sin `mimes`/`max` ni ningún tipo de validación) usando el nombre original del cliente concatenado directamente en la ruta de storage. Dos problemas juntos: (1) se podía subir cualquier tipo de archivo (`.html`, `.svg` con script embebido, etc.) al disco público — XSS almacenado como mínimo, RCE dependiendo de cómo esté configurado el servidor de producción; (2) el nombre de archivo del cliente no se sanitizaba, así que un nombre con `../../` podía escribir fuera de la carpeta `temp/`. `persistirResolucion()` tenía el mismo patrón al mover el archivo a `resoluciones/`. Fix: se agregó `$this->validate(['tempArchivos.*' => 'file|mimes:pdf,jpg,jpeg,png|max:2048'])` (mismo criterio que ya usaba `ResolucionForm::$pdf`, que sí estaba bien hecho), y el nombre de archivo en disco ahora se genera solo a partir de la extensión ya validada (`uniqid().'.'.$archivo->getClientOriginalExtension()`), nunca del nombre original del cliente.
+
+### 🟡 Reportado, no corregido (decisión de producto): `/register` abierto al público
+El registro de cuentas (`routes/auth.php`, heredado del starter kit sin adaptar) es público — cualquiera en internet puede crear una cuenta en un sistema interno del IPV. El impacto práctico hoy es bajo porque una cuenta recién registrada no recibe ningún `Permiso` ni oficina asignada (todas las pantallas están gateadas por permiso), pero sigue siendo superficie de ataque innecesaria para un sistema que no debería tener alta abierta. No lo desactivé porque **no existe ningún flujo alternativo para dar de alta usuarios** — `ListaUsuario` solo edita permisos/oficina de usuarios que ya existen, no los crea. Cerrar `/register` sin reemplazo rompería la única forma de sumar personal nuevo. Recomendación: construir un flujo de alta por invitación desde `ListaUsuario` (solo con `lista_usuario_editar`) y recién ahí cerrar el registro público — es trabajo nuevo, no un fix quirúrgico, así que quedó afuera de esta pasada.
+
+### 🟢 Reportado, no corregido: `Oficinas` sin gate de permiso
+`Oficinas.blade.php`/`Oficinas.php` no chequean ningún permiso — cualquier usuario autenticado ve la lista completa de oficinas (nombre, código, área). Es el único listado del sistema sin chequeo, pero los datos no son sensibles (es directorio organizacional, no PII de expedientes) y no existe un permiso `oficina_ver` definido — agregar uno sería una decisión de producto (7º tipo de permiso), no un fix de seguridad urgente. Se deja anotado por consistencia.
+
+### 🟢 Reportado, no corregido: XSS de auto-ataque en vista previa de `CrearResolucion`
+`crear-resolucion.blade.php:776` hace `{!! $this->plantilla !!}` (sin `Purifier::clean()`) para la vista previa en vivo del modo "Personalizado". `Purifier::clean()` sí se aplica al guardar (`persistirResolucion()`), así que lo guardado en la base ya está sanitizado. El HTML sin sanitizar solo se renderiza en el navegador del mismo usuario que lo está escribiendo (nadie más lo ve sin sanitizar) — es autoataque, sin ganancia de privilegios. Se deja anotado porque no es "impecable" en sentido estricto, pero no es explotable contra terceros.
+
+### Verificado sin hallazgos
+Mass assignment (todos los modelos usan `$fillable`, ninguno `$guarded = []`), inyección SQL (sin `whereRaw`/`DB::raw` con input de usuario en ningún lado del código propio), CSRF (Livewire lo maneja automático), foto de perfil (`settings/profile.blade.php` ya validaba `image|max:1024` y generaba nombre random — bien hecho, a diferencia de `CrearResolucion`), ruta de descarga de PDF (`resoluciones/descargar-pdf/{index}`, sin IDOR real porque lee de la sesión del propio usuario), rate limiting de login (5 intentos, ya implementado), cobertura de middleware `auth` en todas las rutas.
+
+### Test suite: de 1/27 a 27/27 pasando
+Ver más abajo, sección "Hallazgo resuelto" bajo 2.5 — se investigó y corrigió la causa raíz completa (no solo el síntoma de "Table already exists"), incluyendo un segundo bug más sutil en cómo `RefreshDatabase` maneja conexiones adicionales a sqlite en memoria.
+
 - ✅ **Sección 0** (higiene del repo) — resuelto, commit `8aebf7d` + `8e95850`.
 - ✅ **1.1** (`Detalles` fatal error) — resuelto, commit `8e95850`.
 - ✅ **2.4** (bug relación `Area::oficinas()`) — resuelto, commit `8e95850`.

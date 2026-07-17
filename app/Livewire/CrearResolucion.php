@@ -329,7 +329,9 @@ class CrearResolucion extends Component
         ]);
 
         foreach ($this->archivosPDF as $archivo) {
-            $nombreArchivo = uniqid('resolucion_').'_'.$archivo->getClientOriginalName();
+            // Nombre generado a partir de la extensión, no del nombre original del
+            // cliente (ver updatedTempArchivos(): mismo riesgo de path traversal).
+            $nombreArchivo = uniqid('resolucion_').'.'.$archivo->getClientOriginalExtension();
             $ruta = $archivo->storeAs('resoluciones', $nombreArchivo, 'public');
 
             ResolucionArchivo::create([
@@ -377,11 +379,19 @@ class CrearResolucion extends Component
     public function updatedTempArchivos()
     {
         if (! empty($this->tempArchivos)) {
+            // Sin esto, se podía subir cualquier tipo de archivo (incluido .php/.html)
+            // al disco público: mismo riesgo que un upload sin restricción de tipo.
+            $this->validate([
+                'tempArchivos.*' => 'file|mimes:pdf,jpg,jpeg,png|max:2048',
+            ]);
+
             $sesionArchivos = session()->get('archivos_pdf_resolucion', []);
 
             foreach ($this->tempArchivos as $archivo) {
-                // Guardar en storage público temporalmente
-                $nombreArchivo = 'temp_'.uniqid().'_'.$archivo->getClientOriginalName();
+                // Guardar en storage público temporalmente. Nombre generado a partir
+                // de la extensión ya validada, no del nombre original del cliente:
+                // ese nombre podía traer '../' y escribir fuera de la carpeta 'temp'.
+                $nombreArchivo = 'temp_'.uniqid().'.'.$archivo->getClientOriginalExtension();
                 $ruta = $archivo->storeAs('temp', $nombreArchivo, 'public');
 
                 $this->archivosPDF[] = $archivo;
