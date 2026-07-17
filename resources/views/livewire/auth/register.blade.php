@@ -9,7 +9,8 @@ use Livewire\Attributes\Layout;
 use Livewire\Volt\Component;
 
 new #[Layout('components.layouts.auth')] class extends Component {
-    public string $name = '';
+    public string $nombre = '';
+    public string $apellido = '';
     public string $email = '';
     public string $password = '';
     public string $password_confirmation = '';
@@ -20,7 +21,8 @@ new #[Layout('components.layouts.auth')] class extends Component {
     public function register(): void
     {
         $validated = $this->validate([
-            'name' => ['required', 'string', 'max:255'],
+            'nombre' => ['required', 'string', 'max:255'],
+            'apellido' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:' . User::class],
             'password' => ['required', 'string', 'confirmed', Rules\Password::defaults()],
         ]);
@@ -42,15 +44,25 @@ new #[Layout('components.layouts.auth')] class extends Component {
     <x-auth-session-status class="text-center" :status="session('status')" />
 
     <form wire:submit="register" class="flex flex-col gap-6">
-        <!-- Name -->
+        <!-- Nombre -->
         <flux:input
-            wire:model="name"
-            :label="__('Name')"
+            wire:model="nombre"
+            :label="__('Nombre')"
             type="text"
             required
             autofocus
-            autocomplete="name"
-            :placeholder="__('Full name')"
+            autocomplete="given-name"
+            :placeholder="__('Nombre')"
+        />
+
+        <!-- Apellido -->
+        <flux:input
+            wire:model="apellido"
+            :label="__('Apellido')"
+            type="text"
+            required
+            autocomplete="family-name"
+            :placeholder="__('Apellido')"
         />
 
         <!-- Email Address -->

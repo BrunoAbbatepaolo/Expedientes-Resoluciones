@@ -11,9 +11,14 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('users', function (Blueprint $table) {
+        // La tabla real vive en mysql_admin junto al resto del núcleo de negocio
+        // (expedientes, pases, oficinas). Antes se creaba por error una segunda
+        // tabla "users" sin usar en la conexión default con columnas del starter
+        // kit (name/email) — ver implementacion_futuro.md, punto 2.5.
+        Schema::connection('mysql_admin')->create('users', function (Blueprint $table) {
             $table->id();
-            $table->string('name');
+            $table->string('nombre');
+            $table->string('apellido');
             $table->string('email')->unique();
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
@@ -43,7 +48,7 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('users');
+        Schema::connection('mysql_admin')->dropIfExists('users');
         Schema::dropIfExists('password_reset_tokens');
         Schema::dropIfExists('sessions');
     }

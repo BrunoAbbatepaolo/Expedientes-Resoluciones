@@ -4,6 +4,26 @@ Generado a partir de análisis estático del código (sin `composer install`/`np
 
 ---
 
+## Estado de implementación (actualizado 2026-07-17)
+
+Entorno de trabajo: contenedor Docker MySQL aislado (`exp-res-mysql`, puerto 3309) con datos de prueba descartables — no es la base de producción/legacy.
+
+- ✅ **Sección 0** (higiene del repo) — resuelto, commit `8aebf7d` + `8e95850`.
+- ✅ **1.1** (`Detalles` fatal error) — resuelto, commit `8e95850`.
+- ✅ **2.4** (bug relación `Area::oficinas()`) — resuelto, commit `8e95850`.
+- ✅ **2.5** (esquema `users` inconsistente) — resuelto. Detalle:
+  - `users` ahora se crea en `mysql_admin` con columnas reales (`nombre`, `apellido`, `email`, `profile_photo_path`, etc.), no en la conexión default con `name`/`email` del starter kit.
+  - Se eliminó la migración `2025_04_01_131040_add_profile_photo_to_users_table` (agregaba una columna `profile_photo` no usada por ningún componente, y era la causante del error de migración documentado en `migrate_error.txt`).
+  - `UserFactory` y `DatabaseSeeder` corregidos a `nombre`/`apellido`.
+  - `resources/views/livewire/auth/register.blade.php` seguía usando el campo `name` del starter kit (nunca se había adaptado) — corregido a `nombre`/`apellido`, igual que `settings/profile.blade.php`.
+  - Tests `RegistrationTest` y `ProfileUpdateTest` actualizados a los campos reales.
+  - **Bug relacionado encontrado y corregido (era parte de 2.7):** la migración `create_permisos_table` creaba la tabla en la conexión default en vez de `mysql_admin` (donde vive el modelo `Permiso` y donde la migración posterior sí opera). Antes "funcionaba" solo porque `users` estaba, por error, en esa misma conexión default. Corregido: `permisos` ahora se crea en `mysql_admin`.
+  - Validado con `migrate:fresh --seed` contra el contenedor de prueba: `admin.users` y `admin.permisos` se crean con el esquema correcto y el usuario semilla queda con `nombre`/`apellido` reales.
+  - **Hallazgo nuevo (fuera de alcance de este punto, documentado para más adelante):** no existe ninguna migración `create_expedientes_table` / `create_oficinas_table` / `create_areas_table` en el repo — esas tablas son legacy y se asumen pre-existentes; las migraciones del repo solo las alteran (`add_oficina_id_to_expedientes`, etc.). Un `migrate:fresh` desde cero en una base 100% vacía falla en `2025_09_02_120000_add_oficina_id_to_expedientes` porque `expedientes` no existe. Para reproducir un entorno de desarrollo limpio hoy hace falta importar el esquema legacy manualmente (fuera del flujo de migraciones).
+  - **Hallazgo nuevo:** `RefreshDatabase` (usado en los tests) solo gestiona la conexión `default` (sqlite en memoria durante tests). No limpia `mysql_admin`, así que los tests que tocan `User`/`Permiso` requieren que esa conexión ya tenga el esquema correcto y datos limpios de antemano — no hay aislamiento automático entre corridas. Requeriría una estrategia de testing multi-conexión (ej. sqlite en memoria también para `mysql_admin`, o transacciones manuales por conexión) para ser confiable en CI.
+
+---
+
 ## 0. Higiene del repositorio (antes que nada)
 
 🔴 Hay **archivos de depuración commiteados en la raíz del repo**, incluyendo un **archivo SQLite real** (`laravel`, formato `SQLite format 3`, 106 KB) y logs con salidas de errores de migración:
