@@ -66,8 +66,8 @@ class ExpedienteForm extends Form
         DB::connection('mysql_admin')->beginTransaction();
         try {
             $data = collect($this->campos)
-                ->mapWithKeys(fn($campo) => [$campo => $this->{$campo}])
-                ->map(fn($valor) => $valor === '' ? null : $valor)
+                ->mapWithKeys(fn ($campo) => [$campo => $this->{$campo}])
+                ->map(fn ($valor) => $valor === '' ? null : $valor)
                 ->toArray();
 
             \App\Models\Expediente::create($data);
@@ -76,6 +76,7 @@ class ExpedienteForm extends Form
             return 1;
         } catch (\Exception $exception) {
             DB::connection('mysql_admin')->rollBack();
+
             return 0;
         }
     }
@@ -85,20 +86,39 @@ class ExpedienteForm extends Form
         if ($this->hayCambios()) {
             DB::connection('mysql_admin')->beginTransaction();
             try {
+                $oficinaOrigenId = $this->expediente->oficina_id;
+
                 $data = collect($this->campos)
-                    ->mapWithKeys(fn($campo) => [$campo => $this->{$campo}])
-                    ->map(fn($valor) => $valor === '' ? null : $valor)
+                    ->mapWithKeys(fn ($campo) => [$campo => $this->{$campo}])
+                    ->map(fn ($valor) => $valor === '' ? null : $valor)
                     ->toArray();
 
                 $this->expediente->update($data);
+
+                // Si se eligió una oficina de destino distinta de la actual, es un pase real:
+                // dejar registro en el historial (antes solo se pisaban los campos del expediente).
+                if ($this->ofi_salida && (int) $this->ofi_salida !== (int) $oficinaOrigenId) {
+                    \App\Models\Pase::create([
+                        'expediente_id' => $this->expediente->id,
+                        'oficina_id' => $this->ofi_salida,
+                        'oficina_origen_id' => $oficinaOrigenId,
+                        'fecha' => $this->fecha_salida ?: now()->toDateString(),
+                        'user_id' => auth()->id(),
+                        'importado' => false,
+                        'firmado' => false,
+                    ]);
+                }
+
                 DB::connection('mysql_admin')->commit();
 
                 return 1;
             } catch (\Exception $exception) {
                 DB::connection('mysql_admin')->rollBack();
+
                 return 0;
             }
         }
+
         return -1;
     }
 
@@ -112,6 +132,7 @@ class ExpedienteForm extends Form
             return 1;
         } catch (\Exception $exception) {
             DB::connection('mysql_admin')->rollBack();
+
             return 0;
         }
     }

@@ -7,11 +7,13 @@ use Illuminate\Database\Eloquent\Model;
 class Pase extends Model
 {
     protected $connection = 'mysql_admin';
+
     protected $table = 'pases';
 
     protected $fillable = [
         'expediente_id',
         'oficina_id',
+        'oficina_origen_id',
         'oficina_destino_id',
         'fecha',
         'hora',
@@ -23,9 +25,9 @@ class Pase extends Model
     ];
 
     protected $casts = [
-        'fecha'     => 'date',
+        'fecha' => 'date',
         'importado' => 'boolean',
-        'firmado'   => 'boolean',
+        'firmado' => 'boolean',
     ];
 
     public function expediente()
@@ -47,6 +49,7 @@ class Pase extends Model
     {
         return $this->belongsTo(User::class);
     }
+
     public function oficinaOrigen()
     {
         return $this->belongsTo(Oficina::class, 'oficina_origen_id');
