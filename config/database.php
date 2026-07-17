@@ -85,8 +85,10 @@ return [
         ],
 
         // MySQL legui (antes tenía host/usuario/pass hardcodeados)
+        // driver configurable por env: en tests apunta a sqlite in-memory
+        // (ver phpunit.xml) para no tocar la base real de desarrollo.
         'mysql_legui' => [
-            'driver' => 'mysql',
+            'driver' => env('LEGUI_DB_CONNECTION', 'mysql'),
             'url' => env('LEGUI_DB_URL'),
             'host' => env('LEGUI_DB_HOST', '127.0.0.1'),
             'port' => env('LEGUI_DB_PORT', '3306'),
@@ -103,8 +105,10 @@ return [
         ],
 
         // MySQL admin (antes tenía host/usuario/pass hardcodeados)
+        // driver configurable por env: en tests apunta a sqlite in-memory
+        // (ver phpunit.xml) para no tocar la base real de desarrollo.
         'mysql_admin' => [
-            'driver' => 'mysql',
+            'driver' => env('ADMIN_DB_CONNECTION', 'mysql'),
             'url' => env('ADMIN_DB_URL'),
             'host' => env('ADMIN_DB_HOST', '127.0.0.1'),
             'port' => env('ADMIN_DB_PORT', '3306'),
