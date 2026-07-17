@@ -74,8 +74,22 @@ class Resoluciones extends Component
 
     public function render()
     {
-        // Se agregó latest() para que las más nuevas aparezcan arriba
-        $resolucionesConExpediente = Resolucion::with('expediente')->latest()->get();
+        $oficinaId = auth()->user()?->oficinaAsignadaId()
+            ?? auth()->user()?->oficinaIdPara('resolucion_ver');
+
+        // Se agregó latest() para que las más nuevas aparezcan arriba.
+        // Las resoluciones viejas sin oficina_id (ver implementacion_futuro.md 2.1)
+        // se siguen mostrando a todos hasta que se les asigne una oficina.
+        $resolucionesConExpediente = Resolucion::with('expediente')
+            ->where(function ($query) use ($oficinaId) {
+                $query->whereNull('oficina_id');
+
+                if ($oficinaId) {
+                    $query->orWhere('oficina_id', $oficinaId);
+                }
+            })
+            ->latest()
+            ->get();
 
         return view('livewire.resoluciones', [
             'resolucionesConExpediente' => $resolucionesConExpediente,
