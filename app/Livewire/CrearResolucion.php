@@ -313,6 +313,7 @@ class CrearResolucion extends Component
         string $plantilla
     ): Resolucion {
         $resolucion = Resolucion::create([
+            'oficina_id' => auth()->user()->oficinaAsignadaId(),
             'numero_exp' => $numeroExp,
             'numero_resolucion' => $numeroResolucion,
             'fecha' => $fecha,
