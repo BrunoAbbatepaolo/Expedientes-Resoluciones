@@ -18,6 +18,7 @@ class Resolucion extends Model
     public $timestamps = true;
 
     protected $fillable = [
+        'oficina_id',
         'numero_exp',
         'numero_resolucion',
         'plantilla',
@@ -31,6 +32,11 @@ class Resolucion extends Model
     public function expediente()
     {
         return $this->belongsTo(VistaExpedientes::class, 'numero_exp', 'numero');
+    }
+
+    public function oficina()
+    {
+        return $this->belongsTo(Oficina::class, 'oficina_id');
     }
 
     public function archivos(): HasMany
