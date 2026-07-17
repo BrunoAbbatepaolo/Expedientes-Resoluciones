@@ -27,7 +27,50 @@
         </div>
 
         <div class="bg-white dark:bg-gray-900 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700">
-            <table class="w-full table-fixed divide-y divide-gray-200 dark:divide-gray-700">
+            @if ($tipoVista === 'entrantes')
+                <table class="w-full table-fixed divide-y divide-gray-200 dark:divide-gray-700">
+                    <thead class="bg-blue-300 dark:bg-gray-800 sticky top-0 z-10 rounded-t-lg">
+                        <tr>
+                            <x-th class="w-[110px] first:rounded-tl-lg last:rounded-tr-lg">Número</x-th>
+                            <x-th class="w-[180px]">Causante</x-th>
+                            <x-th class="w-[180px]">Origen</x-th>
+                            <x-th class="w-[100px]">Fecha</x-th>
+                            <x-th class="text-center w-[100px] first:rounded-tl-lg last:rounded-tr-lg">Acciones</x-th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-blue-50 dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-700">
+                        @forelse ($expedientes as $pase)
+                            <tr class="hover:bg-violet-50 dark:hover:bg-gray-800/50 last:border-b-0">
+                                <x-td click="verDetalle({{ $pase->expediente_id }})"
+                                    class="cursor-pointer text-center overflow-hidden text-ellipsis whitespace-nowrap">
+                                    {{ $pase->expediente->num_exp ?? '-' }}
+                                </x-td>
+                                <x-td class="text-center overflow-hidden text-ellipsis whitespace-nowrap">
+                                    {{ $this->formatearCausante($pase->expediente->causante ?? '-') }}
+                                </x-td>
+                                <x-td class="text-center overflow-hidden text-ellipsis whitespace-nowrap">
+                                    {{ $pase->oficinaOrigen->nombre ?? '-' }}
+                                </x-td>
+                                <x-td class="text-center overflow-hidden text-ellipsis whitespace-nowrap">
+                                    {{ $this->obtenerDMY($pase->fecha) }}
+                                </x-td>
+                                <x-td class="text-center rounded-bl-lg">
+                                    @if (auth()->user()->permiso('expediente_editar'))
+                                        <flux:button size="sm" wire:click="aceptarPase({{ $pase->id }})"
+                                            class="cursor-pointer">Aceptar</flux:button>
+                                    @endif
+                                </x-td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="5" class="px-6 py-4 text-center text-gray-500">No hay expedientes
+                                    entrantes.</td>
+                            </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            @else
+                <table class="w-full table-fixed divide-y divide-gray-200 dark:divide-gray-700">
                 <thead class="bg-blue-300 dark:bg-gray-800 sticky top-0 z-10 rounded-t-lg">
                     <tr>
                         <x-th class="w-[110px] first:rounded-tl-lg last:rounded-tr-lg">Número</x-th>
@@ -125,7 +168,8 @@
                         </tr>
                     @endforelse
                 </tbody>
-            </table>
+                </table>
+            @endif
         </div>
 
         <div class="mt-4">

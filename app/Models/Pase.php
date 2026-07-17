@@ -25,6 +25,7 @@ class Pase extends Model
         'user_id',
         'importado',
         'firmado',
+        'estado',
     ];
 
     protected $casts = [

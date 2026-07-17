@@ -29,3 +29,4 @@ yarn-error.log
 migrate_error.*
 test_error.*
 test_migrate.php
+/.playwright-mcp

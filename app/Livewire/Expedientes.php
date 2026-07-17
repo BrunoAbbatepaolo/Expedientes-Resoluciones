@@ -5,8 +5,10 @@ namespace App\Livewire;
 use App\Livewire\Forms\ExpedienteForm;
 use App\Models\Expediente;
 use App\Models\Oficina;
+use App\Models\Pase;
 use App\Traits\AuthorizesOficina;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
 use Jantinnerezo\LivewireAlert\Facades\LivewireAlert;
 use Livewire\Component;
 use Livewire\WithPagination;
@@ -124,6 +126,9 @@ class Expedientes extends Component
             case 'expedientes.egresados':
                 $this->tipoVista = 'egresados';
                 break;
+            case 'expedientes.entrantes':
+                $this->tipoVista = 'entrantes';
+                break;
             default:
                 $this->tipoVista = 'todos';
         }
@@ -155,6 +160,11 @@ class Expedientes extends Component
             $this->sinOficina = true;
 
             return Expediente::whereRaw('1=0')->paginate(10);
+        }
+
+        // Bandeja de entrada: expedientes con un pase pendiente hacia la oficina del usuario
+        if ($this->tipoVista === 'entrantes') {
+            return $this->getEntrantes((int) $oficinaId);
         }
 
         // 3) Filtrar por oficina del usuario
@@ -195,6 +205,49 @@ class Expedientes extends Component
 
         // 7) Orden y paginación
         return $query->orderByDesc('created_at')->paginate(10);
+    }
+
+    private function getEntrantes(int $oficinaId)
+    {
+        $query = Pase::where('oficina_destino_id', $oficinaId)
+            ->where('estado', 'pendiente')
+            ->with(['expediente', 'oficinaOrigen']);
+
+        if (! empty($this->search)) {
+            $search = $this->search;
+            $query->whereHas('expediente', function ($q) use ($search) {
+                $q->where('num_exp', 'LIKE', "%{$search}%")
+                    ->orWhere('asunto', 'LIKE', "%{$search}%")
+                    ->orWhere('causante', 'LIKE', "%{$search}%");
+            });
+        }
+
+        return $query->orderByDesc('fecha')->paginate(10);
+    }
+
+    public function aceptarPase($paseId)
+    {
+        $this->autorizarPermiso('expediente_editar');
+
+        $oficinaId = auth()->user()?->oficinaAsignadaId()
+            ?? auth()->user()?->oficinaIdPara('expediente_editar');
+
+        DB::connection('mysql_admin')->transaction(function () use ($paseId, $oficinaId) {
+            $pase = Pase::lockForUpdate()->findOrFail($paseId);
+
+            abort_unless($oficinaId && (int) $pase->oficina_destino_id === (int) $oficinaId, 403);
+            abort_unless($pase->estado === 'pendiente', 403);
+
+            $pase->update(['estado' => 'aceptado']);
+            Expediente::where('id', $pase->expediente_id)->update(['oficina_id' => $pase->oficina_destino_id]);
+        });
+
+        LivewireAlert::title('Expediente aceptado en tu oficina')
+            ->success()
+            ->timer(2500)
+            ->toast()
+            ->position('top-end')
+            ->show();
     }
 
     public function updatedSearch()

@@ -78,6 +78,12 @@
                                 class="!text-gray-700 dark:!text-gray-300 text-sm">
                                 {{ __('Egresados') }}
                             </flux:navlist.item>
+
+                            <flux:navlist.item icon="inbox" :href="route('expedientes.entrantes')"
+                                :current="request()->routeIs('expedientes.entrantes')" wire:navigate
+                                class="!text-gray-700 dark:!text-gray-300 text-sm">
+                                {{ __('Entrantes') }}
+                            </flux:navlist.item>
                         </div>
                     </div>
                 <!-- @endif -->

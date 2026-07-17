@@ -108,10 +108,12 @@ class ExpedienteForm extends Form
                         'expediente_id' => $expediente->id,
                         'oficina_id' => $this->ofi_salida,
                         'oficina_origen_id' => $oficinaOrigenId,
+                        'oficina_destino_id' => $this->ofi_salida,
                         'fecha' => $this->fecha_salida ?: now()->toDateString(),
                         'user_id' => auth()->id(),
                         'importado' => false,
                         'firmado' => false,
+                        'estado' => 'pendiente',
                     ]);
                 }
 

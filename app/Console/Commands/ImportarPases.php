@@ -224,6 +224,7 @@ class ImportarPases extends Command
                         'user_id' => null,
                         'importado' => true,
                         'firmado' => false,
+                        'estado' => 'aceptado', // pases históricos: ya resueltos, no van a la bandeja de entrada
                         'created_at' => ($pase->created_at && $pase->created_at > '1970-01-01')
                                                 ? $pase->created_at : now(),
                         'updated_at' => ($pase->updated_at && $pase->updated_at > '1970-01-01')

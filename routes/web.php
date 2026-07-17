@@ -20,6 +20,7 @@ Route::middleware(['auth'])->group(function () {
     Volt::route('expedientes', 'expedientes')->middleware('auth')->name('expedientes');
     Volt::route('expedientes/ingresados', 'expedientes')->middleware('auth')->name('expedientes.ingresados');
     Volt::route('expedientes/egresados', 'expedientes')->middleware('auth')->name('expedientes.egresados');
+    Volt::route('expedientes/entrantes', 'expedientes')->middleware('auth')->name('expedientes.entrantes');
     Volt::route('expedientes/detalle/{id}', 'detalles')->middleware('auth')->name('expedientes.detalle');
     Volt::route('oficinas', 'oficinas')->middleware('auth')->name('oficinas');
     Volt::route('usuarios', 'ListaUsuario')->middleware('auth')->name('listausuarios');
