@@ -1,80 +1,82 @@
-<div class="space-y-4">
+<div class="space-y-4" x-data="{ showEditar: false, showBorrar: false }"
+    x-on:modal-close.window="
+        if ($event.detail.name === 'edit-profile') showEditar = false;
+        if ($event.detail.name === 'delete-profile') showBorrar = false;
+    ">
     @if (auth()->user()->permiso('resolucion_ver'))
-        <div class="text-3xl font-bold text-center p-4 dark:bg-zinc-900 dark:text-white rounded-lg dark:shadow-md">
+        <h1 class="text-2xl font-semibold text-ipv-ink dark:text-ipv-ink-dark">
             Sistema de Carga de Resoluciones
-        </div>
+        </h1>
 
-        <div class="flex items-center gap-2 p-4">
+        <div class="flex items-center gap-2">
             <input type="text" placeholder="Búsqueda de resoluciones"
-                class="px-4 py-2 w-full border rounded-lg bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-400
-               dark:bg-gray-800 dark:text-white dark:border-gray-600 dark:focus:ring-blue-500">
+                class="w-full rounded-lg border border-ipv-blue/20 bg-white/80 px-4 py-2 text-sm text-ipv-ink focus:outline-none focus:ring-2 focus:ring-ipv-blue/40 dark:border-white/15 dark:bg-white/[0.06] dark:text-ipv-ink-dark">
             @if (auth()->user()->permiso('resolucion_editar'))
-                <x-button wire:navigate href="{{ route('resoluciones.elegir') }}" icon="plus" color="primary">
+                <a wire:navigate href="{{ route('resoluciones.elegir') }}"
+                    class="flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-lg bg-ipv-blue px-4 py-2 text-sm font-semibold text-white hover:bg-ipv-blue-dark">
+                    <svg class="size-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
+                    </svg>
                     Generar nueva resolución
-                </x-button>
+                </a>
             @endif
         </div>
 
-
-        <div class="bg-white dark:bg-gray-900 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700">
-            <table class="w-full table-fixed divide-y divide-gray-200 dark:divide-gray-700">
-                <thead class="bg-blue-300 dark:bg-gray-800 sticky top-0 z-10 rounded-t-lg">
+        <div class="sirex-glass-card overflow-hidden rounded-[14px]">
+            <table class="w-full table-fixed">
+                <thead>
                     <tr>
-                        <x-th class="w-[140px] first:rounded-tl-lg last:rounded-tr-lg">Nº de Expediente</x-th>
-                        <x-th class="w-[140px] first:rounded-tl-lg last:rounded-tr-lg">Nº de Resolución</x-th>
-                        <x-th class="w-[120px] first:rounded-tl-lg last:rounded-tr-lg">Fecha de Resolución</x-th>
-                        <x-th class="w-[100px] first:rounded-tl-lg last:rounded-tr-lg">Barrio</x-th>
-                        <x-th class="w-[80px]  first:rounded-tl-lg last:rounded-tr-lg">Casa</x-th>
-                        <x-th class="w-[100px] first:rounded-tl-lg last:rounded-tr-lg">Archivo PDF</x-th>
+                        <th class="w-[140px] px-4 py-2.5 text-center text-xs font-semibold uppercase tracking-wide text-ipv-ink/50 dark:text-ipv-ink-dark/50">Nº de Expediente</th>
+                        <th class="w-[140px] px-4 py-2.5 text-center text-xs font-semibold uppercase tracking-wide text-ipv-ink/50 dark:text-ipv-ink-dark/50">Nº de Resolución</th>
+                        <th class="w-[120px] px-4 py-2.5 text-center text-xs font-semibold uppercase tracking-wide text-ipv-ink/50 dark:text-ipv-ink-dark/50">Fecha de Resolución</th>
+                        <th class="w-[100px] px-4 py-2.5 text-center text-xs font-semibold uppercase tracking-wide text-ipv-ink/50 dark:text-ipv-ink-dark/50">Barrio</th>
+                        <th class="w-[80px] px-4 py-2.5 text-center text-xs font-semibold uppercase tracking-wide text-ipv-ink/50 dark:text-ipv-ink-dark/50">Casa</th>
+                        <th class="w-[100px] px-4 py-2.5 text-center text-xs font-semibold uppercase tracking-wide text-ipv-ink/50 dark:text-ipv-ink-dark/50">Archivo PDF</th>
                         @if (auth()->user()->permiso('resolucion_editar'))
-                            <x-th class="text-center w-[120px] first:rounded-tl-lg last:rounded-tr-lg">Acciones</x-th>
+                            <th class="w-[120px] px-4 py-2.5 text-center text-xs font-semibold uppercase tracking-wide text-ipv-ink/50 dark:text-ipv-ink-dark/50">Acciones</th>
                         @endif
                     </tr>
                 </thead>
-                <tbody class="bg-blue-50 dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-700">
-                    @php $hasActions = auth()->user()->permiso('resolucion_editar'); @endphp
+                <tbody class="divide-y divide-ipv-blue/10 dark:divide-white/10">
                     @forelse ($resolucionesConExpediente as $resolucion)
-                        <tr class="hover:bg-violet-50 dark:hover:bg-gray-800/50 last:border-b-0">
-                            <x-td class="text-center truncate @if ($loop->last) rounded-bl-lg @endif">
+                        <tr class="hover:bg-black/[0.02] dark:hover:bg-white/[0.03]">
+                            <td class="truncate px-4 py-2.5 text-center text-sm text-ipv-ink dark:text-ipv-ink-dark">
                                 @if ($resolucion->expediente)
                                     {{ $resolucion->expediente->numero }}
                                 @else
-                                    <span class="text-gray-400 italic">Sin expediente</span>
+                                    <span class="italic text-ipv-ink/40 dark:text-ipv-ink-dark/40">Sin expediente</span>
                                 @endif
-                            </x-td>
-                            <x-td class="truncate text-center">
+                            </td>
+                            <td class="truncate px-4 py-2.5 text-center text-sm text-ipv-ink dark:text-ipv-ink-dark">
                                 {{ $resolucion->numero_resolucion }}
-                            </x-td>
-                            <x-td class="truncate text-center">
+                            </td>
+                            <td class="truncate px-4 py-2.5 text-center text-sm text-ipv-ink/70 dark:text-ipv-ink-dark/70">
                                 {{ $resolucion->fecha }}
-                            </x-td>
-                            <x-td class="truncate text-center">
+                            </td>
+                            <td class="truncate px-4 py-2.5 text-center text-sm text-ipv-ink/70 dark:text-ipv-ink-dark/70">
                                 {{ $resolucion->cod_barrio }}
-                            </x-td>
-                            <x-td class="truncate text-center">
+                            </td>
+                            <td class="truncate px-4 py-2.5 text-center text-sm text-ipv-ink/70 dark:text-ipv-ink-dark/70">
                                 {{ $resolucion->cod_casa }}
-                            </x-td>
-                            <x-td class="text-center truncate @if ($loop->last && !$hasActions) rounded-br-lg @endif">
+                            </td>
+                            <td class="truncate px-4 py-2.5 text-center">
                                 <a href="{{ $resolucion->pdf }}" target="_blank" rel="noopener"
-                                    class="inline-flex items-center gap-1 text-red-500 hover:text-red-600 transition-colors duration-200">
+                                    class="inline-flex items-center gap-1 text-ipv-magenta transition-colors duration-200 hover:opacity-80">
                                     <svg class="size-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                             d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                                     </svg>
                                     Ver PDF
                                 </a>
-                            </x-td>
+                            </td>
 
                             @if (auth()->user()->permiso('resolucion_editar'))
-                                <x-td class="text-center @if ($loop->last && $hasActions) rounded-br-lg @endif">
-                                    <div class="relative inline-block" x-data="{ open: false }"
-                                        @click.outside="open = false">
+                                <td class="px-4 py-2.5 text-center">
+                                    <div class="relative inline-block" x-data="{ open: false }" @click.outside="open = false">
                                         <button @click="open = !open"
-                                            class="p-2 rounded-xl bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 transition-colors duration-200 cursor-pointer">
-                                            <svg class="size-5 text-gray-600 dark:text-gray-400" fill="currentColor"
-                                                viewBox="0 0 24 24">
-                                                <path
-                                                    d="M12 3c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 14c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0-7c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z" />
+                                            class="cursor-pointer rounded-xl bg-black/[0.04] p-2 transition-colors duration-200 hover:bg-black/[0.08] dark:bg-white/[0.06] dark:hover:bg-white/[0.12]">
+                                            <svg class="size-5 text-ipv-ink/70 dark:text-ipv-ink-dark/70" fill="currentColor" viewBox="0 0 24 24">
+                                                <path d="M12 3c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 14c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0-7c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z" />
                                             </svg>
                                         </button>
 
@@ -84,42 +86,32 @@
                                             x-transition:leave="transition ease-in duration-75"
                                             x-transition:leave-start="opacity-100 scale-100"
                                             x-transition:leave-end="opacity-0 scale-95"
-                                            class="absolute right-0 z-50 w-48 mt-2 rounded-xl bg-white dark:bg-gray-800 shadow-xl ring-1 ring-gray-200 dark:ring-gray-700 overflow-hidden origin-top-right">
-                                            <flux:modal.trigger name="edit-profile">
-                                                <button wire:click="cargarResolucion({{ $resolucion->id }})"
-                                                    @click="open = false"
-                                                    class="w-full px-4 py-3 text-sm text-left text-gray-700 dark:text-gray-200 hover:bg-gradient-to-r hover:from-blue-500 hover:to-blue-600 hover:text-white dark:hover:from-blue-600 dark:hover:to-blue-700 transition-all duration-200 flex items-center gap-2 cursor-pointer">
-                                                    <svg class="size-4" fill="none" stroke="currentColor"
-                                                        viewBox="0 0 24 24">
-                                                        <path stroke-linecap="round" stroke-linejoin="round"
-                                                            stroke-width="2"
-                                                            d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                                                    </svg>
-                                                    Modificar resolución
-                                                </button>
-                                            </flux:modal.trigger>
-                                            <flux:modal.trigger name="delete-profile">
-                                                <button wire:click="confirmarBorrado({{ $resolucion->id }})" @click="open = false"
-                                                    class="w-full px-4 py-3 text-sm text-left text-red-600 dark:text-red-400 hover:bg-gradient-to-r hover:from-red-500 hover:to-red-600 hover:text-white dark:hover:from-red-600 dark:hover:to-red-700 transition-all duration-200 flex items-center gap-2 cursor-pointer">
-                                                    <svg class="size-4" fill="none" stroke="currentColor"
-                                                        viewBox="0 0 24 24">
-                                                        <path stroke-linecap="round" stroke-linejoin="round"
-                                                            stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                                                    </svg>
-                                                    Eliminar resolución
-                                                </button>
-                                            </flux:modal.trigger>
+                                            class="absolute right-0 z-50 mt-2 w-48 origin-top-right overflow-hidden rounded-xl bg-white shadow-xl ring-1 ring-ipv-blue/15 dark:bg-slate-800 dark:ring-white/10">
+                                            <button wire:click="cargarResolucion({{ $resolucion->id }})" @click="open = false; showEditar = true"
+                                                class="flex w-full cursor-pointer items-center gap-2 px-4 py-3 text-left text-sm text-ipv-ink/80 transition-all duration-200 hover:bg-ipv-blue hover:text-white dark:text-ipv-ink-dark/85">
+                                                <svg class="size-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                        d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                                </svg>
+                                                Modificar resolución
+                                            </button>
+                                            <button wire:click="confirmarBorrado({{ $resolucion->id }})" @click="open = false; showBorrar = true"
+                                                class="flex w-full cursor-pointer items-center gap-2 px-4 py-3 text-left text-sm text-ipv-magenta transition-all duration-200 hover:bg-ipv-magenta hover:text-white">
+                                                <svg class="size-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                                                </svg>
+                                                Eliminar resolución
+                                            </button>
                                         </div>
                                     </div>
-                                </x-td>
+                                </td>
                             @endif
                         </tr>
                     @empty
-                        <tr class="last:rounded-bl-lg last:rounded-br-lg">
-                            <td colspan="7"
-                                class="px-6 py-12 text-center text-gray-500 dark:text-gray-400 rounded-b-lg">
+                        <tr>
+                            <td colspan="7" class="px-6 py-12 text-center text-ipv-ink/40 dark:text-ipv-ink-dark/40">
                                 <div class="flex flex-col items-center gap-2">
-                                    <svg class="size-12 text-gray-300 dark:text-gray-600" fill="none"
+                                    <svg class="size-12 text-ipv-ink/20 dark:text-ipv-ink-dark/20" fill="none"
                                         stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1"
                                             d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
@@ -133,59 +125,79 @@
             </table>
         </div>
 
-
-
         <!-- modal para editar resoluciones -->
-        <flux:modal name="edit-profile" class="md:w-96">
-            <div class="space-y-6">
-                <div>
-                    <flux:heading size="lg">Modificar Resolucion</flux:heading>
-                    <flux:text class="mt-2">Modifique los cambios en la resolucion</flux:text>
-                </div>
+        <div x-show="showEditar" x-cloak x-on:keydown.escape.window="showEditar = false"
+            class="fixed inset-0 z-[100] flex items-center justify-center bg-[#001428]/50 p-4 backdrop-blur-sm"
+            x-on:click.self="showEditar = false">
+            <div class="w-full max-w-96 rounded-2xl border border-ipv-blue/20 bg-white/95 p-5 shadow-2xl backdrop-blur-2xl backdrop-saturate-150 dark:border-white/10 dark:bg-[#141c26]/95">
+                <div class="space-y-6">
+                    <div>
+                        <h3 class="text-lg font-semibold text-ipv-ink dark:text-ipv-ink-dark">Modificar Resolución</h3>
+                        <p class="mt-2 text-sm text-ipv-ink/60 dark:text-ipv-ink-dark/60">Modifique los cambios en la resolución</p>
+                    </div>
 
-                <flux:input wire:model="resolucionForm.numero_exp" label="Nº de Expediente"
-                    placeholder="Ingrese el numero de Expediente" />
+                    <div>
+                        <label class="mb-1 block text-sm font-medium text-ipv-ink/75 dark:text-ipv-ink-dark/80">Nº de Expediente</label>
+                        <input wire:model="resolucionForm.numero_exp" placeholder="Ingrese el numero de Expediente"
+                            class="w-full rounded-lg border border-ipv-blue/20 bg-white/80 px-3 py-2 text-sm text-ipv-ink focus:outline-none focus:ring-2 focus:ring-ipv-blue/40 dark:border-white/15 dark:bg-white/[0.06] dark:text-ipv-ink-dark">
+                    </div>
 
-                <flux:input wire:model="resolucionForm.numero_resolucion" label="Nº de Resolución"
-                    placeholder="Ingrese el Nº de Resolución" />
+                    <div>
+                        <label class="mb-1 block text-sm font-medium text-ipv-ink/75 dark:text-ipv-ink-dark/80">Nº de Resolución</label>
+                        <input wire:model="resolucionForm.numero_resolucion" placeholder="Ingrese el Nº de Resolución"
+                            class="w-full rounded-lg border border-ipv-blue/20 bg-white/80 px-3 py-2 text-sm text-ipv-ink focus:outline-none focus:ring-2 focus:ring-ipv-blue/40 dark:border-white/15 dark:bg-white/[0.06] dark:text-ipv-ink-dark">
+                    </div>
 
-                <flux:input type="date" wire:model="resolucionForm.fecha" label="Fecha"
-                    placeholder="Ingrese la fecha" />
+                    <div>
+                        <label class="mb-1 block text-sm font-medium text-ipv-ink/75 dark:text-ipv-ink-dark/80">Fecha</label>
+                        <input type="date" wire:model="resolucionForm.fecha" placeholder="Ingrese la fecha"
+                            class="w-full rounded-lg border border-ipv-blue/20 bg-white/80 px-3 py-2 text-sm text-ipv-ink focus:outline-none focus:ring-2 focus:ring-ipv-blue/40 dark:border-white/15 dark:bg-white/[0.06] dark:text-ipv-ink-dark">
+                    </div>
 
-                <flux:input wire:model="resolucionForm.cod_barrio" label="Barrio" placeholder="Ingrese el Barrio" />
+                    <div>
+                        <label class="mb-1 block text-sm font-medium text-ipv-ink/75 dark:text-ipv-ink-dark/80">Barrio</label>
+                        <input wire:model="resolucionForm.cod_barrio" placeholder="Ingrese el Barrio"
+                            class="w-full rounded-lg border border-ipv-blue/20 bg-white/80 px-3 py-2 text-sm text-ipv-ink focus:outline-none focus:ring-2 focus:ring-ipv-blue/40 dark:border-white/15 dark:bg-white/[0.06] dark:text-ipv-ink-dark">
+                    </div>
 
-                <flux:input wire:model="resolucionForm.cod_casa" label="Casa"
-                    placeholder="Ingrese el Nº de Casa" />
+                    <div>
+                        <label class="mb-1 block text-sm font-medium text-ipv-ink/75 dark:text-ipv-ink-dark/80">Casa</label>
+                        <input wire:model="resolucionForm.cod_casa" placeholder="Ingrese el Nº de Casa"
+                            class="w-full rounded-lg border border-ipv-blue/20 bg-white/80 px-3 py-2 text-sm text-ipv-ink focus:outline-none focus:ring-2 focus:ring-ipv-blue/40 dark:border-white/15 dark:bg-white/[0.06] dark:text-ipv-ink-dark">
+                    </div>
 
-                <div class="flex">
-                    <flux:spacer />
-
-                    <flux:button type="submit" variant="primary" class="cursor-pointer">Guardar Cambios
-                    </flux:button>
-                </div>
-            </div>
-        </flux:modal>
-        <flux:modal name="delete-profile" class="min-w-[22rem]">
-            <div class="space-y-6">
-                <div>
-                    <flux:heading size="lg">Borrar resolucion?</flux:heading>
-
-                    <flux:text class="mt-2">
-                        <p>Estas seguro que quieres borrarla?</p>
-
-                    </flux:text>
-                </div>
-
-                <div class="flex gap-2">
-                    <flux:spacer />
-
-                    <flux:modal.close>
-                        <flux:button variant="ghost" class="cursor-pointer">Cancelar</flux:button>
-                    </flux:modal.close>
-
-                    <flux:button wire:click="borrar" variant="danger" class="cursor-pointer">Borrar</flux:button>
+                    <div class="flex justify-end">
+                        <button type="submit" class="cursor-pointer rounded-lg bg-ipv-blue px-4 py-2 text-sm font-semibold text-white hover:bg-ipv-blue-dark">
+                            Guardar Cambios
+                        </button>
+                    </div>
                 </div>
             </div>
-        </flux:modal>
+        </div>
+
+        <!-- modal para confirmar borrado -->
+        <div x-show="showBorrar" x-cloak x-on:keydown.escape.window="showBorrar = false"
+            class="fixed inset-0 z-[100] flex items-center justify-center bg-[#001428]/50 p-4 backdrop-blur-sm"
+            x-on:click.self="showBorrar = false">
+            <div class="w-full min-w-[22rem] max-w-sm rounded-2xl border border-ipv-blue/20 bg-white/95 p-5 shadow-2xl backdrop-blur-2xl backdrop-saturate-150 dark:border-white/10 dark:bg-[#141c26]/95">
+                <div class="space-y-6">
+                    <div>
+                        <h3 class="text-lg font-semibold text-ipv-ink dark:text-ipv-ink-dark">¿Borrar resolución?</h3>
+                        <p class="mt-2 text-sm text-ipv-ink/60 dark:text-ipv-ink-dark/60">¿Estás seguro que querés borrarla?</p>
+                    </div>
+
+                    <div class="flex justify-end gap-2">
+                        <button type="button" @click="showBorrar = false"
+                            class="cursor-pointer rounded-lg border border-ipv-blue/20 px-4 py-2 text-sm font-medium text-ipv-ink/80 hover:bg-black/[0.03] dark:border-white/15 dark:text-ipv-ink-dark/85 dark:hover:bg-white/5">
+                            Cancelar
+                        </button>
+                        <button type="button" wire:click="borrar"
+                            class="cursor-pointer rounded-lg bg-ipv-magenta px-4 py-2 text-sm font-semibold text-white hover:opacity-90">
+                            Borrar
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
     @endif
 </div>
