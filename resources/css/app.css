@@ -41,6 +41,9 @@
     --color-ipv-magenta-light: #ff9dc0;
     --color-ipv-ink: #1f2937;
     --color-ipv-ink-dark: #e5e9ee;
+
+    /* Fondo neutro para pantallas sin el shell de glassmorphism (auth, settings) */
+    --color-background: #ffffff;
 }
 
 @keyframes sirex-badge-pop {
@@ -93,6 +96,7 @@
         --color-accent: var(--color-white);
         --color-accent-content: var(--color-white);
         --color-accent-foreground: var(--color-neutral-800);
+        --color-background: #0f1720;
     }
 }
 
