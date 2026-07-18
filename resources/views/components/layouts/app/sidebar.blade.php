@@ -45,7 +45,7 @@
                 class="w-full rounded-full border border-ipv-blue/15 bg-white/70 py-2 pl-[30px] pr-2.5 text-[12.5px] text-ipv-ink placeholder-ipv-ink/40 focus:outline-none focus:ring-2 focus:ring-ipv-blue/30 dark:border-white/15 dark:bg-white/[0.06] dark:text-ipv-ink-dark dark:placeholder-ipv-ink-dark/40" />
         </div>
 
-        <nav class="flex flex-1 flex-col gap-0.5 overflow-y-auto">
+        <nav class="flex min-h-0 flex-1 flex-col gap-0.5 overflow-y-auto">
 
             <div class="px-3 pb-1.5 pt-1 text-[10.5px] font-bold uppercase tracking-wider text-ipv-ink/40 dark:text-ipv-ink-dark/40">
                 General
