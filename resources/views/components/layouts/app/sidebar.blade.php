@@ -5,118 +5,158 @@
     @include('partials.head')
 </head>
 
-<body class="min-h-screen bg-zinc-100 dark:bg-zinc-800">
-    <flux:sidebar sticky stashable class="border-r border-zinc-200 bg-blue-200 dark:border-zinc-700 dark:bg-zinc-900">
-        <flux:sidebar.toggle class="lg:hidden" icon="x-mark" />
+<body class="min-h-screen overflow-x-hidden sirex-shell text-ipv-ink dark:text-ipv-ink-dark">
+    <flux:sidebar sticky stashable
+        class="sirex-glass gap-1 border-r border-[rgba(0,81,158,0.12)] !p-3.5 dark:border-white/10">
 
-        <a href="{{ route('dashboard') }}"
-            class="flex flex-col items-center space-y-2 bg-blue-50 dark:bg-zinc-800 rounded-full p-4" wire:navigate>
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
-                stroke="currentColor" class="size-6">
-                <path stroke-linecap="round" stroke-linejoin="round"
-                    d="M6.72 13.829c-.24.03-.48.062-.72.096m.72-.096a42.415 42.415 0 0 1 10.56 0m-10.56 0L6.34 18m10.94-4.171c.24.03.48.062.72.096m-.72-.096L17.66 18m0 0 .229 2.523a1.125 1.125 0 0 1-1.12 1.227H7.231c-.662 0-1.18-.568-1.12-1.227L6.34 18m11.318 0h1.091A2.25 2.25 0 0 0 21 15.75V9.456c0-1.081-.768-2.015-1.837-2.175a48.055 48.055 0 0 0-1.913-.247M6.34 18H5.25A2.25 2.25 0 0 1 3 15.75V9.456c0-1.081.768-2.015 1.837-2.175a48.041 48.041 0 0 1 1.913-.247m10.5 0a48.536 48.536 0 0 0-10.5 0m10.5 0V3.375c0-.621-.504-1.125-1.125-1.125h-8.25c-.621 0-1.125.504-1.125 1.125v3.659M18 10.5h.008v.008H18V10.5Zm-3 0h.008v.008H15V10.5Z" />
-            </svg>
-            <h1 class="text-xl font-bold">SiRex</h1>
-        </a>
+        <div class="flex items-center justify-between gap-2 px-1 pb-3">
+            <a href="{{ route('dashboard') }}" class="flex min-w-0 items-center gap-2.5" wire:navigate>
+                <span class="flex size-9 shrink-0 items-center justify-center rounded-[10px] bg-ipv-gold">
+                    <flux:icon.folder-open variant="outline" class="size-[18px] !text-ipv-blue-dark" />
+                </span>
+                <span class="min-w-0">
+                    <span class="block truncate text-base font-semibold leading-tight">SiRex</span>
+                    <span class="block truncate text-[11px] text-ipv-ink/55 dark:text-ipv-ink-dark/50">Gestión de
+                        expedientes</span>
+                </span>
+            </a>
+            <flux:sidebar.toggle class="lg:hidden" icon="x-mark" />
+        </div>
 
+        <div class="relative mb-3.5 px-0.5">
+            <flux:icon.magnifying-glass
+                class="pointer-events-none absolute left-4 top-1/2 size-3.5 -translate-y-1/2 !text-ipv-ink/40 dark:!text-ipv-ink-dark/45" />
+            <input type="text" placeholder="Buscar…"
+                class="w-full rounded-full border border-[rgba(0,81,158,0.15)] bg-white/70 py-2 pl-9 pr-3 text-[12.5px] text-ipv-ink placeholder-ipv-ink/40 focus:outline-none focus:ring-2 focus:ring-ipv-blue/30 dark:border-white/15 dark:bg-white/[0.06] dark:text-ipv-ink-dark dark:placeholder-ipv-ink-dark/40" />
+        </div>
 
-        <flux:navlist variant="outline">
-            <flux:navlist.group :heading="__('')" class="grid">
+        <flux:navlist variant="outline" class="gap-0.5">
+            <flux:navlist.group :heading="__('')" class="!space-y-0.5">
+
+                <div
+                    class="px-3 pb-1.5 pt-1 text-[10.5px] font-bold uppercase tracking-[0.07em] text-ipv-ink/40 dark:text-ipv-ink-dark/40">
+                    General
+                </div>
+
                 <flux:navlist.item icon="home" :href="route('dashboard')" :current="request()->routeIs('dashboard')"
-                    class="!text-gray-800 dark:!text-white" wire:navigate>{{ __('Dashboard') }}</flux:navlist.item>
+                    class="!h-auto !gap-2.5 !rounded-[9px] !py-[9px] !pl-4 !pr-3 !text-sm !font-medium !text-ipv-ink/75 data-current:!bg-ipv-gold/18 data-current:!font-semibold data-current:!text-ipv-gold-ink dark:!text-ipv-ink-dark/82 dark:data-current:!bg-ipv-gold/16 dark:data-current:!text-ipv-gold-light"
+                    wire:navigate>
+                    <span
+                        class="absolute inset-y-2 left-1 w-[3px] rounded-full {{ request()->routeIs('dashboard') ? 'bg-ipv-gold' : 'bg-transparent' }}"></span>
+                    {{ __('Dashboard') }}
+                </flux:navlist.item>
 
-                <!-- {{-- @if (auth()->user()->permiso('expediente_ver')) -->
-                    <flux:navlist.item icon="document" :href="route('expedientes')"
-                        :current="request()->routeIs('expedientes')" class="!text-gray-800 dark:!text-white"
-                        wire:navigate>{{ __('Expedientes') }}</flux:navlist.item>
+                <div
+                    class="px-3 pb-1.5 pt-3 text-[10.5px] font-bold uppercase tracking-[0.07em] text-ipv-ink/40 dark:text-ipv-ink-dark/40">
+                    Gestión
+                </div>
 
-                <!-- @endif --}} -->
                 <!-- @if (auth()->user()->permiso('expediente_ver')) -->
-                    <div x-data="{
-                        open: {{ request()->routeIs('expedientes*') ? 'true' : 'false' }},
-                        toggle() { this.open = !this.open }
-                    }" class="space-y-1">
+                <div x-data="{
+                    open: {{ request()->routeIs('expedientes*') ? 'true' : 'false' }},
+                    toggle() { this.open = !this.open }
+                }">
 
-                        <!-- Elemento principal que actúa como toggle -->
-                        <flux:navlist.item @click="toggle()" icon="folder"
-                            :current="request()->routeIs('expedientes*')"
-                            class="!text-gray-800 dark:!text-white cursor-pointer" as="button" type="button">
-                            <div class="flex items-center justify-between w-full">
-                                <span>{{ __('Expedientes') }}</span>
-                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"
-                                    class="w-4 h-4 transition-transform ml-auto" :class="{ 'rotate-180': open }">
-                                    <path fill-rule="evenodd"
-                                        d="M5.23 7.21a.75.75 0 0 1 1.06.02L10 10.94l3.71-3.71a.75.75 0 1 1 1.06 1.06l-4.24 4.25a.75.75 0 0 1-1.06 0L5.25 8.27a.75.75 0 0 1-.02-1.06Z"
-                                        clip-rule="evenodd" />
-                                </svg>
-                            </div>
+                    <!-- Elemento principal que actúa como toggle -->
+                    <flux:navlist.item @click="toggle()" icon="folder" :current="request()->routeIs('expedientes*')"
+                        class="!h-auto !cursor-pointer !gap-2.5 !rounded-[9px] !py-[9px] !pl-4 !pr-3 !text-sm !font-medium !text-ipv-ink/75 dark:!text-ipv-ink-dark/82"
+                        as="button" type="button">
+                        <div class="flex w-full items-center justify-between">
+                            <span>{{ __('Expedientes') }}</span>
+                            <flux:icon.chevron-down class="ml-auto size-3.5 transition-transform"
+                                :class="{ 'rotate-180': open }" />
+                        </div>
+                    </flux:navlist.item>
+
+                    <!-- Submenú colapsable -->
+                    <div x-show="open" x-cloak x-transition:enter="transition ease-out duration-200"
+                        x-transition:enter-start="opacity-0 -translate-y-2"
+                        x-transition:enter-end="opacity-100 translate-y-0"
+                        x-transition:leave="transition ease-in duration-150"
+                        x-transition:leave-start="opacity-100 translate-y-0"
+                        x-transition:leave-end="opacity-0 -translate-y-2"
+                        class="ml-3.5 mt-0.5 space-y-px border-l-2 border-[rgba(0,81,158,0.15)] pl-2.5 dark:border-white/15">
+
+                        <flux:navlist.item icon="document" :href="route('expedientes')"
+                            :current="request()->routeIs('expedientes') && !request()->routeIs('expedientes.ingresados') && !request()->routeIs('expedientes.egresados')"
+                            wire:navigate
+                            class="!h-auto !rounded-[7px] !px-2.5 !py-[7px] !text-[13px] !font-normal !text-ipv-ink/65 dark:!text-ipv-ink-dark/65">
+                            {{ __('Todos') }}
                         </flux:navlist.item>
 
-                        <!-- Submenú colapsable -->
-                        <div x-show="open" x-cloak x-transition:enter="transition ease-out duration-200"
-                            x-transition:enter-start="opacity-0 -translate-y-2"
-                            x-transition:enter-end="opacity-100 translate-y-0"
-                            x-transition:leave="transition ease-in duration-150"
-                            x-transition:leave-start="opacity-100 translate-y-0"
-                            x-transition:leave-end="opacity-0 -translate-y-2"
-                            class="ml-4 space-y-1 border-l-2 border-zinc-200 dark:border-zinc-700 pl-2">
+                        <flux:navlist.item icon="document-plus" :href="route('expedientes.ingresados')"
+                            :current="request()->routeIs('expedientes.ingresados')" wire:navigate
+                            class="!h-auto !rounded-[7px] !px-2.5 !py-[7px] !text-[13px] !font-normal !text-ipv-ink/65 dark:!text-ipv-ink-dark/65">
+                            {{ __('Ingresados') }}
+                        </flux:navlist.item>
 
-                            <flux:navlist.item icon="document" :href="route('expedientes')"
-                                :current="request()->routeIs('expedientes') && !request()->routeIs('expedientes.ingresados') && !request()->routeIs('expedientes.egresados')"
-                                wire:navigate class="!text-gray-700 dark:!text-gray-300 text-sm">
-                                {{ __('Todos') }}
-                            </flux:navlist.item>
+                        <flux:navlist.item icon="document-check" :href="route('expedientes.egresados')"
+                            :current="request()->routeIs('expedientes.egresados')" wire:navigate
+                            class="!h-auto !rounded-[7px] !px-2.5 !py-[7px] !text-[13px] !font-normal !text-ipv-ink/65 dark:!text-ipv-ink-dark/65">
+                            {{ __('Egresados') }}
+                        </flux:navlist.item>
 
-                            <flux:navlist.item icon="document-plus" :href="route('expedientes.ingresados')"
-                                :current="request()->routeIs('expedientes.ingresados')" wire:navigate
-                                class="!text-gray-700 dark:!text-gray-300 text-sm">
-                                {{ __('Ingresados') }}
-                            </flux:navlist.item>
-
-                            <flux:navlist.item icon="document-check" :href="route('expedientes.egresados')"
-                                :current="request()->routeIs('expedientes.egresados')" wire:navigate
-                                class="!text-gray-700 dark:!text-gray-300 text-sm">
-                                {{ __('Egresados') }}
-                            </flux:navlist.item>
-
-                            <flux:navlist.item icon="inbox" :href="route('expedientes.entrantes')"
-                                :current="request()->routeIs('expedientes.entrantes')" wire:navigate
-                                class="!text-gray-700 dark:!text-gray-300 text-sm">
-                                <div class="flex items-center justify-between w-full">
-                                    <span>{{ __('Entrantes') }}</span>
-                                    <livewire:entrantes-badge />
-                                </div>
-                            </flux:navlist.item>
-                        </div>
+                        <flux:navlist.item icon="inbox" :href="route('expedientes.entrantes')"
+                            :current="request()->routeIs('expedientes.entrantes')" wire:navigate
+                            class="!h-auto !rounded-[7px] !bg-ipv-gold/16 !px-2.5 !py-[7px] !text-[13px] !font-semibold !text-ipv-gold-ink dark:!bg-ipv-gold/14 dark:!text-ipv-gold-light">
+                            <div class="flex w-full items-center justify-between">
+                                <span>{{ __('Entrantes') }}</span>
+                                <livewire:entrantes-badge />
+                            </div>
+                        </flux:navlist.item>
                     </div>
+                </div>
                 <!-- @endif -->
 
-
-
                 <!-- @if (auth()->user()->permiso('resolucion_ver')) -->
-                    <flux:navlist.item icon="folder-open" :href="route('resoluciones')"
-                        :current="request()->routeIs('resoluciones')" class="!text-gray-800 dark:!text-white"
-                        wire:navigate>{{ __('Resoluciones') }}</flux:navlist.item>
+                <flux:navlist.item icon="folder-open" :href="route('resoluciones')"
+                    :current="request()->routeIs('resoluciones')"
+                    class="!h-auto !gap-2.5 !rounded-[9px] !py-[9px] !pl-4 !pr-3 !text-sm !font-medium !text-ipv-ink/75 data-current:!bg-ipv-gold/18 data-current:!font-semibold data-current:!text-ipv-gold-ink dark:!text-ipv-ink-dark/82 dark:data-current:!bg-ipv-gold/16 dark:data-current:!text-ipv-gold-light"
+                    wire:navigate>
+                    <span
+                        class="absolute inset-y-2 left-1 w-[3px] rounded-full {{ request()->routeIs('resoluciones') ? 'bg-ipv-gold' : 'bg-transparent' }}"></span>
+                    {{ __('Resoluciones') }}
+                </flux:navlist.item>
                 <!-- @endif -->
 
                 <flux:navlist.item icon="building-office" :href="route('oficinas')"
-                    :current="request()->routeIs('oficinas')" class="!text-gray-800 dark:!text-white" wire:navigate>
-                    {{ __('Oficinas') }}</flux:navlist.item>
-                    <flux:navlist.item icon="user" :href="route('listausuarios')"
-                        :current="request()->routeIs('listausuario')" class="!text-gray-800 dark:!text-white"
-                        wire:navigate>{{ __('Usuarios') }}</flux:navlist.item>
+                    :current="request()->routeIs('oficinas')"
+                    class="!h-auto !gap-2.5 !rounded-[9px] !py-[9px] !pl-4 !pr-3 !text-sm !font-medium !text-ipv-ink/75 data-current:!bg-ipv-gold/18 data-current:!font-semibold data-current:!text-ipv-gold-ink dark:!text-ipv-ink-dark/82 dark:data-current:!bg-ipv-gold/16 dark:data-current:!text-ipv-gold-light"
+                    wire:navigate>
+                    <span
+                        class="absolute inset-y-2 left-1 w-[3px] rounded-full {{ request()->routeIs('oficinas') ? 'bg-ipv-gold' : 'bg-transparent' }}"></span>
+                    {{ __('Oficinas') }}
+                </flux:navlist.item>
+
+                <flux:navlist.item icon="user" :href="route('listausuarios')"
+                    :current="request()->routeIs('listausuario')"
+                    class="!h-auto !gap-2.5 !rounded-[9px] !py-[9px] !pl-4 !pr-3 !text-sm !font-medium !text-ipv-ink/75 data-current:!bg-ipv-gold/18 data-current:!font-semibold data-current:!text-ipv-gold-ink dark:!text-ipv-ink-dark/82 dark:data-current:!bg-ipv-gold/16 dark:data-current:!text-ipv-gold-light"
+                    wire:navigate>
+                    <span
+                        class="absolute inset-y-2 left-1 w-[3px] rounded-full {{ request()->routeIs('listausuario') ? 'bg-ipv-gold' : 'bg-transparent' }}"></span>
+                    {{ __('Usuarios') }}
+                </flux:navlist.item>
             </flux:navlist.group>
         </flux:navlist>
 
         <flux:spacer />
 
+        <div
+            class="flex items-center justify-between border-t border-[rgba(0,81,158,0.12)] px-2.5 py-2.5 dark:border-white/10">
+            <span class="flex items-center gap-1.5 text-[13px] font-medium text-ipv-ink/75 dark:text-ipv-ink-dark/82">
+                <span x-data x-show="$flux.dark" x-cloak><flux:icon.moon variant="outline" class="size-[15px]" /></span>
+                <span x-data x-show="!$flux.dark" x-cloak><flux:icon.sun variant="outline" class="size-[15px]" /></span>
+                Modo oscuro
+            </span>
+            <flux:switch x-data x-model="$flux.dark" />
+        </div>
 
-        <flux:switch x-data x-model="$flux.dark" label="Modo Obscuro" />
         <!-- Desktop User Menu -->
         <flux:dropdown position="bottom" align="start">
             <flux:profile :name="auth()->user()->nombre" :initials="auth()->user()->initials()"
                 :image="auth()->user()->profile_photo_path ? Storage::url(auth()->user()->profile_photo_path) : null"
-                icon-trailing="chevrons-up-down" />
+                avatar:class="bg-ipv-gold text-ipv-gold-ink" icon-trailing="chevrons-up-down"
+                class="!rounded-[9px]" />
 
             <flux:menu class="w-[220px]">
                 <flux:menu.radio.group>
@@ -128,7 +168,7 @@
                                         alt="{{ auth()->user()->name }}" class="h-full w-full object-cover">
                                 @else
                                     <span
-                                        class="flex h-full w-full items-center justify-center rounded-lg bg-neutral-200 text-black dark:bg-neutral-700 dark:text-white">
+                                        class="flex h-full w-full items-center justify-center rounded-lg bg-ipv-gold text-ipv-gold-ink">
                                         {{ auth()->user()->initials() }}
                                     </span>
                                 @endif
@@ -162,13 +202,15 @@
     </flux:sidebar>
 
     <!-- Mobile User Menu -->
-    <flux:header class="lg:hidden">
-        <flux:sidebar.toggle class="lg:hidden" icon="bars-2" inset="left" />
+    <flux:header
+        class="sirex-glass border-b border-[rgba(0,81,158,0.12)] lg:hidden dark:border-white/10">
+        <flux:sidebar.toggle class="lg:hidden !text-ipv-blue dark:!text-ipv-blue-light" icon="bars-2" inset="left" />
 
         <flux:spacer />
 
         <flux:dropdown position="top" align="end">
-            <flux:profile :initials="auth()->user()->initials()" icon-trailing="chevron-down" />
+            <flux:profile :initials="auth()->user()->initials()" icon-trailing="chevron-down"
+                avatar:class="bg-ipv-gold text-ipv-gold-ink" />
 
             <flux:menu>
                 <flux:menu.radio.group>
@@ -176,7 +218,7 @@
                         <div class="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
                             <span class="relative flex h-8 w-8 shrink-0 overflow-hidden rounded-lg">
                                 <span
-                                    class="flex h-full w-full items-center justify-center rounded-lg bg-neutral-200 text-black dark:bg-neutral-700 dark:text-white">
+                                    class="flex h-full w-full items-center justify-center rounded-lg bg-ipv-gold text-ipv-gold-ink">
                                     {{ auth()->user()->initials() }}
                                 </span>
                             </span>

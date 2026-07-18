@@ -19,14 +19,74 @@
     --color-zinc-400: #a3a3a3;
     --color-zinc-500: #737373;
     --color-zinc-600: #525252;
-    --color-zinc-700: #40 40;
-    --color-zinc-800: #26 26;
-    --color-zinc-900: #17 17;
+    --color-zinc-700: #3f3f46;
+    --color-zinc-800: #27272a;
+    --color-zinc-900: #18181b;
     --color-zinc-950: #0a0a0a;
 
     --color-accent: var(--color-neutral-800);
     --color-accent-content: var(--color-neutral-800);
     --color-accent-foreground: var(--color-white);
+
+    /* Paleta institucional IPV — ver design_handoff_sirex_dashboard/README.md */
+    --color-ipv-blue: #00519e;
+    --color-ipv-blue-dark: #003d7a;
+    --color-ipv-blue-light: #8fc1ee;
+    --color-ipv-gold: #ffb81a;
+    --color-ipv-gold-light: #ffce63;
+    --color-ipv-gold-hover: #ffc44d;
+    --color-ipv-gold-ink: #7a5200;
+    --color-ipv-gold-ink-dark: #3d2600;
+    --color-ipv-magenta: #cf2972;
+    --color-ipv-magenta-light: #ff9dc0;
+    --color-ipv-ink: #1f2937;
+    --color-ipv-ink-dark: #e5e9ee;
+}
+
+@keyframes sirex-badge-pop {
+    0% { transform: scale(0.6); opacity: 0; }
+    60% { transform: scale(1.15); opacity: 1; }
+    100% { transform: scale(1); opacity: 1; }
+}
+
+@layer components {
+    /* Fondo de página con radiales sutiles azul/dorado, claro y oscuro */
+    .sirex-shell {
+        background-color: #ffffff;
+        background-image:
+            radial-gradient(circle at 12% 15%, rgba(0, 81, 158, 0.10), transparent 55%),
+            radial-gradient(circle at 88% 20%, rgba(255, 184, 26, 0.12), transparent 50%),
+            radial-gradient(circle at 30% 90%, rgba(0, 81, 158, 0.06), transparent 50%);
+    }
+    .dark .sirex-shell {
+        background-color: #0f1720;
+        background-image:
+            radial-gradient(circle at 12% 15%, rgba(0, 81, 158, 0.28), transparent 55%),
+            radial-gradient(circle at 88% 20%, rgba(255, 184, 26, 0.14), transparent 50%),
+            radial-gradient(circle at 30% 90%, rgba(0, 81, 158, 0.16), transparent 50%);
+    }
+
+    /* Glassmorphism — sidebar */
+    .sirex-glass {
+        background: rgba(255, 255, 255, 0.6);
+        backdrop-filter: blur(20px) saturate(160%);
+        -webkit-backdrop-filter: blur(20px) saturate(160%);
+    }
+    .dark .sirex-glass {
+        background: rgba(15, 23, 32, 0.65);
+    }
+
+    /* Glassmorphism — tarjetas y paneles */
+    .sirex-glass-card {
+        background: rgba(255, 255, 255, 0.55);
+        backdrop-filter: blur(18px) saturate(160%);
+        -webkit-backdrop-filter: blur(18px) saturate(160%);
+        box-shadow: 0 8px 30px rgba(0, 81, 158, 0.08);
+    }
+    .dark .sirex-glass-card {
+        background: rgba(255, 255, 255, 0.055);
+        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.35);
+    }
 }
 
 @layer theme {
