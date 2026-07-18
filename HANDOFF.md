@@ -2,7 +2,9 @@
 
 **Fecha:** 2026-07-18
 **Rama:** `security-review-2026-07-17` (pusheada a `origin`, working tree limpio)
-**Último commit:** `d19458e` "feat(ui): eliminar Flux de Resoluciones (listado + elegir tipo)"
+**Último commit:** `e590821` "feat(ui): eliminar Flux de crear-resolucion (editor de resoluciones)"
+
+**Estado: la eliminación de Flux UI está completa en todo el proyecto.** El único archivo que quedaba pendiente (`crear-resolucion.blade.php`) ya fue migrado y validado. Ver sección "Qué falta" al final — no queda nada de este trabajo, solo una limpieza opcional no urgente.
 
 > El próximo agente debería poder retomar el trabajo leyendo **solo este archivo**. Si necesita el detalle línea por línea de algún commit, están todos en `git log` con mensajes largos y descriptivos.
 
@@ -27,6 +29,7 @@ Orden cronológico de commits en esta rama (los últimos 9, todos de esta tarea)
 | `2a5ab4b` | Usuarios (lista-usuario + modal-permisos + permiso-card), 3 modales. |
 | `67b0e89` | Expedientes (listado + detalle + 5 modales). |
 | `d19458e` | Resoluciones (listado + elegir tipo), 2 modales. |
+| `e590821` | **Crear resolución** (editor con Quill, 8 tipos de formulario, modo plantilla/personalizado): último archivo pendiente, ~180 `x-input` + 17 `x-button` reemplazados. |
 
 ### Archivos modificados/creados por esta tarea (resumen)
 
@@ -41,6 +44,7 @@ Orden cronológico de commits en esta rama (los últimos 9, todos de esta tarea)
 - `resources/views/livewire/lista-usuario.blade.php`, `modal-permisos.blade.php`, `components/permiso-card.blade.php` — sin Flux, 3 modales reconstruidos con Alpine.
 - `resources/views/livewire/Expedientes/expedientes.blade.php` + `modal-NuevoExpediente`, `modal-EditarExpediente`, `modal-RealizarPase`, `modal-ConfirmarBorrado` (compartido), `modal-filtros` (compartido), `detalles.blade.php` — sin Flux, 5 modales.
 - `resources/views/livewire/resoluciones.blade.php`, `elegir-resolucion.blade.php` — sin Flux, 2 modales.
+- `resources/views/livewire/crear-resolucion.blade.php` — sin Flux. 180 `<x-input>` y 17 `<x-button>` reemplazados por HTML+Tailwind+ipv-* tokens; iconos `fas fa-*` (Font Awesome, que en realidad nunca estuvo cargado en el proyecto — ver descubrimiento nuevo más abajo) reemplazados por SVG inline. El editor Quill (`x-data="quillInit()"`, `wire:ignore`, `public/js/quill-init.js`, clases `[&_.ql-*]` y `.documento-ql-editor` de `app.css`) no se tocó.
 - Borrados por ser código muerto (sin ninguna referencia en el proyecto): `components/layouts/app/header.blade.php`, `components/modal.blade.php`, `components/dialog-modal.blade.php`, `resources/views/flux/navlist/group.blade.php`.
 
 **Cero cambios de lógica de backend en todo este trabajo.** Ningún método PHP, ninguna query, ningún `wire:model`/`wire:click` fue tocado — solo el markup/CSS de las vistas.
@@ -115,19 +119,16 @@ Paleta de colores de categoría de tareas del calendario (blue/yellow/red/green/
 
 ## Qué falta (para la próxima sesión)
 
-### `resources/views/livewire/crear-resolucion.blade.php`
-**782 líneas, ~197 referencias a Flux/x-input/x-button.** Es el editor de resoluciones con Quill, con 3 modalidades (modelo completo / plantilla completa / personalizado). Sustancialmente más grande que cualquier otro archivo migrado en esta tarea — no se tocó, amerita su propia sesión dedicada con la cabeza fresca en vez de apurarlo al final de esta.
-
-Antes de empezar con este archivo, la próxima sesión debería:
-1. Leer este HANDOFF completo (ya lo estás haciendo).
-2. Leer `app/Livewire/CrearResolucion.php` para ver qué mecanismo de modal usa (`dispatch('open-modal'/'close-modal', ...)` estilo array, o `$this->modal()->close()` estilo objeto) — no asumir, verificar con grep como se explica arriba.
-3. Revisar cómo interactúa con Quill (`public/js/quill-init.js`, `resources/css/app.css` sección `.documento-ql-editor` y `.ql-*` dark mode) — esas partes no son Flux, no tocarlas.
-4. Aplicar el mismo criterio de todo este trabajo: cero cambios de lógica, solo vista/CSS.
-5. Validar en vivo con Playwright las 3 modalidades (completo/plantilla/personalizado) antes de dar por terminado.
-6. Correr `php artisan test` (debe seguir en 25/25) y `./vendor/bin/pint` sobre los archivos tocados.
+**Nada obligatorio.** La eliminación de Flux UI está terminada en todo el proyecto (verificado con `grep -rn "<flux:\|Flux::\|<x-input\|<x-button\|<x-badge" resources/views/` sobre cada archivo migrado → 0 resultados). Solo queda una limpieza cosmética opcional:
 
 ### Limpieza menor opcional (no urgente)
 `resources/views/flux/icon/*.blade.php` (book-open-text, chevrons-up-down, folder-git-2, layout-grid) — overrides de íconos custom de Flux. Puede que ya no se usen desde que el sidebar usa SVG inline directo, pero no se verificó a fondo. Revisar con `grep -rn "flux:icon\." resources/views/` antes de borrar.
+
+### Descubrimiento nuevo (de la migración de `crear-resolucion.blade.php`)
+El archivo tenía íconos `<i class="fas fa-edit">`, `fa-eye`, `fa-save"` (Font Awesome) que **nunca funcionaron**: Font Awesome no está cargado en ningún layout del proyecto (verificado con `grep -rn "font-awesome\|fontawesome" resources/`). Es decir, esos íconos ya se veían rotos/vacíos antes de esta migración. Se reemplazaron por SVG inline consistentes con el resto de la app. Si aparece algún otro `fas fa-*` suelto en el proyecto, es del mismo origen (probablemente copiado de una plantilla externa) y tampoco va a renderizar nada.
+
+### Nota sobre el modo "Personalizado"
+`CrearResolucion.php` tiene un método `usarPersonalizado()` que carga el editor Quill, pero la pantalla de selección de modo (`$modo === ''`) solo tiene 2 botones: "Usar modelo completo" y "Plantilla completa" — no hay ningún botón que dispare `usarPersonalizado`. Esto es así desde antes de esta migración (no se agregó ni quitó ningún botón, solo se tradujo el markup existente 1:1), así que es un gap de UX preexistente, no una regresión introducida acá. Si en algún momento se quiere exponer el modo personalizado, falta agregar un tercer botón en esa pantalla.
 
 ## Cómo probar el entorno
 
