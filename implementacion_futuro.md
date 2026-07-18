@@ -4,6 +4,14 @@ Generado a partir de análisis estático del código (sin `composer install`/`np
 
 ---
 
+## Modernización visual — glassmorphism sin Flux UI (2026-07-18)
+
+**Ver `HANDOFF.md` en la raíz del proyecto para el detalle completo** (es el documento pensado para que una sesión nueva retome el trabajo leyendo solo ese archivo). Resumen: se rediseñó todo el proyecto con paleta institucional IPV + efecto glassmorphism, y a pedido explícito del usuario se eliminó **toda** dependencia de Flux UI (incluso `<x-input>`/`<x-button>`/`<x-badge>`, que resultaron ser alias ocultos del propio Flux). Reemplazado por HTML plano + Tailwind v4 + Alpine.js, incluyendo los modales (reconstruidos replicando el contrato de eventos exacto que ya disparaba el PHP existente — dos variantes distintas encontradas y documentadas en el HANDOFF).
+
+Completado: sidebar, dashboard, auth (6 vistas), settings, oficinas, usuarios (3 modales), expedientes (5 modales), resoluciones (listado + elegir tipo, 2 modales). Cero cambios de lógica de backend en todo el proceso.
+
+Pendiente: `crear-resolucion.blade.php` (editor Quill, 782 líneas, ~197 referencias a Flux) — se dejó para una sesión aparte por su tamaño.
+
 ## Estado de implementación (actualizado 2026-07-17)
 
 Entorno de trabajo: contenedor Docker MySQL aislado (`exp-res-mysql`, puerto 3309) con datos de prueba descartables — no es la base de producción/legacy.
