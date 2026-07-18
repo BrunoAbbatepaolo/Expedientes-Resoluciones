@@ -1,4 +1,5 @@
 <?php
+
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Storage;
 use Livewire\Volt\Volt;
@@ -8,10 +9,17 @@ Route::get('/', function () {
 })->name('home');
 
 Route::view('dashboard', 'dashboard')
-    ->middleware(['auth', 'verified'])
+    ->middleware(['auth', 'verified', 'password.change'])
     ->name('dashboard');
 
+// Fuera del grupo protegido por password.change: si el usuario tiene la
+// contraseña provisoria, esta es la única ruta a la que puede llegar además
+// de logout (ver App\Http\Middleware\EnsurePasswordIsChanged).
 Route::middleware(['auth'])->group(function () {
+    Volt::route('cambiar-clave-inicial', 'auth.cambiar-clave-inicial')->name('cambiar-clave-inicial');
+});
+
+Route::middleware(['auth', 'password.change'])->group(function () {
     Route::redirect('settings', 'settings/profile');
     Volt::route('settings/profile', 'settings.profile')->name('settings.profile');
     Volt::route('settings/password', 'settings.password')->name('settings.password');
