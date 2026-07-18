@@ -83,8 +83,8 @@ Plantilla de bridge (ejemplo real, tomado de `expedientes.blade.php`):
 </div>
 ```
 
-### 3. Bug preexistente encontrado (no corregido, es lógica): botón "Filtrar" en Usuarios
-En `lista-usuario.blade.php` el botón "Filtrar" nunca funcionó — abre un modal `modal-filtro` cuyo template (`modal-filtros.blade.php`) nunca se incluía en esa pantalla, y además ese componente depende de `filtro.fechaDesde`/`aplicarFiltros` que `ListaUsuario` no tiene. Se dejó igual (botón inerte), documentado, no corregido por ser lógica de negocio.
+### 3. Bug preexistente encontrado y CORREGIDO: botón "Filtrar" en Usuarios
+En `lista-usuario.blade.php` el botón "Filtrar" nunca funcionó — abría un modal `modal-filtro` cuyo template (`modal-filtros.blade.php`) nunca se incluía en esa pantalla, y además ese componente depende de `filtro.fechaDesde`/`aplicarFiltros` que `ListaUsuario` no tiene. En el commit `3e09e37` se eliminó el botón (no se inventó un filtro nuevo porque no había spec de qué campo debía filtrar en usuarios). `modal-filtros.blade.php` se mantiene intacto porque lo sigue usando `Expedientes.php`.
 
 ### 4. Layout bug encontrado y corregido en la migración del sidebar
 El handoff de diseño (los 3 que se fueron entregando) nunca ponía `display:flex` en el `<body>`, así que el `<aside>` y el `<main>` quedaban apilados verticalmente en vez de lado a lado. Se agregó `lg:flex` al `<body>` en `sidebar.blade.php`. Ninguno de los 3 handoffs había sido probado contra el proyecto real (lo decían ellos mismos en su propio README).
@@ -127,8 +127,11 @@ Paleta de colores de categoría de tareas del calendario (blue/yellow/red/green/
 ### Descubrimiento nuevo (de la migración de `crear-resolucion.blade.php`)
 El archivo tenía íconos `<i class="fas fa-edit">`, `fa-eye`, `fa-save"` (Font Awesome) que **nunca funcionaron**: Font Awesome no está cargado en ningún layout del proyecto (verificado con `grep -rn "font-awesome\|fontawesome" resources/`). Es decir, esos íconos ya se veían rotos/vacíos antes de esta migración. Se reemplazaron por SVG inline consistentes con el resto de la app. Si aparece algún otro `fas fa-*` suelto en el proyecto, es del mismo origen (probablemente copiado de una plantilla externa) y tampoco va a renderizar nada.
 
-### Nota sobre el modo "Personalizado"
-`CrearResolucion.php` tiene un método `usarPersonalizado()` que carga el editor Quill, pero la pantalla de selección de modo (`$modo === ''`) solo tiene 2 botones: "Usar modelo completo" y "Plantilla completa" — no hay ningún botón que dispare `usarPersonalizado`. Esto es así desde antes de esta migración (no se agregó ni quitó ningún botón, solo se tradujo el markup existente 1:1), así que es un gap de UX preexistente, no una regresión introducida acá. Si en algún momento se quiere exponer el modo personalizado, falta agregar un tercer botón en esa pantalla.
+### Nota sobre el modo "Personalizado" — CORREGIDO
+`CrearResolucion.php` tenía un método `usarPersonalizado()` que carga el editor Quill, pero la pantalla de selección de modo solo tenía 2 botones. En el commit `3e09e37` se agregó el tercer botón "Personalizado" (`wire:click="usarPersonalizado"`). Validado en vivo: carga el editor Quill sin errores de consola.
+
+### PDF iframe pedía `/descargar-pdf/null` — CORREGIDO
+En el modo "plantilla" (tipos AplicarPagos/ReconocimientoCuotaPagada*), el iframe del visor de PDF tenía `:src="'/resoluciones/descargar-pdf/' + pdfIndex"` con `pdfIndex` arrancando en `null`, así que apenas cargaba la pantalla el iframe pedía esa URL con "null" literal y tiraba 404 en consola, aunque el modal estuviera oculto (`x-show`, no `x-if` — el iframe igual existe en el DOM y dispara la carga). Corregido en `3e09e37`: `:src="pdfIndex !== null ? '/resoluciones/descargar-pdf/' + pdfIndex : ''"`.
 
 ## Cómo probar el entorno
 
