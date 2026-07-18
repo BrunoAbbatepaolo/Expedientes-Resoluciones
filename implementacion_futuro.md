@@ -141,6 +141,18 @@ Ver más abajo, sección "Hallazgo resuelto" bajo 2.5 — se investigó y corrig
   - Validado contra el contenedor de prueba: el pase se sigue creando con los datos correctos tras el cambio.
   - **No se tocó** la creación/edición de `Resolucion` (`CrearResolucion`, `ResolucionForm`): no hay ahí un patrón leer-modificar-escribir sobre un mismo registro compartido entre oficinas como en `Expediente`, así que el riesgo de condición de carrera es mucho menor.
 
+### ✅ Cierre del registro público (2026-07-17)
+
+Pedido explícito del usuario, seguimiento del hallazgo 🟡 "`/register` abierto al público" reportado en la auditoría anterior. Reemplazado por alta de usuario exclusiva del administrador + cambio de contraseña forzado.
+
+- `users.legajo` (string, nullable, único) y `users.require_password_change` (boolean, default `false`) — migraciones nuevas sobre `mysql_admin`. `legajo` es nullable porque los usuarios ya cargados no tienen uno asignado retroactivamente.
+- `ListaUsuario::crearUsuario()` — nuevo método gateado por `lista_usuario_editar` (mismo patrón que el resto del componente). Crea el `User` con contraseña genérica `12345678` (hasheada automáticamente por el cast `hashed` del modelo) y `require_password_change = true`, y asigna la oficina vía `Permiso::setOficinaAsignada()`. El botón "Nuevo usuario" ya existía en la vista pero apuntaba a `modal-exp` (el modal de alta de *expedientes*, un bug de copy-paste preexistente que no hacía nada) — se corrigió para apuntar al modal real.
+- `App\Http\Middleware\EnsurePasswordIsChanged` — alias `password.change`, registrado en `bootstrap/app.php`. Aplicado a la ruta `dashboard` y al grupo `Route::middleware(['auth'])` de `routes/web.php` (expedientes, resoluciones, oficinas, usuarios, settings, etc.). La ruta `cambiar-clave-inicial` vive en su propio grupo con solo `auth` (sin `password.change`, para evitar loop de redirección); `logout` no tiene middleware `auth` y queda fuera de ambos grupos.
+- Vista `/cambiar-clave-inicial` (Volt, layout `auth`) — pide nueva contraseña + confirmación con `Rules\Password::defaults()`, actualiza `password` y `require_password_change = false`, redirige a `/dashboard`.
+- Rutas de `/register` eliminadas de `routes/auth.php`, componente `auth/register.blade.php` y su test (`RegistrationTest.php`) eliminados. Los links "Regístrese"/"Sign up" en `login.blade.php` y `welcome.blade.php` ya estaban condicionados con `@if (Route::has('register'))`, así que desaparecen solos sin tocar esas vistas.
+- Validado extremo a extremo con Playwright contra el contenedor de prueba: alta de usuario desde `/usuarios` → login con la contraseña provisoria → redirige a `/cambiar-clave-inicial` (no se puede navegar a otras rutas protegidas mientras el flag esté en `true`) → cambio de contraseña → redirige a `/dashboard` → la contraseña provisoria deja de funcionar (`Estas credenciales no coinciden con nuestros registros`) → la contraseña nueva entra directo sin loop → `/register` devuelve 404.
+- Suite de tests: 25/25 pasando (bajaron de 27 por los 2 tests de `RegistrationTest.php` eliminados junto con la feature). No hizo falta bypassear el middleware en `TestCase`: `require_password_change` tiene default `false` a nivel de columna y ningún factory lo pisa, así que los usuarios de test nunca quedan atrapados en el flujo de cambio de contraseña.
+
 ---
 
 ## 0. Higiene del repositorio (antes que nada)
