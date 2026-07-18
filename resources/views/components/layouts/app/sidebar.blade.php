@@ -64,7 +64,7 @@
                         <div class="flex w-full items-center justify-between">
                             <span>{{ __('Expedientes') }}</span>
                             <flux:icon.chevron-down class="ml-auto size-3.5 transition-transform"
-                                :class="{ 'rotate-180': open }" />
+                                x-bind:class="{ 'rotate-180': open }" />
                         </div>
                     </flux:navlist.item>
 
