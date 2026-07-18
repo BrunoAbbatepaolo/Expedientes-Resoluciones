@@ -17,9 +17,11 @@ class User extends Authenticatable
     protected $fillable = [
         'nombre',
         'apellido',
+        'legajo',
         'email',
         'password',
         'profile_photo_path',
+        'require_password_change',
     ];
 
     protected $hidden = ['password', 'remember_token'];
@@ -29,6 +31,7 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'require_password_change' => 'boolean',
         ];
     }
 
