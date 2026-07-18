@@ -54,16 +54,16 @@
     .sirex-shell {
         background-color: #ffffff;
         background-image:
-            radial-gradient(circle at 12% 15%, rgba(0, 81, 158, 0.10), transparent 55%),
-            radial-gradient(circle at 88% 20%, rgba(255, 184, 26, 0.12), transparent 50%),
-            radial-gradient(circle at 30% 90%, rgba(0, 81, 158, 0.06), transparent 50%);
+            radial-gradient(circle at 12% 15%, rgba(0, 81, 158, 0.16), transparent 55%),
+            radial-gradient(circle at 88% 20%, rgba(255, 184, 26, 0.20), transparent 50%),
+            radial-gradient(circle at 30% 90%, rgba(0, 81, 158, 0.10), transparent 50%);
     }
     .dark .sirex-shell {
         background-color: #0f1720;
         background-image:
-            radial-gradient(circle at 12% 15%, rgba(0, 81, 158, 0.28), transparent 55%),
-            radial-gradient(circle at 88% 20%, rgba(255, 184, 26, 0.14), transparent 50%),
-            radial-gradient(circle at 30% 90%, rgba(0, 81, 158, 0.16), transparent 50%);
+            radial-gradient(circle at 12% 15%, rgba(0, 81, 158, 0.34), transparent 55%),
+            radial-gradient(circle at 88% 20%, rgba(255, 184, 26, 0.20), transparent 50%),
+            radial-gradient(circle at 30% 90%, rgba(0, 81, 158, 0.22), transparent 50%);
     }
 
     /* Glassmorphism — sidebar */
@@ -76,16 +76,17 @@
         background: rgba(15, 23, 32, 0.65);
     }
 
-    /* Glassmorphism — tarjetas y paneles */
+    /* Glassmorphism — tarjetas y paneles: mas transparencia + blur para que
+       se note el fondo con radiales detras (pedido explicito: "mas glassmorphism") */
     .sirex-glass-card {
-        background: rgba(255, 255, 255, 0.55);
-        backdrop-filter: blur(18px) saturate(160%);
-        -webkit-backdrop-filter: blur(18px) saturate(160%);
-        box-shadow: 0 8px 30px rgba(0, 81, 158, 0.08);
+        background: rgba(255, 255, 255, 0.45);
+        backdrop-filter: blur(24px) saturate(180%);
+        -webkit-backdrop-filter: blur(24px) saturate(180%);
+        box-shadow: 0 8px 32px rgba(0, 81, 158, 0.10), inset 0 1px 0 rgba(255, 255, 255, 0.5);
     }
     .dark .sirex-glass-card {
-        background: rgba(255, 255, 255, 0.055);
-        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.35);
+        background: rgba(255, 255, 255, 0.06);
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.06);
     }
 }
 
