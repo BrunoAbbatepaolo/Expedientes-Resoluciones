@@ -21,7 +21,7 @@
                     <flux:button class="cursor-pointer">Filtrar</flux:button>
                 </flux:modal.trigger>
                 @if (auth()->user()->permiso('lista_usuario_editar'))
-                    <flux:modal.trigger name="modal-exp">
+                    <flux:modal.trigger name="modal-crear-usuario">
                         <flux:button class="cursor-pointer">Nuevo usuario</flux:button>
                     </flux:modal.trigger>
                 @endif
@@ -98,6 +98,55 @@
                 </tbody>
             </table>
         </div>
+
+        {{-- Modal para crear usuario --}}
+        @if (auth()->user()->permiso('lista_usuario_editar'))
+            <flux:modal name="modal-crear-usuario" size="md" persistent>
+                <div class="p-4 space-y-4">
+                    <h3 class="text-lg font-semibold">Nuevo usuario</h3>
+
+                    <div class="space-y-4">
+                        <flux:input wire:model="nuevoNombre" label="Nombre" />
+                        <flux:input wire:model="nuevoApellido" label="Apellido" />
+                        <flux:input wire:model="nuevoLegajo" label="Legajo" />
+                        <flux:input wire:model="nuevoEmail" type="email" label="Email" />
+
+                        <div class="space-y-2">
+                            <label for="nuevoOficinaId" class="text-sm font-medium">Oficina</label>
+                            <select id="nuevoOficinaId" wire:model="nuevoOficinaId"
+                                class="w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100">
+                                <option value="">Seleccione oficina…</option>
+                                @foreach ($oficinas as $ofi)
+                                    <option value="{{ $ofi['id'] }}">{{ $ofi['nombre'] }}</option>
+                                @endforeach
+                            </select>
+                            @error('nuevoOficinaId')
+                                <p class="text-sm text-red-600 mt-1">{{ $message }}</p>
+                            @enderror
+                        </div>
+
+                        <p class="text-xs text-gray-500 dark:text-gray-400">
+                            El usuario se creará con una contraseña provisoria y deberá cambiarla al iniciar sesión por primera vez.
+                        </p>
+                    </div>
+
+                    <div class="flex justify-end gap-2 pt-2">
+                        <flux:modal.close>
+                            <button type="button"
+                                class="px-4 py-2 rounded-md border border-gray-300 dark:border-gray-600 text-sm">
+                                Cancelar
+                            </button>
+                        </flux:modal.close>
+
+                        <button type="button" wire:click="crearUsuario" wire:loading.attr="disabled"
+                            class="px-4 py-2 rounded-md bg-indigo-600 text-white text-sm hover:bg-indigo-700 disabled:opacity-60">
+                            <span wire:loading.remove>Crear usuario</span>
+                            <span wire:loading>Creando…</span>
+                        </button>
+                    </div>
+                </div>
+            </flux:modal>
+        @endif
 
         {{-- Modal para editar oficina --}}
         <flux:modal name="modal-oficina" size="md" persistent>

@@ -38,6 +38,17 @@ class ListaUsuario extends Component
 
     public array $oficinas = [];
 
+    // --- Alta de usuario ---
+    public string $nuevoNombre = '';
+
+    public string $nuevoApellido = '';
+
+    public string $nuevoLegajo = '';
+
+    public string $nuevoEmail = '';
+
+    public ?int $nuevoOficinaId = null;
+
     protected array $queryString = ['search'];
 
     protected function rules(): array
@@ -49,6 +60,25 @@ class ListaUsuario extends Component
                 function ($attribute, $value, $fail) {
                     $existe = Oficina::query()->where('id', $value)->exists();
                     if (! $existe) {
+                        $fail('La oficina seleccionada no es válida.');
+                    }
+                },
+            ],
+        ];
+    }
+
+    protected function reglasNuevoUsuario(): array
+    {
+        return [
+            'nuevoNombre' => ['required', 'string', 'max:255'],
+            'nuevoApellido' => ['required', 'string', 'max:255'],
+            'nuevoLegajo' => ['required', 'string', 'max:255', 'unique:mysql_admin.users,legajo'],
+            'nuevoEmail' => ['required', 'string', 'email', 'max:255', 'unique:mysql_admin.users,email'],
+            'nuevoOficinaId' => [
+                'required',
+                'integer',
+                function ($attribute, $value, $fail) {
+                    if (! Oficina::query()->where('id', $value)->exists()) {
                         $fail('La oficina seleccionada no es válida.');
                     }
                 },
@@ -151,6 +181,47 @@ class ListaUsuario extends Component
             ]);
 
             $this->dispatch('toast', type: 'error', message: 'Ocurrió un error al guardar.');
+        }
+    }
+
+    public function crearUsuario(): void
+    {
+        if (! auth()->user()?->permiso('lista_usuario_editar')) {
+            $this->dispatch('toast', type: 'error', message: 'No tenés permiso para crear usuarios.');
+
+            return;
+        }
+
+        try {
+            $this->validate($this->reglasNuevoUsuario());
+
+            $usuario = User::query()->create([
+                'nombre' => $this->nuevoNombre,
+                'apellido' => $this->nuevoApellido,
+                'legajo' => $this->nuevoLegajo,
+                'email' => $this->nuevoEmail,
+                // Contraseña genérica: el usuario está obligado a cambiarla en su
+                // primer login (ver App\Http\Middleware\EnsurePasswordIsChanged).
+                'password' => '12345678',
+                'require_password_change' => true,
+            ]);
+
+            Permiso::setOficinaAsignada($usuario->id, (int) $this->nuevoOficinaId);
+
+            $this->dispatch('toast', type: 'success', message: 'Usuario creado. Deberá cambiar su contraseña al iniciar sesión.');
+            $this->reset(['nuevoNombre', 'nuevoApellido', 'nuevoLegajo', 'nuevoEmail', 'nuevoOficinaId']);
+            $this->dispatch('close-modal', 'modal-crear-usuario');
+        } catch (\Illuminate\Validation\ValidationException $ve) {
+            $this->dispatch('toast', type: 'error', message: 'Revise los campos.');
+            throw $ve;
+        } catch (\Throwable $e) {
+            \Log::error('Error en crearUsuario()', [
+                'msg' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+            ]);
+
+            $this->dispatch('toast', type: 'error', message: 'Ocurrió un error al crear el usuario.');
         }
     }
 
