@@ -14,18 +14,21 @@
     {{-- Métricas --}}
     <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
         @foreach ([
-            ['label' => 'Activos en oficina', 'valor' => $activos, 'icon' => 'archive-box'],
-            ['label' => 'Ingresados este mes', 'valor' => $ingresados, 'icon' => 'arrow-down-tray'],
-            ['label' => 'Egresados este mes', 'valor' => $egresados, 'icon' => 'arrow-up-tray'],
-            ['label' => 'Resoluciones emitidas', 'valor' => $resoluciones, 'icon' => 'check-badge'],
+            ['label' => 'Activos en oficina', 'valor' => $activos, 'icon' => 'M4 4a2 2 0 0 1 2-2h4.6a2 2 0 0 1 1.4.6L15.4 6a2 2 0 0 1 .6 1.4V16a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4Z'],
+            ['label' => 'Ingresados este mes', 'valor' => $ingresados, 'icon' => 'M12 4v12m0 0-4-4m4 4 4-4M4 18h16'],
+            ['label' => 'Egresados este mes', 'valor' => $egresados, 'icon' => 'M12 20V8m0 0 4 4m-4-4-4 4M4 6h16'],
+            ['label' => 'Resoluciones emitidas', 'valor' => $resoluciones, 'icon' => 'M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z'],
         ] as $m)
-            <div class="sirex-glass-card rounded-[14px] p-[18px_20px]">
-                <div class="mb-3 flex items-center justify-between">
+            <div class="sirex-glass-card rounded-[14px] p-5">
+                <div class="mb-3.5 flex items-center justify-between">
                     <span class="text-xs font-semibold uppercase tracking-wide text-ipv-ink/55 dark:text-ipv-ink-dark/55">
                         {{ $m['label'] }}
                     </span>
                     <div class="flex size-[30px] items-center justify-center rounded-lg bg-ipv-blue/12 dark:bg-ipv-blue-light/20">
-                        <flux:icon :icon="$m['icon']" variant="outline" class="size-4 !text-ipv-blue dark:!text-ipv-blue-light" />
+                        <svg class="size-4 text-ipv-blue dark:text-ipv-blue-light" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="{{ $m['icon'] }}" />
+                        </svg>
                     </div>
                 </div>
                 <div class="text-[26px] font-bold leading-none text-ipv-ink dark:text-ipv-ink-dark">{{ $m['valor'] }}</div>
@@ -46,7 +49,7 @@
             </div>
 
             <div class="overflow-x-auto">
-                <table class="w-full text-[13.5px]">
+                <table class="w-full border-collapse text-[13.5px]">
                     <thead>
                         <tr>
                             <th class="px-5 py-2.5 text-left text-[11px] font-semibold uppercase tracking-wide text-ipv-ink/50 dark:text-ipv-ink-dark/50">Número</th>
@@ -59,12 +62,12 @@
                     <tbody>
                         @forelse($recientes as $exp)
                             @php $egresado = (bool) $exp->fecha_salida; @endphp
-                            <tr class="border-t border-ipv-blue/10 dark:border-white/10">
+                            <tr class="border-t border-ipv-blue/10 hover:bg-black/[0.02] dark:border-white/10 dark:hover:bg-white/[0.03]">
                                 <td class="whitespace-nowrap px-5 py-3 font-bold text-ipv-blue dark:text-ipv-blue-light">
                                     {{ $exp->num_exp }}
                                 </td>
-                                <td class="px-5 py-3 text-ipv-ink dark:text-ipv-ink-dark">
-                                    <p class="max-w-[200px] truncate">{{ $exp->asunto }}</p>
+                                <td class="px-5 py-3">
+                                    <p class="max-w-[200px] truncate text-ipv-ink dark:text-ipv-ink-dark">{{ $exp->asunto }}</p>
                                     @if($exp->causante)
                                         <p class="truncate text-xs text-ipv-ink/45 dark:text-ipv-ink-dark/45">{{ $exp->causante }}</p>
                                     @endif
@@ -76,9 +79,13 @@
                                     {{ \Carbon\Carbon::parse($exp->fecha_ingreso)->format('d/m/Y') }}
                                 </td>
                                 <td class="px-5 py-3">
-                                    <flux:badge size="sm" :color="$egresado ? 'zinc' : 'blue'">
+                                    <span class="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full px-2.5 py-0.5 text-xs font-semibold
+                                        {{ $egresado
+                                            ? 'bg-gray-500/10 text-gray-500 dark:text-gray-300 border border-gray-400/20'
+                                            : 'bg-ipv-blue/12 text-ipv-blue border border-ipv-blue/25 dark:bg-ipv-blue-light/20 dark:text-ipv-blue-light' }}">
+                                        <span class="size-1.5 rounded-full bg-current"></span>
                                         {{ $egresado ? 'Egresado' : 'Activo' }}
-                                    </flux:badge>
+                                    </span>
                                 </td>
                             </tr>
                         @empty
@@ -107,11 +114,11 @@
         <div class="grid grid-cols-5 gap-3">
             @php
                 $accesos = [
-                    ['route' => 'expedientes',      'label' => 'Expedientes',    'icon' => 'folder'],
-                    ['route' => 'resoluciones',     'label' => 'Resoluciones',   'icon' => 'check-badge'],
-                    ['route' => 'listausuarios',    'label' => 'Usuarios',       'icon' => 'users'],
-                    ['route' => '#',                'label' => 'Faltas',         'icon' => 'calendar-days'],
-                    ['route' => 'settings.profile', 'label' => 'Configuración',  'icon' => 'cog-6-tooth'],
+                    ['route' => 'expedientes',      'label' => 'Expedientes',   'icon' => 'M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z'],
+                    ['route' => 'resoluciones',     'label' => 'Resoluciones',  'icon' => 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z'],
+                    ['route' => 'listausuarios',    'label' => 'Usuarios',      'icon' => 'M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z'],
+                    ['route' => '#',                'label' => 'Faltas',        'icon' => 'M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z'],
+                    ['route' => 'settings.profile', 'label' => 'Configuración', 'icon' => 'M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z M15 12a3 3 0 11-6 0 3 3 0 016 0z'],
                 ];
             @endphp
 
@@ -120,7 +127,9 @@
                 <a href="{{ $href }}"
                    class="group flex flex-col items-center gap-2 rounded-xl border border-ipv-blue/12 bg-white/40 p-3 transition-all duration-200 hover:scale-105 hover:bg-white/60 dark:border-white/10 dark:bg-white/[0.04] dark:hover:bg-white/[0.08]">
                     <div class="flex size-9 items-center justify-center rounded-full bg-ipv-blue/12 dark:bg-ipv-blue-light/20">
-                        <flux:icon :icon="$item['icon']" variant="outline" class="size-5 !text-ipv-blue dark:!text-ipv-blue-light" />
+                        <svg class="size-5 text-ipv-blue dark:text-ipv-blue-light" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="{{ $item['icon'] }}" clip-rule="evenodd" />
+                        </svg>
                     </div>
                     <span class="text-center text-xs font-medium text-ipv-ink/75 dark:text-ipv-ink-dark/80">{{ $item['label'] }}</span>
                 </a>

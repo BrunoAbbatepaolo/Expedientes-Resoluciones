@@ -207,16 +207,32 @@ new class extends Component
     {{-- Header: título y navegación en filas separadas para que nunca se recorte --}}
     <div class="flex flex-col gap-2 border-b border-ipv-blue/10 px-4 pb-2.5 pt-3 dark:border-white/10">
         <h3 class="flex items-center gap-1.5 text-sm font-semibold text-ipv-ink dark:text-ipv-ink-dark md:text-base">
-            <flux:icon.calendar-days variant="outline" class="size-4 shrink-0 !text-ipv-blue dark:!text-ipv-blue-light" />
+            <svg class="size-4 shrink-0 text-ipv-blue dark:text-ipv-blue-light" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round"
+                    d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2Z" />
+            </svg>
             Calendario de Tareas
         </h3>
 
         <div class="flex items-center justify-between">
-            <flux:button size="xs" variant="ghost" icon="chevron-left" wire:click="prevMonth" />
+            <button wire:click="prevMonth" type="button"
+                class="rounded-md p-1 text-ipv-blue hover:bg-black/[0.03] dark:text-ipv-blue-light dark:hover:bg-white/5">
+                <svg class="size-[15px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M15 6l-6 6 6 6" />
+                </svg>
+            </button>
             <span class="whitespace-nowrap text-xs font-semibold capitalize text-ipv-ink/80 dark:text-ipv-ink-dark/85">
                 {{ \Carbon\Carbon::create()->month($currentMonth)->locale('es')->translatedFormat('F') }} {{ $currentYear }}
             </span>
-            <flux:button size="xs" variant="ghost" icon="chevron-right" wire:click="nextMonth" />
+            <button wire:click="nextMonth" type="button"
+                class="rounded-md p-1 text-ipv-blue hover:bg-black/[0.03] dark:text-ipv-blue-light dark:hover:bg-white/5">
+                <svg class="size-[15px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M9 6l6 6-6 6" />
+                </svg>
+            </button>
         </div>
     </div>
 
@@ -303,7 +319,7 @@ new class extends Component
                 <span class="size-1.5 rounded-full {{ $tt->is_completed ? 'bg-gray-400' : 'bg-ipv-blue dark:bg-ipv-blue-light' }}"></span>
                 {{ $tt->title }}
                 @if($this->hasPermission && !$tt->is_completed)
-                    <button wire:click="toggleCompletion({{ $tt->id }})" class="ml-1 text-ipv-blue hover:underline dark:text-ipv-blue-light">✓</button>
+                    <button wire:click="toggleCompletion({{ $tt->id }})" type="button" class="ml-1 text-ipv-blue hover:underline dark:text-ipv-blue-light">✓</button>
                 @endif
             </span>
         @endforeach
@@ -313,9 +329,9 @@ new class extends Component
     <!-- Task Modal -->
     @if($this->hasPermission && $showModal)
         <div class="fixed inset-0 z-[100] flex items-center justify-center bg-[#001428]/50 p-4 backdrop-blur-sm" wire:click.self="closeModal">
-            <div class="flex w-full max-w-sm flex-col overflow-hidden rounded-2xl border border-ipv-blue/20 bg-white/90 shadow-2xl backdrop-blur-2xl backdrop-saturate-150 dark:border-white/10 dark:bg-[#141c26]/95">
+            <div class="w-full max-w-sm overflow-hidden rounded-2xl border border-ipv-blue/20 bg-white/90 shadow-2xl backdrop-blur-2xl backdrop-saturate-150 dark:border-white/10 dark:bg-[#141c26]/95">
                 <div class="flex items-center justify-between border-b border-ipv-blue/10 px-4 py-4 dark:border-white/10">
-                    <h3 class="font-semibold text-ipv-ink dark:text-ipv-ink-dark">
+                    <h3 class="text-[15px] font-semibold text-ipv-ink dark:text-ipv-ink-dark">
                         @if($taskId)
                             @if($isEditing) Editar Tarea @else Detalles de Tarea @endif
                         @else
@@ -324,37 +340,49 @@ new class extends Component
                     </h3>
                     <div class="flex items-center gap-1.5">
                         @if($taskId && !$isEditing)
-                            <flux:button size="xs" variant="ghost" icon="pencil" wire:click="$set('isEditing', true)" />
+                            <button wire:click="$set('isEditing', true)" type="button"
+                                class="rounded-lg bg-ipv-blue/10 p-1.5 text-ipv-blue dark:text-ipv-blue-light">
+                                <svg class="size-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                    stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M15.2 5.2 18.7 8.7M16.7 3.7a2.5 2.5 0 1 1 3.5 3.5L6.5 21H3v-3.5L16.7 3.7Z" />
+                                </svg>
+                            </button>
                         @endif
-                        <flux:button size="xs" variant="ghost" icon="x-mark" wire:click="closeModal" />
+                        <button wire:click="closeModal" type="button"
+                            class="rounded-lg p-1.5 text-ipv-ink/45 hover:bg-black/[0.03] dark:text-ipv-ink-dark/50 dark:hover:bg-white/5">
+                            <svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                stroke-linecap="round">
+                                <path d="M6 18 18 6M6 6l12 12" />
+                            </svg>
+                        </button>
                     </div>
                 </div>
 
-                <div class="space-y-4 p-4">
+                <div class="space-y-3.5 p-4">
                     @if(!$isEditing && $taskId)
                         <!-- Vista de Detalles (Solo Lectura) -->
                         <div>
                             <h4 class="text-lg font-bold text-ipv-ink dark:text-ipv-ink-dark">{{ $taskTitle }}</h4>
                             @if($taskDescription)
-                                <p class="mt-2 whitespace-pre-wrap rounded-lg border border-ipv-blue/10 bg-ipv-blue/5 p-3 text-sm text-ipv-ink/80 dark:border-white/10 dark:bg-white/5 dark:text-ipv-ink-dark/80">{{ $taskDescription }}</p>
+                                <p class="mt-2 whitespace-pre-wrap rounded-lg border border-ipv-blue/10 bg-ipv-blue/5 p-2.5 text-sm text-ipv-ink/80 dark:border-white/10 dark:bg-white/5 dark:text-ipv-ink-dark/80">{{ $taskDescription }}</p>
                             @endif
                         </div>
 
-                        <div class="mt-4 grid grid-cols-2 gap-4">
+                        <div class="grid grid-cols-2 gap-3">
                             <div class="flex flex-col">
-                                <span class="mb-1 text-xs font-semibold uppercase tracking-wider text-ipv-ink/45 dark:text-ipv-ink-dark/45">Responsable</span>
-                                <span class="text-sm font-medium text-ipv-ink dark:text-ipv-ink-dark">
+                                <span class="mb-1 text-[10.5px] font-bold uppercase tracking-wider text-ipv-ink/45 dark:text-ipv-ink-dark/45">Responsable</span>
+                                <span class="text-sm font-semibold text-ipv-ink dark:text-ipv-ink-dark">
                                     {{ $taskAssignedTo ?: 'Sin asignar' }}
                                 </span>
                             </div>
                             <div class="flex flex-col">
-                                <span class="mb-1 text-xs font-semibold uppercase tracking-wider text-ipv-ink/45 dark:text-ipv-ink-dark/45">Fecha Límite</span>
-                                <span class="text-sm font-medium text-ipv-ink dark:text-ipv-ink-dark">
+                                <span class="mb-1 text-[10.5px] font-bold uppercase tracking-wider text-ipv-ink/45 dark:text-ipv-ink-dark/45">Fecha Límite</span>
+                                <span class="text-sm font-semibold text-ipv-ink dark:text-ipv-ink-dark">
                                     {{ \Carbon\Carbon::parse($taskDate)->format('d/m/Y') }}
                                 </span>
                             </div>
                             <div class="flex flex-col">
-                                <span class="mb-1 text-xs font-semibold uppercase tracking-wider text-ipv-ink/45 dark:text-ipv-ink-dark/45">Estado</span>
+                                <span class="mb-1 text-[10.5px] font-bold uppercase tracking-wider text-ipv-ink/45 dark:text-ipv-ink-dark/45">Estado</span>
                                 @php
                                     $task = App\Models\Task::find($taskId);
                                 @endphp
@@ -365,34 +393,52 @@ new class extends Component
                         </div>
                     @else
                         <!-- Formulario de Edición/Creación -->
-                        <flux:input label="Título de Tarea" wire:model="taskTitle" />
-                        @error('taskTitle') <span class="text-xs text-red-500">{{ $message }}</span> @enderror
+                        <div>
+                            <label class="mb-1 block text-[11.5px] font-semibold text-ipv-ink/70 dark:text-ipv-ink-dark/75">Título de Tarea</label>
+                            <input type="text" wire:model="taskTitle"
+                                class="w-full rounded-lg border border-ipv-blue/20 bg-white/80 px-2.5 py-2 text-sm text-ipv-ink focus:outline-none focus:ring-2 focus:ring-ipv-blue/40 dark:border-white/15 dark:bg-white/[0.06] dark:text-ipv-ink-dark">
+                            @error('taskTitle') <span class="text-xs text-ipv-magenta">{{ $message }}</span> @enderror
+                        </div>
 
-                        <flux:textarea label="Descripción (Opcional)" wire:model="taskDescription" rows="3" />
-                        @error('taskDescription') <span class="text-xs text-red-500">{{ $message }}</span> @enderror
+                        <div>
+                            <label class="mb-1 block text-[11.5px] font-semibold text-ipv-ink/70 dark:text-ipv-ink-dark/75">Descripción (Opcional)</label>
+                            <textarea wire:model="taskDescription" rows="3"
+                                class="w-full resize-none rounded-lg border border-ipv-blue/20 bg-white/80 px-2.5 py-2 text-sm text-ipv-ink focus:outline-none focus:ring-2 focus:ring-ipv-blue/40 dark:border-white/15 dark:bg-white/[0.06] dark:text-ipv-ink-dark"></textarea>
+                            @error('taskDescription') <span class="text-xs text-ipv-magenta">{{ $message }}</span> @enderror
+                        </div>
 
                         <div class="grid grid-cols-2 gap-3">
                             <div>
-                                <flux:input type="date" label="Fecha" wire:model="taskDate" />
-                                @error('taskDate') <span class="text-xs text-red-500">{{ $message }}</span> @enderror
+                                <label class="mb-1 block text-[11.5px] font-semibold text-ipv-ink/70 dark:text-ipv-ink-dark/75">Fecha</label>
+                                <input type="date" wire:model="taskDate"
+                                    class="w-full rounded-lg border border-ipv-blue/20 bg-white/80 px-2 py-1.5 text-sm text-ipv-ink focus:outline-none focus:ring-2 focus:ring-ipv-blue/40 dark:border-white/15 dark:bg-white/[0.06] dark:text-ipv-ink-dark">
+                                @error('taskDate') <span class="text-xs text-ipv-magenta">{{ $message }}</span> @enderror
                             </div>
 
-                            <flux:select label="Color" wire:model="taskColor">
-                                <flux:select.option value="blue">Azul institucional</flux:select.option>
-                                <flux:select.option value="yellow">Dorado</flux:select.option>
-                                <flux:select.option value="red">Urgente</flux:select.option>
-                                <flux:select.option value="green">Neutro</flux:select.option>
-                                <flux:select.option value="purple">Neutro</flux:select.option>
-                            </flux:select>
+                            <div>
+                                <label class="mb-1 block text-[11.5px] font-semibold text-ipv-ink/70 dark:text-ipv-ink-dark/75">Color</label>
+                                <select wire:model="taskColor"
+                                    class="w-full rounded-lg border border-ipv-blue/20 bg-white/80 px-2 py-1.5 text-sm text-ipv-ink focus:outline-none focus:ring-2 focus:ring-ipv-blue/40 dark:border-white/15 dark:bg-white/[0.06] dark:text-ipv-ink-dark">
+                                    <option value="blue">Azul institucional</option>
+                                    <option value="yellow">Dorado</option>
+                                    <option value="red">Urgente</option>
+                                    <option value="green">Neutro</option>
+                                    <option value="purple">Neutro</option>
+                                </select>
+                            </div>
                         </div>
 
-                        <flux:select label="Responsable" wire:model="taskAssignedTo">
-                            <flux:select.option value="">Seleccionar responsable...</flux:select.option>
-                            @foreach($this->availableNames as $name)
-                                <flux:select.option :value="$name">{{ $name }}</flux:select.option>
-                            @endforeach
-                        </flux:select>
-                        @error('taskAssignedTo') <span class="text-xs text-red-500">{{ $message }}</span> @enderror
+                        <div>
+                            <label class="mb-1 block text-[11.5px] font-semibold text-ipv-ink/70 dark:text-ipv-ink-dark/75">Responsable</label>
+                            <select wire:model="taskAssignedTo"
+                                class="w-full rounded-lg border border-ipv-blue/20 bg-white/80 px-2.5 py-2 text-sm text-ipv-ink focus:outline-none focus:ring-2 focus:ring-ipv-blue/40 dark:border-white/15 dark:bg-white/[0.06] dark:text-ipv-ink-dark">
+                                <option value="">Seleccionar responsable...</option>
+                                @foreach($this->availableNames as $name)
+                                    <option value="{{ $name }}">{{ $name }}</option>
+                                @endforeach
+                            </select>
+                            @error('taskAssignedTo') <span class="text-xs text-ipv-magenta">{{ $message }}</span> @enderror
+                        </div>
                     @endif
                 </div>
 
@@ -400,22 +446,28 @@ new class extends Component
                     <div>
                         @if($taskId)
                             @php $currentTask = App\Models\Task::find($taskId); @endphp
-                            <flux:button size="sm" :variant="$currentTask && $currentTask->is_completed ? 'ghost' : 'primary'" wire:click="toggleCompletion({{ $taskId }})">
+                            <button wire:click="toggleCompletion({{ $taskId }})" type="button"
+                                class="rounded-lg px-3 py-1.5 text-xs font-semibold
+                                    {{ $currentTask && $currentTask->is_completed
+                                        ? 'border border-gray-300 text-ipv-ink/70 dark:border-white/20 dark:text-ipv-ink-dark/70'
+                                        : 'bg-ipv-blue text-white' }}">
                                 {{ $currentTask && $currentTask->is_completed ? 'Volver a activar' : 'Completar' }}
-                            </flux:button>
+                            </button>
                         @endif
                     </div>
 
                     <div class="flex space-x-2">
                         @if($taskId)
-                            <flux:button size="sm" class="!bg-ipv-magenta !text-white" wire:click="deleteTask({{ $taskId }})" onclick="confirm('¿Estás seguro de eliminar esta tarea?') || event.stopImmediatePropagation()">
+                            <button wire:click="deleteTask({{ $taskId }})" type="button"
+                                onclick="confirm('¿Estás seguro de eliminar esta tarea?') || event.stopImmediatePropagation()"
+                                class="rounded-lg bg-ipv-magenta px-3.5 py-1.5 text-xs font-semibold text-white">
                                 Eliminar
-                            </flux:button>
+                            </button>
                         @endif
                         @if(!$taskId || $isEditing)
-                            <flux:button size="sm" class="!bg-ipv-blue !text-white" wire:click="saveTask">
+                            <button wire:click="saveTask" type="button" class="rounded-lg bg-ipv-blue px-4 py-1.5 text-xs font-semibold text-white">
                                 Guardar
-                            </flux:button>
+                            </button>
                         @endif
                     </div>
                 </div>
