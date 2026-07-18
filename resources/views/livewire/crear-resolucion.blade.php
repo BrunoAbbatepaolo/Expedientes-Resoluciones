@@ -31,6 +31,13 @@
                     </svg>
                     Plantilla completa
                 </button>
+                <button type="button" wire:click="usarPersonalizado"
+                    class="flex flex-1 items-center justify-center gap-2 rounded-lg border border-ipv-blue/20 bg-white/70 px-4 py-3 font-medium text-ipv-ink/80 transition-colors hover:bg-white dark:border-white/15 dark:bg-white/[0.06] dark:text-ipv-ink-dark/85 dark:hover:bg-white/[0.1]">
+                    <svg class="size-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                    </svg>
+                    Personalizado
+                </button>
             </div>
         </div>
 
@@ -1527,8 +1534,8 @@
                         </button>
                     </div>
                     <div class="flex-1 overflow-hidden rounded-b-lg bg-black/[0.03] dark:bg-white/[0.03]">
-                        <iframe 
-                            :src="'/resoluciones/descargar-pdf/' + pdfIndex" 
+                        <iframe
+                            :src="pdfIndex !== null ? '/resoluciones/descargar-pdf/' + pdfIndex : ''"
                             class="w-full h-full"
                             frameborder="0"
                         ></iframe>

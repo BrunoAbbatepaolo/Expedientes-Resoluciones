@@ -18,10 +18,6 @@
             </div>
 
             <div class="flex gap-2">
-                <button type="button"
-                    class="cursor-pointer rounded-lg border border-ipv-blue/20 bg-white/70 px-4 py-2 text-sm font-medium text-ipv-ink/80 hover:bg-white dark:border-white/15 dark:bg-white/[0.06] dark:text-ipv-ink-dark/85 dark:hover:bg-white/[0.1]">
-                    Filtrar
-                </button>
                 @if (auth()->user()->permiso('lista_usuario_editar'))
                     <button type="button" @click="showCrearUsuario = true"
                         class="cursor-pointer rounded-lg bg-ipv-blue px-4 py-2 text-sm font-semibold text-white hover:bg-ipv-blue-dark">
