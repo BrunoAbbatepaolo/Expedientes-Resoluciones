@@ -195,10 +195,10 @@
         </div>
 
         <!-- Perfil -->
-        <div x-data="{ open: false }" class="relative">
+        <div x-data="{ open: false }" class="relative mt-auto pt-4 pb-2">
             <button @click="open = !open" @click.outside="open = false" type="button"
-                class="flex w-full items-center gap-2.5 rounded-lg px-2.5 py-1.5 hover:bg-black/[0.03] dark:hover:bg-white/5">
-                <span class="relative flex size-8 shrink-0 items-center justify-center overflow-hidden rounded-[9px] bg-ipv-gold text-[13px] font-bold text-ipv-gold-ink dark:text-ipv-gold-ink-dark">
+                class="group flex w-full items-center gap-3 rounded-[12px] bg-white/40 border border-ipv-blue/15 px-3 py-2.5 transition-all hover:bg-white/70 hover:shadow-sm hover:border-ipv-blue/30 dark:bg-white/[0.04] dark:border-white/10 dark:hover:bg-white/[0.08] dark:hover:border-white/20">
+                <span class="relative flex size-9 shrink-0 items-center justify-center overflow-hidden rounded-[10px] bg-ipv-gold text-[13px] font-bold text-ipv-gold-ink transition-transform duration-300 group-hover:scale-105 group-hover:ring-2 group-hover:ring-ipv-gold/50 group-hover:ring-offset-2 group-hover:ring-offset-transparent dark:text-ipv-gold-ink-dark">
                     @if (auth()->user()->profile_photo_path)
                         <img src="{{ Storage::url(auth()->user()->profile_photo_path) }}"
                             alt="{{ auth()->user()->name }}" class="h-full w-full object-cover">
@@ -207,31 +207,48 @@
                     @endif
                 </span>
                 <div class="min-w-0 flex-1 text-left">
-                    <div class="truncate text-[13px] font-semibold">{{ auth()->user()->nombre }}</div>
-                    <div class="truncate text-[11px] text-ipv-ink/55 dark:text-ipv-ink-dark/50">
+                    <div class="truncate text-[13.5px] font-semibold tracking-tight text-ipv-ink dark:text-ipv-ink-dark">{{ auth()->user()->nombre }}</div>
+                    <div class="truncate text-[11px] font-medium text-ipv-ink/60 dark:text-ipv-ink-dark/50">
                         {{ auth()->user()->permisos()->where('nombre', 'oficina_asignada')->first()?->oficina?->nombre ?? 'Sin oficina' }}
                     </div>
                 </div>
-                <svg class="size-3.5 shrink-0 text-ipv-ink/40 dark:text-ipv-ink-dark/45" viewBox="0 0 20 20" fill="currentColor">
-                    <path fill-rule="evenodd"
-                        d="M10.53 3.47a.75.75 0 0 0-1.06 0L6.22 6.72a.75.75 0 0 0 1.06 1.06L10 5.06l2.72 2.72a.75.75 0 1 0 1.06-1.06l-3.25-3.25Zm-3.31 9.81 3.25 3.25a.75.75 0 0 0 1.06 0l3.25-3.25a.75.75 0 1 0-1.06-1.06L10 14.94l-2.72-2.72a.75.75 0 0 0-1.06 1.06Z"
-                        clip-rule="evenodd" />
+                <svg class="size-4 shrink-0 text-ipv-ink/40 transition-transform duration-200 group-hover:text-ipv-ink/70 dark:text-ipv-ink-dark/45 dark:group-hover:text-ipv-ink-dark/70" :class="open ? 'rotate-180' : ''" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M14.707 12.707a1 1 0 01-1.414 0L10 9.414l-3.293 3.293a1 1 0 01-1.414-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 010 1.414z" clip-rule="evenodd" />
                 </svg>
             </button>
 
-            <div x-show="open" x-cloak x-transition
-                class="absolute bottom-full left-0 z-50 mb-2 w-[220px] overflow-hidden rounded-lg border border-ipv-blue/10 bg-white shadow-xl dark:border-white/10 dark:bg-slate-800">
-                <a href="{{ route('settings.profile') }}" wire:navigate
-                    class="block px-4 py-2.5 text-sm text-ipv-ink/80 hover:bg-black/[0.03] dark:text-ipv-ink-dark/85 dark:hover:bg-white/5">
-                    {{ __('Settings') }}
-                </a>
-                <form method="POST" action="{{ route('logout') }}">
-                    @csrf
-                    <button type="submit"
-                        class="w-full px-4 py-2.5 text-left text-sm text-ipv-ink/80 hover:bg-black/[0.03] dark:text-ipv-ink-dark/85 dark:hover:bg-white/5">
-                        {{ __('Log Out') }}
-                    </button>
-                </form>
+            <div x-show="open" x-cloak 
+                x-transition:enter="transition ease-out duration-200"
+                x-transition:enter-start="opacity-0 scale-95 translate-y-2"
+                x-transition:enter-end="opacity-100 scale-100 translate-y-0"
+                x-transition:leave="transition ease-in duration-150"
+                x-transition:leave-start="opacity-100 scale-100 translate-y-0"
+                x-transition:leave-end="opacity-0 scale-95 translate-y-2"
+                class="absolute bottom-full left-0 z-50 mb-3 w-[240px] overflow-hidden rounded-[14px] border border-ipv-blue/15 bg-white shadow-xl dark:border-white/10 dark:bg-[#1a2332] sirex-glass-card">
+                
+                <div class="px-4 py-3 border-b border-ipv-blue/10 dark:border-white/10">
+                    <p class="text-[11px] font-semibold uppercase tracking-wider text-ipv-ink/50 dark:text-ipv-ink-dark/50">Sesión iniciada como</p>
+                    <p class="truncate text-[13px] font-medium text-ipv-ink dark:text-ipv-ink-dark mt-0.5">{{ auth()->user()->email }}</p>
+                </div>
+                
+                <div class="p-1.5">
+                    <a href="{{ route('settings.profile') }}" wire:navigate
+                        class="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium text-ipv-ink/80 transition-colors hover:bg-black/[0.04] dark:text-ipv-ink-dark/85 dark:hover:bg-white/5">
+                        <svg class="size-[18px] text-ipv-ink/50 dark:text-ipv-ink-dark/50" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                        {{ __('Settings') }}
+                    </a>
+                </div>
+                
+                <div class="border-t border-ipv-blue/10 dark:border-white/10 p-1.5">
+                    <form method="POST" action="{{ route('logout') }}">
+                        @csrf
+                        <button type="submit"
+                            class="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-left text-sm font-medium text-ipv-ink/80 transition-colors hover:bg-black/[0.04] dark:text-ipv-ink-dark/85 dark:hover:bg-white/5">
+                            <svg class="size-[18px] text-ipv-magenta/70 dark:text-ipv-magenta-light/70" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
+                            <span class="text-ipv-magenta dark:text-ipv-magenta-light">{{ __('Log Out') }}</span>
+                        </button>
+                    </form>
+                </div>
             </div>
         </div>
     </aside>

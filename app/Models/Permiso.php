@@ -25,6 +25,11 @@ class Permiso extends Model
         return $this->belongsTo(User::class);
     }
 
+    public function oficina(): BelongsTo
+    {
+        return $this->belongsTo(Oficina::class, 'oficina_id');
+    }
+
     public static function oficinaAsignada(?int $userId): ?self
     {
         if (! $userId) {
