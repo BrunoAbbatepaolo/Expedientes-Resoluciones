@@ -96,7 +96,7 @@
 
             @if ($expedienteEncontrado)
                 <button type="button" wire:click="guardar"
-                    class="cursor-pointer rounded-lg bg-ipv-blue px-5 py-2 font-medium text-white shadow-sm transition-colors hover:bg-ipv-blue-dark">
+                    class="sirex-btn cursor-pointer rounded-lg bg-ipv-blue px-5 py-2 font-medium text-white shadow-sm transition-colors hover:bg-ipv-blue-dark">
                     Guardar
                 </button>
             @endif

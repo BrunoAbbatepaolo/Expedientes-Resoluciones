@@ -1,11 +1,13 @@
 {{-- ── Bienvenida ── --}}
 <div class="flex min-w-0 flex-1 flex-col gap-4">
 
-    <div class="mb-1">
-        <h1 class="text-2xl font-semibold text-ipv-ink dark:text-ipv-ink-dark">
+    <div class="mb-1" x-data="{ shown: false }" x-init="setTimeout(() => shown = true, 100)">
+        <h1 class="text-2xl font-semibold text-ipv-ink dark:text-ipv-ink-dark transition-all duration-700 ease-out"
+            :class="shown ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-3'">
             ¡Hola, {{ Auth::user()->nombre }}!
         </h1>
-        <p class="text-sm text-ipv-ink/55 dark:text-ipv-ink-dark/55">
+        <p class="text-sm text-ipv-ink/55 dark:text-ipv-ink-dark/55 transition-all duration-700 ease-out delay-150"
+            :class="shown ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-3'">
             {{ Auth::user()->permisos()->where('nombre', 'oficina_asignada')->first()?->oficina?->nombre ?? 'Sistema Administrativo' }}
             — {{ now()->locale('es')->translatedFormat('d \d\e F \d\e Y') }}
         </p>

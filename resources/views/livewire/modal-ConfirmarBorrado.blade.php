@@ -16,7 +16,7 @@
                     Cancelar
                 </button>
                 <button type="button" wire:click="eliminarExpediente"
-                    class="rounded-lg bg-ipv-magenta px-4 py-2 text-sm font-semibold text-white hover:opacity-90">
+                    class="cursor-pointer rounded-lg bg-ipv-magenta px-4 py-2 text-sm font-semibold text-white transition-colors duration-150 hover:bg-ipv-magenta-dark">
                     Eliminar
                 </button>
             </div>

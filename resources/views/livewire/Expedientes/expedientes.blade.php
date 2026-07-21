@@ -10,6 +10,22 @@
         <h1 class="text-2xl font-semibold text-ipv-ink dark:text-ipv-ink-dark">
             Sistema de Expedientes - {{ $oficinaUsuario->nombre ?? 'Sin oficina asignada' }}
         </h1>
+
+        @if ($sinOficina)
+            <div class="flex items-start gap-3 rounded-lg border border-ipv-gold/40 bg-ipv-gold/10 px-4 py-3 text-sm dark:border-ipv-gold/25">
+                <svg class="mt-0.5 size-5 shrink-0 text-ipv-gold-ink dark:text-ipv-gold-light" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M12 9v3.75m0 3.75h.008v.008H12v-.008ZM10.29 3.86 1.82 18a1.5 1.5 0 0 0 1.29 2.25h17.78A1.5 1.5 0 0 0 22.18 18L13.71 3.86a1.5 1.5 0 0 0-2.62 0Z" />
+                </svg>
+                <div>
+                    <p class="font-semibold text-ipv-gold-ink dark:text-ipv-gold-light">No tenés una oficina asignada</p>
+                    <p class="mt-0.5 text-ipv-gold-ink/80 dark:text-ipv-gold-light/80">
+                        No vas a poder ver ni cargar expedientes hasta que un administrador te asigne una oficina en Usuarios.
+                    </p>
+                </div>
+            </div>
+        @endif
+
         <div class="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
             <div class="relative w-full sm:w-1/3">
                 <svg class="pointer-events-none absolute left-3 top-1/2 size-5 -translate-y-1/2 text-ipv-ink/40 dark:text-ipv-ink-dark/45"
@@ -187,5 +203,13 @@
         @include('livewire.Expedientes.modal-EditarExpediente')
         @include('livewire.Expedientes.modal-RealizarPase')
         @include('livewire.modal-ConfirmarBorrado')
+    @else
+        <div class="flex items-start gap-3 rounded-lg border border-ipv-magenta/30 bg-ipv-magenta/10 px-4 py-3 text-sm text-ipv-magenta">
+            <svg class="mt-0.5 size-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <rect x="4.5" y="10.5" width="15" height="9.5" rx="2" stroke-width="2" />
+                <path stroke-width="2" d="M8 10.5V7a4 4 0 0 1 8 0v3.5" />
+            </svg>
+            <p>No tenés permiso para ver expedientes. Pedile a un administrador que te lo habilite en Usuarios.</p>
+        </div>
     @endif
 </div>

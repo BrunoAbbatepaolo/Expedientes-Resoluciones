@@ -60,7 +60,7 @@
         <!-- Botones -->
         <div class="flex flex-wrap justify-end gap-3 border-t border-ipv-blue/10 pt-4 dark:border-white/10">
             <button type="button" wire:click="actualizar"
-                class="rounded-lg bg-ipv-blue px-5 py-2 font-medium text-white shadow-md transition-all duration-200 hover:scale-105 hover:bg-ipv-blue-dark focus:outline-none focus:ring-2 focus:ring-ipv-blue/40 focus:ring-offset-2">
+                class="sirex-btn rounded-lg bg-ipv-blue px-5 py-2 font-medium text-white shadow-md transition-all duration-200 hover:scale-105 hover:bg-ipv-blue-dark focus:outline-none focus:ring-2 focus:ring-ipv-blue/40 focus:ring-offset-2">
                 Guardar
             </button>
             <button type="button" wire:click="cancelarModal" @click="showEditar = false"

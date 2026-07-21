@@ -168,7 +168,7 @@
                                     </div>
                                     <div class="pt-6">
                                         <button type="submit"
-                                            class="flex w-full items-center justify-center gap-2 rounded-lg bg-ipv-blue px-5 py-2.5 font-medium text-white shadow-sm transition-colors hover:bg-ipv-blue-dark">
+                                            class="sirex-btn flex w-full items-center justify-center gap-2 rounded-lg bg-ipv-blue px-5 py-2.5 font-medium text-white shadow-sm transition-colors hover:bg-ipv-blue-dark">
                                             <svg class="size-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
                                             </svg>
@@ -311,7 +311,7 @@
                                     </div>
                                     <div class="pt-6">
                                         <button type="submit"
-                                            class="flex w-full items-center justify-center gap-2 rounded-lg bg-ipv-blue px-5 py-2.5 font-medium text-white shadow-sm transition-colors hover:bg-ipv-blue-dark">
+                                            class="sirex-btn flex w-full items-center justify-center gap-2 rounded-lg bg-ipv-blue px-5 py-2.5 font-medium text-white shadow-sm transition-colors hover:bg-ipv-blue-dark">
                                             <svg class="size-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
                                             </svg>
@@ -530,7 +530,7 @@
                                     </div>
                                     <div class="pt-6">
                                         <button type="submit"
-                                            class="flex w-full items-center justify-center gap-2 rounded-lg bg-ipv-blue px-5 py-2.5 font-medium text-white shadow-sm transition-colors hover:bg-ipv-blue-dark">
+                                            class="sirex-btn flex w-full items-center justify-center gap-2 rounded-lg bg-ipv-blue px-5 py-2.5 font-medium text-white shadow-sm transition-colors hover:bg-ipv-blue-dark">
                                             <svg class="size-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
                                             </svg>
@@ -742,7 +742,7 @@
                                     </div>
                                     <div class="pt-6">
                                         <button type="submit"
-                                            class="flex w-full items-center justify-center gap-2 rounded-lg bg-ipv-blue px-5 py-2.5 font-medium text-white shadow-sm transition-colors hover:bg-ipv-blue-dark">
+                                            class="sirex-btn flex w-full items-center justify-center gap-2 rounded-lg bg-ipv-blue px-5 py-2.5 font-medium text-white shadow-sm transition-colors hover:bg-ipv-blue-dark">
                                             <svg class="size-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
                                             </svg>
@@ -911,7 +911,7 @@
                                     </div>
                                     <div class="pt-6">
                                         <button type="submit"
-                                            class="flex w-full items-center justify-center gap-2 rounded-lg bg-ipv-blue px-5 py-2.5 font-medium text-white shadow-sm transition-colors hover:bg-ipv-blue-dark">
+                                            class="sirex-btn flex w-full items-center justify-center gap-2 rounded-lg bg-ipv-blue px-5 py-2.5 font-medium text-white shadow-sm transition-colors hover:bg-ipv-blue-dark">
                                             <svg class="size-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
                                             </svg>
@@ -1065,7 +1065,7 @@
                                     </div>
                                     <div class="pt-6">
                                         <button type="submit"
-                                            class="flex w-full items-center justify-center gap-2 rounded-lg bg-ipv-blue px-5 py-2.5 font-medium text-white shadow-sm transition-colors hover:bg-ipv-blue-dark">
+                                            class="sirex-btn flex w-full items-center justify-center gap-2 rounded-lg bg-ipv-blue px-5 py-2.5 font-medium text-white shadow-sm transition-colors hover:bg-ipv-blue-dark">
                                             <svg class="size-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
                                             </svg>
@@ -1219,7 +1219,7 @@
                                     </div>
                                     <div class="pt-6">
                                         <button type="submit"
-                                            class="flex w-full items-center justify-center gap-2 rounded-lg bg-ipv-blue px-5 py-2.5 font-medium text-white shadow-sm transition-colors hover:bg-ipv-blue-dark">
+                                            class="sirex-btn flex w-full items-center justify-center gap-2 rounded-lg bg-ipv-blue px-5 py-2.5 font-medium text-white shadow-sm transition-colors hover:bg-ipv-blue-dark">
                                             <svg class="size-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
                                             </svg>
@@ -1373,7 +1373,7 @@
                                     </div>
                                     <div class="pt-6">
                                         <button type="submit"
-                                            class="flex w-full items-center justify-center gap-2 rounded-lg bg-ipv-blue px-5 py-2.5 font-medium text-white shadow-sm transition-colors hover:bg-ipv-blue-dark">
+                                            class="sirex-btn flex w-full items-center justify-center gap-2 rounded-lg bg-ipv-blue px-5 py-2.5 font-medium text-white shadow-sm transition-colors hover:bg-ipv-blue-dark">
                                             <svg class="size-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
                                             </svg>
@@ -1422,7 +1422,7 @@
                     </span>
                 </div>
                 <button type="button" wire:click="guardarPersonalizado"
-                    class="rounded-lg bg-ipv-blue px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-ipv-blue-dark">
+                    class="sirex-btn rounded-lg bg-ipv-blue px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-ipv-blue-dark">
                     Guardar resolución
                 </button>
             </div>
@@ -1456,7 +1456,7 @@
                     </span>
                 </div>
                 <button type="button" onclick="@this.guardarPlantilla()"
-                    class="rounded-lg bg-ipv-blue px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-ipv-blue-dark">
+                    class="sirex-btn rounded-lg bg-ipv-blue px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-ipv-blue-dark">
                     Guardar resolución
                 </button>
             </div>

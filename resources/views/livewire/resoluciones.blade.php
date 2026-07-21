@@ -167,7 +167,7 @@
                     </div>
 
                     <div class="flex justify-end">
-                        <button type="submit" class="cursor-pointer rounded-lg bg-ipv-blue px-4 py-2 text-sm font-semibold text-white hover:bg-ipv-blue-dark">
+                        <button type="submit" class="sirex-btn cursor-pointer rounded-lg bg-ipv-blue px-4 py-2 text-sm font-semibold text-white hover:bg-ipv-blue-dark">
                             Guardar Cambios
                         </button>
                     </div>
@@ -198,6 +198,14 @@
                     </div>
                 </div>
             </div>
+        </div>
+    @else
+        <div class="flex items-start gap-3 rounded-lg border border-ipv-magenta/30 bg-ipv-magenta/10 px-4 py-3 text-sm text-ipv-magenta">
+            <svg class="mt-0.5 size-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <rect x="4.5" y="10.5" width="15" height="9.5" rx="2" stroke-width="2" />
+                <path stroke-width="2" d="M8 10.5V7a4 4 0 0 1 8 0v3.5" />
+            </svg>
+            <p>No tenés permiso para ver resoluciones. Pedile a un administrador que te lo habilite en Usuarios.</p>
         </div>
     @endif
 </div>

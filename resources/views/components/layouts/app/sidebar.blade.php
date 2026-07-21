@@ -5,7 +5,8 @@
     @include('partials.head')
 </head>
 
-<body class="min-h-screen overflow-x-hidden sirex-shell text-ipv-ink dark:text-ipv-ink-dark lg:flex" x-data="{ sidebarOpen: false }">
+<body class="min-h-screen overflow-x-hidden text-ipv-ink dark:text-ipv-ink-dark lg:flex" x-data="{ sidebarOpen: false }">
+    <div class="fixed inset-0 z-[-1] sirex-shell" aria-hidden="true"></div>
 
     <!-- Overlay móvil -->
     <div x-show="sidebarOpen" x-cloak @click="sidebarOpen = false"
