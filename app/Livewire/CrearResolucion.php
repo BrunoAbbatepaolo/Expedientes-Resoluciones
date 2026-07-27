@@ -4,15 +4,16 @@ namespace App\Livewire;
 
 use App\Models\Resolucion;
 use App\Models\ResolucionArchivo;
-use Carbon\Carbon;
-use Illuminate\Support\Facades\Cache;
+use App\Traits\AuthorizesOficina;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\View;
 use Livewire\Component;
 use Livewire\WithFileUploads;
+use Mews\Purifier\Facades\Purifier;
 
 class CrearResolucion extends Component
 {
+    use AuthorizesOficina;
     use WithFileUploads;
 
     public string $tipo;
@@ -137,6 +138,8 @@ class CrearResolucion extends Component
 
     public function mount($tipo)
     {
+        $this->autorizarPermiso('resolucion_editar');
+
         $this->tipo = $tipo;
         // Establecer la fecha inicial en el formato correcto
         $this->datos['fecha_res'] = date('Y-m-d');
@@ -226,17 +229,22 @@ class CrearResolucion extends Component
             ];
 
             $datosConFunciones = array_merge($datosEjemplo, [
-                'formatearFecha' => [$this, 'formatearFecha'],
-                'formatearFechaLarga' => [$this, 'formatearFechaLarga'],
-                'formatearMoneda' => [$this, 'formatearMoneda'],
-                'num2letras' => [$this, 'num2letras'],
+                'formatearFecha' => 'formatearFecha',
+                'formatearFechaLarga' => 'formatearFechaLarga',
+                'formatearMoneda' => 'formatearMoneda',
+                'num2letras' => 'num2letras',
             ]);
 
             $this->plantilla = View::make("prototipos.{$this->tipo}", $datosConFunciones)->render();
 
         } catch (\Exception $e) {
-            $this->plantilla = "Error al cargar la plantilla: {$e->getMessage()}";
+            $this->plantilla = $this->mensajePlantillaNoDisponible();
         }
+    }
+
+    private function mensajePlantillaNoDisponible(): string
+    {
+        return "Todavía no hay una plantilla completa para \"{$this->tipo}\". Podés escribir el contenido en el modo \"Personalizado\".";
     }
 
     public function cargarPlantillaConDatos(): void
@@ -245,7 +253,7 @@ class CrearResolucion extends Component
             $contenidoHTML = View::make("prototipos.{$this->tipo}", $this->datos)->render();
             $this->plantilla = $this->convertirHTMLaTexto($contenidoHTML);
         } catch (\Exception $e) {
-            $this->plantilla = "Error al cargar la plantilla: {$e->getMessage()}";
+            $this->plantilla = $this->mensajePlantillaNoDisponible();
         }
     }
 
@@ -267,48 +275,78 @@ class CrearResolucion extends Component
         ]);
 
         try {
-            // Generar número de trámite único
-            $numeroTramite = $this->datos['numero_tramite'] ?? $this->generarNumeroTramite();
+            $numeroTramite = $this->siguienteNumeroTramite();
+            $cantidadArchivos = count($this->archivosPDF);
 
-            // Verificar si el número ya existe, si existe generar otro
-            while (\App\Models\Resolucion::where('numero_exp', $numeroTramite)->exists()) {
-                $numeroTramite = $this->generarNumeroTramite();
-            }
+            $this->persistirResolucion(
+                numeroExp: $numeroTramite,
+                numeroResolucion: $this->datos['num_res'] ?? null,
+                fecha: $this->datos['fecha_res'] ?? now()->toDateString(),
+                codBarrio: $this->datos['manzana'] ?? null,
+                codCasa: $this->datos['lote'] ?? null,
+                plantilla: $this->plantilla,
+            );
 
-            // Crear la resolución
-            $resolucion = Resolucion::create([
-                'numero_exp' => $numeroTramite,
-                'numero_resolucion' => $this->datos['num_res'] ?? null,
-                'fecha' => $this->datos['fecha_res'] ?? now()->toDateString(),
-                'cod_barrio' => $this->datos['manzana'] ?? null,
-                'cod_casa' => $this->datos['lote'] ?? null,
-                'plantilla' => $this->plantilla,
-            ]);
-
-            // Guardar los PDFs si hay archivos cargados
-            if (! empty($this->archivosPDF)) {
-                foreach ($this->archivosPDF as $archivo) {
-                    $nombreArchivo = uniqid('resolucion_').'_'.$archivo->getClientOriginalName();
-                    $ruta = $archivo->storeAs('resoluciones', $nombreArchivo, 'public');
-
-                    ResolucionArchivo::create([
-                        'resolucion_id' => $resolucion->id,
-                        'nombre_original' => $archivo->getClientOriginalName(),
-                        'nombre_archivo' => $nombreArchivo,
-                        'ruta' => $ruta,
-                        'tipo' => $archivo->getMimeType(),
-                        'tamano' => $archivo->getSize(),
-                    ]);
-                }
-            }
-
-            // Limpiar archivos temporales
-            $this->archivosPDF = [];
-
-            session()->flash('message', 'Resolución guardada exitosamente con '.count($this->archivosPDF).' archivo(s)');
+            session()->flash('message', 'Resolución guardada exitosamente'.($cantidadArchivos ? " con {$cantidadArchivos} archivo(s)" : ''));
         } catch (\Exception $e) {
             session()->flash('error', 'Error al guardar: '.$e->getMessage());
         }
+    }
+
+    private function siguienteNumeroTramite(): string
+    {
+        $numeroTramite = $this->datos['numero_tramite'] ?? $this->generarNumeroTramite();
+
+        while (\App\Models\Resolucion::where('numero_exp', $numeroTramite)->exists()) {
+            $numeroTramite = $this->generarNumeroTramite();
+        }
+
+        return $numeroTramite;
+    }
+
+    private function persistirResolucion(
+        string $numeroExp,
+        ?string $numeroResolucion,
+        string $fecha,
+        ?string $codBarrio,
+        ?string $codCasa,
+        string $plantilla
+    ): Resolucion {
+        $resolucion = Resolucion::create([
+            'oficina_id' => auth()->user()->oficinaAsignadaId(),
+            'numero_exp' => $numeroExp,
+            'numero_resolucion' => $numeroResolucion,
+            'fecha' => $fecha,
+            // cod_barrio/cod_casa son integer: los tipos que no usan manzana/lote
+            // llegan como '' (string vacío) y no como null, lo que rompe el insert
+            // en modo estricto de MySQL.
+            'cod_barrio' => $codBarrio !== '' ? $codBarrio : null,
+            'cod_casa' => $codCasa !== '' ? $codCasa : null,
+            // Sanitizado antes de guardar: 'plantilla' llega del editor Quill en modo
+            // personalizado (HTML libre del usuario) y podría contener HTML/JS
+            // malicioso si se muestra sin escapar a otros usuarios/oficinas.
+            'plantilla' => Purifier::clean($plantilla),
+        ]);
+
+        foreach ($this->archivosPDF as $archivo) {
+            // Nombre generado a partir de la extensión, no del nombre original del
+            // cliente (ver updatedTempArchivos(): mismo riesgo de path traversal).
+            $nombreArchivo = uniqid('resolucion_').'.'.$archivo->getClientOriginalExtension();
+            $ruta = $archivo->storeAs('resoluciones', $nombreArchivo, 'public');
+
+            ResolucionArchivo::create([
+                'resolucion_id' => $resolucion->id,
+                'nombre_original' => $archivo->getClientOriginalName(),
+                'nombre_archivo' => $nombreArchivo,
+                'ruta' => $ruta,
+                'tipo' => $archivo->getMimeType(),
+                'tamano' => $archivo->getSize(),
+            ]);
+        }
+
+        $this->archivosPDF = [];
+
+        return $resolucion;
     }
 
     public function removeArchivo($index)
@@ -341,11 +379,19 @@ class CrearResolucion extends Component
     public function updatedTempArchivos()
     {
         if (! empty($this->tempArchivos)) {
+            // Sin esto, se podía subir cualquier tipo de archivo (incluido .php/.html)
+            // al disco público: mismo riesgo que un upload sin restricción de tipo.
+            $this->validate([
+                'tempArchivos.*' => 'file|mimes:pdf,jpg,jpeg,png|max:2048',
+            ]);
+
             $sesionArchivos = session()->get('archivos_pdf_resolucion', []);
 
             foreach ($this->tempArchivos as $archivo) {
-                // Guardar en storage público temporalmente
-                $nombreArchivo = 'temp_'.uniqid().'_'.$archivo->getClientOriginalName();
+                // Guardar en storage público temporalmente. Nombre generado a partir
+                // de la extensión ya validada, no del nombre original del cliente:
+                // ese nombre podía traer '../' y escribir fuera de la carpeta 'temp'.
+                $nombreArchivo = 'temp_'.uniqid().'.'.$archivo->getClientOriginalExtension();
                 $ruta = $archivo->storeAs('temp', $nombreArchivo, 'public');
 
                 $this->archivosPDF[] = $archivo;
@@ -379,17 +425,35 @@ class CrearResolucion extends Component
 
     public function guardar()
     {
+        if (! View::exists("prototipos.{$this->tipo}")) {
+            session()->flash('error', $this->mensajePlantillaNoDisponible());
+
+            return;
+        }
+
         $this->validate($this->rules(), $this->messages());
 
         try {
-            // Lógica para guardar la resolución
-            // Ejemplo: ResolucionService::crear($this->datos, $this->tipo);
+            $html = View::make("prototipos.{$this->tipo}", array_merge($this->datos, [
+                'formatearFecha' => 'formatearFecha',
+                'formatearFechaLarga' => 'formatearFechaLarga',
+                'formatearMoneda' => 'formatearMoneda',
+                'num2letras' => 'num2letras',
+            ]))->render();
 
-            session()->flash('message', 'Resolución guardada exitosamente');
+            $cantidadArchivos = count($this->archivosPDF);
 
-            // Opcional: redireccionar o limpiar formulario
+            $this->persistirResolucion(
+                numeroExp: $this->datos['num_exp'],
+                numeroResolucion: $this->datos['num_res'] ?? null,
+                fecha: $this->datos['fecha_res'],
+                codBarrio: $this->datos['manzana'] ?? null,
+                codCasa: $this->datos['lote'] ?? null,
+                plantilla: $html,
+            );
+
+            session()->flash('message', 'Resolución guardada exitosamente'.($cantidadArchivos ? " con {$cantidadArchivos} archivo(s)" : ''));
             $this->resetFormulario();
-
         } catch (\Exception $e) {
             session()->flash('error', 'Error al guardar: '.$e->getMessage());
         }
@@ -402,7 +466,19 @@ class CrearResolucion extends Component
         ]);
 
         try {
-            session()->flash('message', 'Resolución guardada exitosamente');
+            $numeroTramite = $this->siguienteNumeroTramite();
+            $cantidadArchivos = count($this->archivosPDF);
+
+            $this->persistirResolucion(
+                numeroExp: $numeroTramite,
+                numeroResolucion: $this->datos['num_res'] ?? null,
+                fecha: $this->datos['fecha_res'] ?? now()->toDateString(),
+                codBarrio: $this->datos['manzana'] ?? null,
+                codCasa: $this->datos['lote'] ?? null,
+                plantilla: $this->plantilla,
+            );
+
+            session()->flash('message', 'Resolución guardada exitosamente'.($cantidadArchivos ? " con {$cantidadArchivos} archivo(s)" : ''));
         } catch (\Exception $e) {
             session()->flash('error', 'Error al guardar: '.$e->getMessage());
         }
@@ -429,10 +505,10 @@ class CrearResolucion extends Component
     {
         try {
             $datos = array_merge($this->datos, [
-                'formatearFecha' => [$this, 'formatearFecha'],
-                'formatearFechaLarga' => [$this, 'formatearFechaLarga'],
-                'formatearMoneda' => [$this, 'formatearMoneda'],
-                'num2letras' => [$this, 'num2letras'],
+                'formatearFecha' => 'formatearFecha',
+                'formatearFechaLarga' => 'formatearFechaLarga',
+                'formatearMoneda' => 'formatearMoneda',
+                'num2letras' => 'num2letras',
                 'numero_tramite' => $this->generarNumeroTramite(),
             ]);
 
@@ -487,7 +563,9 @@ class CrearResolucion extends Component
             $this->plantilla = $this->convertirHTMLaTexto($contenidoHTML);
 
         } catch (\Exception $e) {
-            $this->plantilla = "Error al cargar la plantilla: {$e->getMessage()}";
+            // Sin plantilla base: se deja vacío para que la persona escriba desde cero
+            // en vez de precargar un mensaje de error que podría guardarse por accidente.
+            $this->plantilla = '';
         }
     }
 
@@ -513,150 +591,6 @@ class CrearResolucion extends Component
         $texto = str_replace(['. ', ':', 'Resolución Nº'], [".\n\n", ":\n", "\nResolución Nº"], $texto);
 
         return trim($texto);
-    }
-
-    /**
-     * Helper para formatear fechas a d-m-Y.
-     * Retorna la fecha en formato d-m-Y o un string vacío si la fecha no es válida.
-     */
-    public function formatearFecha($fecha): string
-    {
-        if (empty($fecha)) {
-            return '';
-        }
-        try {
-            return Carbon::parse($fecha)->format('d-m-Y');
-        } catch (\Exception $e) {
-            return '';
-        }
-    }
-
-    public function formatearFechaLarga($fecha): string
-    {
-        if (empty($fecha)) {
-            return '';
-        }
-        try {
-            return Carbon::parse($fecha)->locale('es')->translatedFormat('j \d\e F \d\e\l Y');
-        } catch (\Exception $e) {
-            return '';
-        }
-    }
-
-    public function formatearMoneda($monto): string
-    {
-        if (empty($monto)) {
-            return '';
-        }
-        try {
-            return number_format((float) str_replace(['$', ','], '', $monto), 2, ',', '.');
-        } catch (\Exception $e) {
-            return $monto;
-        }
-    }
-
-    public function num2letras($numero): string
-    {
-        if (empty($numero)) {
-            return '';
-        }
-        $numero = str_replace(['$', ',', ' '], '', $numero);
-        $numero = (float) $numero;
-        if ($numero == 0) {
-            return 'CERO';
-        }
-
-        $integerPart = floor($numero);
-        $decimalPart = round(($numero - $integerPart) * 100);
-
-        $letters = $this->convertNumberToLetters($integerPart);
-        $result = $letters.' con '.str_pad($decimalPart, 2, '0', STR_PAD_LEFT).'/100';
-
-        return $result;
-    }
-
-    private function convertNumberToLetters(int $number): string
-    {
-        if ($number < 0) {
-            return 'MENOS '.$this->convertNumberToLetters(-$number);
-        }
-        if ($number == 0) {
-            return '';
-        }
-        if ($number < 20) {
-            $units = ['', 'UNO', 'DOS', 'TRES', 'CUATRO', 'CINCO', 'SEIS', 'SIETE', 'OCHO', 'NUEVE', 'DIEZ', 'ONCE', 'DOCE', 'TRECE', 'CATORCE', 'QUINCE', 'DIECISÉIS', 'DIECISIETE', 'DIECIOCHO', 'DIECINUEVE'];
-
-            return $units[$number];
-        }
-        if ($number < 30) {
-            return 'VEINTI'.($number == 21 ? 'UNO' : $this->convertNumberToLetters($number - 20));
-        }
-        if ($number < 40) {
-            return 'TREINTA Y '.$this->convertNumberToLetters($number - 30);
-        }
-        if ($number < 50) {
-            return 'CUARENTA Y '.$this->convertNumberToLetters($number - 40);
-        }
-        if ($number < 60) {
-            return 'CINCUENTA Y '.$this->convertNumberToLetters($number - 50);
-        }
-        if ($number < 70) {
-            return 'SESENTA Y '.$this->convertNumberToLetters($number - 60);
-        }
-        if ($number < 80) {
-            return 'SETENTA Y '.$this->convertNumberToLetters($number - 70);
-        }
-        if ($number < 90) {
-            return 'OCHENTA Y '.$this->convertNumberToLetters($number - 80);
-        }
-        if ($number < 100) {
-            return 'NOVENTA Y '.$this->convertNumberToLetters($number - 90);
-        }
-        if ($number < 200) {
-            return 'CIENTO '.$this->convertNumberToLetters($number - 100);
-        }
-        if ($number < 300) {
-            return 'DOSCIENTOS '.$this->convertNumberToLetters($number - 200);
-        }
-        if ($number < 400) {
-            return 'TRESCIENTOS '.$this->convertNumberToLetters($number - 300);
-        }
-        if ($number < 500) {
-            return 'CUATROCIENTOS '.$this->convertNumberToLetters($number - 400);
-        }
-        if ($number < 600) {
-            return 'QUINIENTOS '.$this->convertNumberToLetters($number - 500);
-        }
-        if ($number < 700) {
-            return 'SEISCIENTOS '.$this->convertNumberToLetters($number - 600);
-        }
-        if ($number < 800) {
-            return 'SETECIENTOS '.$this->convertNumberToLetters($number - 700);
-        }
-        if ($number < 900) {
-            return 'OCHOCIENTOS '.$this->convertNumberToLetters($number - 800);
-        }
-        if ($number < 1000) {
-            return 'NOVECIENTOS '.$this->convertNumberToLetters($number - 900);
-        }
-        if ($number < 2000) {
-            return 'MIL '.$this->convertNumberToLetters($number - 1000);
-        }
-        if ($number < 1000000) {
-            $thousands = floor($number / 1000);
-            $remainder = $number % 1000;
-            $thousandsWord = $thousands == 1 ? 'MIL' : $this->convertNumberToLetters($thousands);
-
-            return $thousandsWord.($remainder > 0 ? ' '.$this->convertNumberToLetters($remainder) : '');
-        }
-        if ($number < 2000000) {
-            return 'UN MILLÓN '.$this->convertNumberToLetters($number - 1000000);
-        }
-
-        $millions = floor($number / 1000000);
-        $remainder = $number % 1000000;
-
-        return $this->convertNumberToLetters($millions).' MILLONES'.($remainder > 0 ? ' '.$this->convertNumberToLetters($remainder) : '');
     }
 
     public function generarNumeroTramite(): string

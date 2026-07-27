@@ -17,9 +17,11 @@ class User extends Authenticatable
     protected $fillable = [
         'nombre',
         'apellido',
+        'legajo',
         'email',
         'password',
         'profile_photo_path',
+        'require_password_change',
     ];
 
     protected $hidden = ['password', 'remember_token'];
@@ -29,6 +31,7 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'require_password_change' => 'boolean',
         ];
     }
 
@@ -76,6 +79,22 @@ class User extends Authenticatable
         return $this->permisos()
             ->where('nombre', $permisoNombre)
             ->value('oficina_id');
+    }
+
+    /**
+     * Pases pendientes de aceptar en la bandeja de "Entrantes" de mi oficina.
+     */
+    public function pasesPendientesCount(): int
+    {
+        $oficinaId = $this->oficinaAsignadaId();
+
+        if (! $oficinaId) {
+            return 0;
+        }
+
+        return Pase::where('oficina_destino_id', $oficinaId)
+            ->where('estado', 'pendiente')
+            ->count();
     }
 
     public function initials(): string

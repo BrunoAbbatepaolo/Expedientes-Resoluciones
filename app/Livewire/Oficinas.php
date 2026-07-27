@@ -34,6 +34,4 @@ class Oficinas extends Component
 
         return $query->orderBy('nombre', 'asc')->paginate(20);
     }
-
-    public function inputBusqueda() {}
 }

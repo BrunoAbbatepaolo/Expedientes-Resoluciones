@@ -5,30 +5,51 @@ namespace App\Livewire;
 use App\Livewire\Forms\ExpedienteForm;
 use App\Models\Expediente;
 use App\Models\Oficina;
+use App\Models\Pase;
+use App\Traits\AuthorizesOficina;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
 use Jantinnerezo\LivewireAlert\Facades\LivewireAlert;
 use Livewire\Component;
 use Livewire\WithPagination;
 
 class Expedientes extends Component
 {
+    use AuthorizesOficina;
     use WithPagination;
 
     public $modalExp = false;
+
     public $modalEdit = false;
+
     public $busquedaExp = '';
+
     public $expedienteEncontrado;
+
     public $expedienteExistente;
+
     public $selectedExpediente;
+
     public $asunto;
+
     public $causante;
+
     public $expedienteId;
+
+    public $expedientePaseId;
+
     public $modalFiltro;
+
     public $search = '';
+
     public $sinPermiso = false;
+
     public $sinOficina = false;
+
     public $oficinaUsuario;
+
     public ExpedienteForm $expedienteForm;
+
     public $menuVisible = null;
 
     public $filtro = [
@@ -37,11 +58,14 @@ class Expedientes extends Component
     ];
 
     public $tipoVista = 'todos';
+
     public $mostrarBoton = false;
 
     // Autocomplete oficinas
     public $query = '';
+
     public $oficinas = [];
+
 
     public function updatedQuery()
     {
@@ -50,6 +74,7 @@ class Expedientes extends Component
             $this->expedienteForm->ofi_salida = null;
             $this->expedienteForm->cod_area = null;
             $this->expedienteForm->cod_oficina = null;
+
             return;
         }
 
@@ -58,12 +83,13 @@ class Expedientes extends Component
             $oficinaActual = Oficina::find($this->expedienteForm->ofi_salida);
             if ($oficinaActual && $this->query === $oficinaActual->nombre) {
                 $this->oficinas = [];
+
                 return;
             }
         }
 
-        $this->oficinas = Oficina::where('nombre', 'like', '%' . $this->query . '%')
-            ->orWhere('codigo', 'like', '%' . $this->query . '%')
+        $this->oficinas = Oficina::where('nombre', 'like', '%'.$this->query.'%')
+            ->orWhere('codigo', 'like', '%'.$this->query.'%')
             ->take(10)
             ->get();
     }
@@ -103,12 +129,15 @@ class Expedientes extends Component
             case 'expedientes.egresados':
                 $this->tipoVista = 'egresados';
                 break;
+            case 'expedientes.entrantes':
+                $this->tipoVista = 'entrantes';
+                break;
             default:
                 $this->tipoVista = 'todos';
         }
         $this->mostrarBoton = request()->routeIs('expedientes') || request()->routeIs('expedientes.ingresados');
-        $oficinaId = auth()->user()->oficinaAsignadaId()
-            ?? auth()->user()->oficinaIdPara('expediente_ver');
+        $oficinaId = auth()->user()?->oficinaAsignadaId()
+            ?? auth()->user()?->oficinaIdPara('expediente_ver');
 
         if ($oficinaId) {
             $this->oficinaUsuario = Oficina::find($oficinaId);
@@ -120,15 +149,15 @@ class Expedientes extends Component
         $query = Expediente::query();
 
         // 1) Permiso base
-        if (! auth()->user()->permiso('expediente_ver')) {
+        if (! auth()->user()?->permiso('expediente_ver')) {
             $this->sinPermiso = true;
 
             return Expediente::whereRaw('1=0')->paginate(10);
         }
 
         // 2) Oficina desde 'oficina_asignada' (fallback a 'expediente_ver' si no existiera)
-        $oficinaId = auth()->user()->oficinaAsignadaId()
-            ?? auth()->user()->oficinaIdPara('expediente_ver');
+        $oficinaId = auth()->user()?->oficinaAsignadaId()
+            ?? auth()->user()?->oficinaIdPara('expediente_ver');
 
         if (! $oficinaId) {
             $this->sinOficina = true;
@@ -136,17 +165,33 @@ class Expedientes extends Component
             return Expediente::whereRaw('1=0')->paginate(10);
         }
 
-        // 3) Filtrar por oficina del usuario
-        $query->deOficina((int) $oficinaId);
+        // Bandeja de entrada: expedientes con un pase pendiente hacia la oficina del usuario
+        if ($this->tipoVista === 'entrantes') {
+            return $this->getEntrantes((int) $oficinaId);
+        }
 
-        // 4) Tipo de vista
-        switch ($this->tipoVista) {
-            case 'ingresados':
+        // 3) Filtrar por oficina del usuario + 4) tipo de vista.
+        // 'egresados' es un caso especial: un expediente pasado a otra oficina deja
+        // de tener oficina_id = la mía (ver Expedientes::aceptarPase()), así que no
+        // puedo filtrarlo con deOficina() como las demás vistas o desaparecería de mi
+        // listado apenas la oficina destino lo acepta. Lo resuelvo con un OR: sigue
+        // contando como "egresado mío" si (a) lo tengo yo con fecha_salida cargada a
+        // mano (cierre sin pase), o (b) hay un pase aceptado cuyo origen soy yo,
+        // sin importar dónde esté ahora.
+        if ($this->tipoVista === 'egresados') {
+            $query->where(function ($q) use ($oficinaId) {
+                $q->where(function ($q2) use ($oficinaId) {
+                    $q2->deOficina($oficinaId)->whereNotNull('fecha_salida');
+                })->orWhereHas('pases', function ($q2) use ($oficinaId) {
+                    $q2->where('oficina_origen_id', $oficinaId)->where('estado', 'aceptado');
+                });
+            });
+        } else {
+            $query->deOficina((int) $oficinaId);
+
+            if ($this->tipoVista === 'ingresados') {
                 $query->whereNull('fecha_salida');
-                break;
-            case 'egresados':
-                $query->whereNotNull('fecha_salida');
-                break;
+            }
         }
 
         // 5) Búsqueda libre
@@ -174,6 +219,55 @@ class Expedientes extends Component
 
         // 7) Orden y paginación
         return $query->orderByDesc('created_at')->paginate(10);
+    }
+
+    private function getEntrantes(int $oficinaId)
+    {
+        $query = Pase::where('oficina_destino_id', $oficinaId)
+            ->where('estado', 'pendiente')
+            ->with(['expediente', 'oficinaOrigen']);
+
+        if (! empty($this->search)) {
+            $search = $this->search;
+            $query->whereHas('expediente', function ($q) use ($search) {
+                $q->where('num_exp', 'LIKE', "%{$search}%")
+                    ->orWhere('asunto', 'LIKE', "%{$search}%")
+                    ->orWhere('causante', 'LIKE', "%{$search}%");
+            });
+        }
+
+        return $query->orderByDesc('fecha')->paginate(10);
+    }
+
+    public function aceptarPase($paseId)
+    {
+        $this->autorizarPermiso('expediente_editar');
+
+        $oficinaId = auth()->user()?->oficinaAsignadaId()
+            ?? auth()->user()?->oficinaIdPara('expediente_editar');
+
+        DB::connection('mysql_admin')->transaction(function () use ($paseId, $oficinaId) {
+            $pase = Pase::lockForUpdate()->findOrFail($paseId);
+
+            abort_unless($oficinaId && (int) $pase->oficina_destino_id === (int) $oficinaId, 403);
+            abort_unless($pase->estado === 'pendiente', 403);
+
+            $pase->update(['estado' => 'aceptado']);
+            // fecha_salida se limpia porque quedaba seteada desde el envío en la
+            // oficina de origen: si no se resetea, el expediente entra a mi oficina
+            // ya marcado como "egresado" (ver 'egresados' en Expedientes::getExp()).
+            Expediente::where('id', $pase->expediente_id)->update([
+                'oficina_id' => $pase->oficina_destino_id,
+                'fecha_salida' => null,
+            ]);
+        });
+
+        LivewireAlert::title('Expediente aceptado en tu oficina')
+            ->success()
+            ->timer(2500)
+            ->toast()
+            ->position('top-end')
+            ->show();
     }
 
     public function updatedSearch()
@@ -263,14 +357,24 @@ class Expedientes extends Component
             $oficinaId = auth()->user()->oficinaAsignadaId()
                 ?? auth()->user()->oficinaIdPara('expediente_ver');
 
-            if ($oficinaId) {
-                // Buscar la oficina para obtener los códigos
-                $oficina = Oficina::find($oficinaId);
+            if (! $oficinaId) {
+                LivewireAlert::title('No tenés una oficina asignada')
+                    ->text('Pedile a un administrador que te asigne una oficina antes de cargar expedientes.')
+                    ->error()
+                    ->timer(4000)
+                    ->toast()
+                    ->position('top-end')
+                    ->show();
 
-                if ($oficina) {
-                    // Asignar la oficina del usuario al formulario
-                    $this->expedienteForm->oficina_id = $oficinaId; // o como se llame el campo
-                }
+                return;
+            }
+
+            // Buscar la oficina para obtener los códigos
+            $oficina = Oficina::find($oficinaId);
+
+            if ($oficina) {
+                // Asignar la oficina del usuario al formulario
+                $this->expedienteForm->oficina_id = $oficinaId; // o como se llame el campo
             }
 
             $this->validate();
@@ -294,7 +398,8 @@ class Expedientes extends Component
 
     public function editar($id)
     {
-        $expediente = \App\Models\Expediente::find($id);
+        $expediente = \App\Models\Expediente::findOrFail($id);
+        $this->autorizarExpediente($expediente, 'expediente_editar');
 
         $this->expedienteForm->loadExpMitiv($expediente);
 
@@ -303,40 +408,95 @@ class Expedientes extends Component
         $this->expedienteForm->fecha_salida = $expediente->fecha_salida
             ? Carbon::parse($expediente->fecha_salida)->format('Y-m-d')
             : null;
-
-        // Oficina - cargar el nombre en el campo visible
-        if ($expediente->ofi_salida) {
-            $oficina = Oficina::find($expediente->ofi_salida);
-            $this->query = $oficina?->nombre ?? '';
-        } else {
-            $this->query = '';
-        }
     }
 
     public function actualizar()
     {
+        if ($this->expedienteForm->expediente) {
+            $this->autorizarExpediente($this->expedienteForm->expediente, 'expediente_editar');
+        }
+
         try {
-            if ($this->expedienteForm->ofi_salida) {
-                $oficina = Oficina::find($this->expedienteForm->ofi_salida);
-
-                if ($oficina) {
-                    $this->expedienteForm->cod_area = $oficina->cod_area;
-                    $this->expedienteForm->cod_oficina = $oficina->codigo;
-                } else {
-                    $this->expedienteForm->cod_area = null;
-                    $this->expedienteForm->cod_oficina = null;
-                }
-            } else {
-                $this->expedienteForm->cod_area = null;
-                $this->expedienteForm->cod_oficina = null;
-            }
-
             $resultado = $this->expedienteForm->update();
             $this->modal('modal-editarExpediente')->close();
             LivewireAlert::title('El Expediente se editó Correctamente')->success()->timer(2500)->toast()->position('top-end')->show();
         } catch (\Exception $e) {
             LivewireAlert::title('El Expediente no se pudo Editar')->error()->timer(2500)->toast()->position('top-end')->show();
         }
+    }
+
+    /**
+     * Abre el modal para iniciar un pase (traspaso a otra oficina), separado de
+     * "Editar" para no volver a mezclar datos del expediente con el traslado.
+     */
+    public function abrirPase($id)
+    {
+        $expediente = \App\Models\Expediente::findOrFail($id);
+        $this->autorizarExpediente($expediente, 'expediente_editar');
+
+        $this->expedientePaseId = $expediente->id;
+        $this->query = '';
+        $this->oficinas = [];
+        $this->expedienteForm->ofi_salida = null;
+        $this->expedienteForm->cod_area = null;
+        $this->expedienteForm->cod_oficina = null;
+    }
+
+    public function confirmarPase()
+    {
+        if (! $this->expedienteForm->ofi_salida) {
+            LivewireAlert::title('Elegí una oficina de destino')->error()->timer(2500)->toast()->position('top-end')->show();
+
+            return;
+        }
+
+        $expediente = \App\Models\Expediente::findOrFail($this->expedientePaseId);
+        $this->autorizarExpediente($expediente, 'expediente_editar');
+
+        if (Pase::where('expediente_id', $expediente->id)->where('estado', 'pendiente')->exists()) {
+            LivewireAlert::title('Este expediente ya tiene un pase pendiente de aceptación')->error()->timer(2500)->toast()->position('top-end')->show();
+
+            return;
+        }
+
+        $oficina = Oficina::findOrFail($this->expedienteForm->ofi_salida);
+
+        DB::connection('mysql_admin')->transaction(function () use ($expediente, $oficina) {
+            $expediente->update([
+                'ofi_salida' => $oficina->id,
+                'cod_area' => $oficina->cod_area,
+                'cod_oficina' => $oficina->codigo,
+            ]);
+
+            Pase::create([
+                'expediente_id' => $expediente->id,
+                'oficina_id' => $oficina->id,
+                'oficina_origen_id' => $expediente->oficina_id,
+                'oficina_destino_id' => $oficina->id,
+                'fecha' => now()->toDateString(),
+                'user_id' => auth()->id(),
+                'importado' => false,
+                'firmado' => false,
+                'estado' => 'pendiente',
+            ]);
+        });
+
+        $this->cancelarPase();
+
+        LivewireAlert::title('Pase iniciado, pendiente de aceptación en '.$oficina->nombre)
+            ->success()
+            ->timer(2500)
+            ->toast()
+            ->position('top-end')
+            ->show();
+    }
+
+    public function cancelarPase()
+    {
+        $this->modal('modal-realizarPase')->close();
+        $this->expedientePaseId = null;
+        $this->query = '';
+        $this->oficinas = [];
     }
 
     public function confirmarBorrado($expedienteId)
@@ -346,7 +506,10 @@ class Expedientes extends Component
 
     public function eliminarExpediente()
     {
-        \App\Models\Expediente::findOrFail($this->expedienteId)->delete();
+        $expediente = \App\Models\Expediente::findOrFail($this->expedienteId);
+        $this->autorizarExpediente($expediente, 'expediente_editar');
+
+        $expediente->delete();
         $this->modal('modal-ConfirmarBorrado')->close();
         $this->reset('expedienteId');
         LivewireAlert::title('Expediente eliminado')->success()->timer(2500)->toast()->position('top-end')->show();

@@ -63,55 +63,48 @@ class ExpedienteForm extends Form
 
     public function store()
     {
-        DB::connection('mysql_admin')->beginTransaction();
         try {
-            $data = collect($this->campos)
-                ->mapWithKeys(fn($campo) => [$campo => $this->{$campo}])
-                ->map(fn($valor) => $valor === '' ? null : $valor)
-                ->toArray();
+            return DB::connection('mysql_admin')->transaction(function () {
+                $data = collect($this->campos)
+                    ->mapWithKeys(fn ($campo) => [$campo => $this->{$campo}])
+                    ->map(fn ($valor) => $valor === '' ? null : $valor)
+                    ->toArray();
 
-            \App\Models\Expediente::create($data);
-            DB::connection('mysql_admin')->commit();
+                \App\Models\Expediente::create($data);
 
-            return 1;
+                return 1;
+            });
         } catch (\Exception $exception) {
-            DB::connection('mysql_admin')->rollBack();
             return 0;
         }
     }
 
     public function update()
     {
-        if ($this->hayCambios()) {
-            DB::connection('mysql_admin')->beginTransaction();
-            try {
+        if (! $this->hayCambios()) {
+            return -1;
+        }
+
+        try {
+            return DB::connection('mysql_admin')->transaction(function () {
+                // lockForUpdate: si dos usuarios editan el mismo expediente a la vez, el
+                // segundo espera a que termine el primero.
+                $expediente = \App\Models\Expediente::lockForUpdate()->findOrFail($this->expediente->id);
+
                 $data = collect($this->campos)
-                    ->mapWithKeys(fn($campo) => [$campo => $this->{$campo}])
-                    ->map(fn($valor) => $valor === '' ? null : $valor)
+                    ->mapWithKeys(fn ($campo) => [$campo => $this->{$campo}])
+                    ->map(fn ($valor) => $valor === '' ? null : $valor)
                     ->toArray();
 
-                $this->expediente->update($data);
-                DB::connection('mysql_admin')->commit();
+                $expediente->update($data);
+                $this->expediente = $expediente;
 
+                // Iniciar un pase (elegir oficina de destino) es una acción aparte,
+                // ver Expedientes::confirmarPase() — este método solo edita los datos
+                // propios del expediente, no crea historial de traslados.
                 return 1;
-            } catch (\Exception $exception) {
-                DB::connection('mysql_admin')->rollBack();
-                return 0;
-            }
-        }
-        return -1;
-    }
-
-    public function delete($expediente)
-    {
-        DB::connection('mysql_admin')->beginTransaction();
-        try {
-            $expediente->delete();
-            DB::connection('mysql_admin')->commit();
-
-            return 1;
+            });
         } catch (\Exception $exception) {
-            DB::connection('mysql_admin')->rollBack();
             return 0;
         }
     }

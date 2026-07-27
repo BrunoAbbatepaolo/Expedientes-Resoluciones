@@ -20,6 +20,6 @@ class Area extends Model
 
     public function oficinas()
     {
-        return $this->hasMany(Oficina::class, 'codigo', 'cod_area');
+        return $this->hasMany(Oficina::class, 'cod_area', 'codigo');
     }
 }

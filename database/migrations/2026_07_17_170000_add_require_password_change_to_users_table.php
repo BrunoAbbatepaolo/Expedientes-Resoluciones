@@ -11,8 +11,8 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('users', function (Blueprint $table) {
-            $table->string('profile_photo')->nullable()->after('email');
+        Schema::connection('mysql_admin')->table('users', function (Blueprint $table) {
+            $table->boolean('require_password_change')->default(false)->after('password');
         });
     }
 
@@ -21,8 +21,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('users', function (Blueprint $table) {
-            //
+        Schema::connection('mysql_admin')->table('users', function (Blueprint $table) {
+            $table->dropColumn('require_password_change');
         });
     }
 };

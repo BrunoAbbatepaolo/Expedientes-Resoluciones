@@ -1,5 +1,5 @@
-<flux:modal name="modal-permisos" title="Gestionar Permisos de Usuario"
-    description="Activa o desactiva los permisos correspondientes para este usuario." x-data="{
+<div x-data="{
+        show: false,
         saving: false,
         hasChanges: false,
         originalPermisos: {},
@@ -9,7 +9,7 @@
             Object.keys($wire.permisos || {}).forEach(key => {
                 this.originalPermisos[key] = Boolean($wire.permisos[key]);
             });
-    
+
             this.$watch('$wire.permisos', () => {
                 this.checkForChanges();
             });
@@ -19,7 +19,7 @@
             Object.keys($wire.permisos || {}).forEach(key => {
                 currentPermisos[key] = Boolean($wire.permisos[key]);
             });
-    
+
             // Comparar boolean a boolean
             let changed = false;
             Object.keys(this.originalPermisos).forEach(key => {
@@ -27,19 +27,16 @@
                     changed = true;
                 }
             });
-    
+
             this.hasChanges = changed;
         }
     }"
-    class="backdrop-blur-md">
-
-    <!-- Estilos personalizados para el backdrop -->
-    <style>
-        .flux-modal-backdrop {
-            background-color: rgba(0, 0, 0, 0.75) !important;
-            backdrop-filter: blur(6px) saturate(150%) !important;
-        }
-    </style>
+    x-on:open-modal.window="if ($event.detail[0] === 'modal-permisos') show = true"
+    x-on:close-modal.window="if ($event.detail[0] === 'modal-permisos') show = false"
+    x-show="show" x-cloak x-on:keydown.escape.window="show = false"
+    class="fixed inset-0 z-[100] flex items-center justify-center bg-[#001428]/60 p-4 backdrop-blur-md"
+    x-on:click.self="show = false">
+    <div class="max-h-[90vh] w-full max-w-3xl overflow-y-auto rounded-2xl border border-ipv-blue/20 bg-white/95 shadow-2xl backdrop-blur-2xl backdrop-saturate-150 dark:border-white/10 dark:bg-[#141c26]/95">
 
     <!-- Notificación de éxito -->
     @if (session()->has('message'))
@@ -58,18 +55,18 @@
 
     <div class="p-6 space-y-6">
         <!-- Encabezado mejorado -->
-        <div class="flex items-center gap-4 border-b border-gray-200 dark:border-gray-700 pb-6">
-            <div class="p-3 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 shadow-lg">
-                <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" stroke-width="2"
+        <div class="flex items-center gap-4 border-b border-ipv-blue/10 pb-6 dark:border-white/10">
+            <div class="rounded-full bg-ipv-gold p-3 shadow-lg">
+                <svg class="h-6 w-6 text-ipv-gold-ink" fill="none" stroke="currentColor" stroke-width="2"
                     viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round"
                         d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                 </svg>
             </div>
             <div>
-                <h2 class="text-xl font-bold text-gray-900 dark:text-gray-100">Gestión de Permisos</h2>
-                <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                    Configurar accesos para: <span class="font-medium text-blue-600 dark:text-blue-400">
+                <h2 class="text-xl font-bold text-ipv-ink dark:text-ipv-ink-dark">Gestión de Permisos</h2>
+                <p class="mt-1 text-sm text-ipv-ink/60 dark:text-ipv-ink-dark/60">
+                    Configurar accesos para: <span class="font-medium text-ipv-blue dark:text-ipv-blue-light">
                         {{ $usuarioSeleccionado->name ?? 'Usuario' }}
                     </span>
                 </p>
@@ -135,41 +132,42 @@
         </div>
 
         <!-- Acciones rápidas -->
-        <div class="flex flex-wrap gap-2 pt-4 border-t border-gray-200 dark:border-gray-700">
+        <div class="flex flex-wrap gap-2 border-t border-ipv-blue/10 pt-4 dark:border-white/10">
             <button type="button" wire:click="seleccionarTodos"
-                class="px-3 py-2 text-sm font-medium text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100 dark:bg-blue-900/20 dark:text-blue-400 dark:hover:bg-blue-900/40 transition-colors">
+                class="rounded-lg bg-ipv-blue/10 px-3 py-2 text-sm font-medium text-ipv-blue transition-colors hover:bg-ipv-blue/20 dark:bg-ipv-blue-light/15 dark:text-ipv-blue-light dark:hover:bg-ipv-blue-light/25">
                 Seleccionar Todo
             </button>
             <button type="button" wire:click="limpiarSeleccion"
-                class="px-3 py-2 text-sm font-medium text-gray-600 bg-gray-50 rounded-lg hover:bg-gray-100 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700 transition-colors">
+                class="rounded-lg bg-black/[0.03] px-3 py-2 text-sm font-medium text-ipv-ink/70 transition-colors hover:bg-black/[0.06] dark:bg-white/[0.05] dark:text-ipv-ink-dark/75 dark:hover:bg-white/[0.1]">
                 Limpiar Todo
             </button>
             <button type="button" wire:click="aplicarPermisosSoloLectura"
-                class="px-3 py-2 text-sm font-medium text-green-600 bg-green-50 rounded-lg hover:bg-green-100 dark:bg-green-900/20 dark:text-green-400 dark:hover:bg-green-900/40 transition-colors">
+                class="rounded-lg bg-ipv-gold/15 px-3 py-2 text-sm font-medium text-[#7a5200] transition-colors hover:bg-ipv-gold/25 dark:text-ipv-gold-light">
                 Solo Lectura
             </button>
         </div>
     </div>
 
     <!-- Footer del modal - SIMPLIFICADO -->
-    <div class="flex items-center justify-end p-6 border-t border-gray-200 dark:border-gray-700">
+    <div class="flex items-center justify-end border-t border-ipv-blue/10 p-6 dark:border-white/10">
         <div class="flex gap-3">
-            <flux:button variant="subtle" wire:click="$dispatch('close-modal', 'modal-permisos')">
+            <button type="button" @click="show = false"
+                class="rounded-lg border border-ipv-blue/20 px-4 py-2 text-sm font-medium text-ipv-ink/80 hover:bg-black/[0.03] dark:border-white/15 dark:text-ipv-ink-dark/85 dark:hover:bg-white/5">
                 Cancelar
-            </flux:button>
+            </button>
 
-            <flux:button class="bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-2 px-4 rounded"
+            <button type="button" class="rounded-lg bg-emerald-500 px-4 py-2 font-bold text-white hover:bg-emerald-600"
                 wire:click="guardarPermisos" wire:loading.attr="disabled" wire:target="guardarPermisos">
 
                 <span wire:loading.remove wire:target="guardarPermisos" class="flex items-center">
-                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg class="mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
                     </svg>
                     <span>Guardar Permisos</span>
                 </span>
 
                 <span wire:loading wire:target="guardarPermisos" class="flex items-center">
-                    <svg class="animate-spin -ml-1 mr-3 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+                    <svg class="-ml-1 mr-3 h-4 w-4 animate-spin text-white" fill="none" viewBox="0 0 24 24">
                         <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor"
                             stroke-width="4"></circle>
                         <path class="opacity-75" fill="currentColor"
@@ -179,7 +177,8 @@
                     <span>Guardando...</span>
                 </span>
 
-            </flux:button>
+            </button>
         </div>
     </div>
-</flux:modal>
+    </div>
+</div>

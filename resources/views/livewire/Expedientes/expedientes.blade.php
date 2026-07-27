@@ -1,131 +1,197 @@
-<div class="space-y-4">
+<div class="space-y-4" x-data="{ showFiltro: false, showNuevo: false, showEditar: false, showPase: false, showBorrar: false }"
+    x-on:modal-close.window="
+        if ($event.detail.name === 'modal-filtro') showFiltro = false;
+        if ($event.detail.name === 'modal-exp') showNuevo = false;
+        if ($event.detail.name === 'modal-editarExpediente') showEditar = false;
+        if ($event.detail.name === 'modal-realizarPase') showPase = false;
+        if ($event.detail.name === 'modal-ConfirmarBorrado') showBorrar = false;
+    ">
     @if (auth()->user()->permiso('expediente_ver'))
-        <div
-            class="text-3xl font-bold text-center p-4 bg-blue-200 dark:bg-zinc-900 dark:text-white rounded-xl dark:shadow-md">
+        <h1 class="text-2xl font-semibold text-ipv-ink dark:text-ipv-ink-dark">
             Sistema de Expedientes - {{ $oficinaUsuario->nombre ?? 'Sin oficina asignada' }}
-        </div>
-        <div class="flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center">
+        </h1>
+
+        @if ($sinOficina)
+            <div class="flex items-start gap-3 rounded-lg border border-ipv-gold/40 bg-ipv-gold/10 px-4 py-3 text-sm dark:border-ipv-gold/25">
+                <svg class="mt-0.5 size-5 shrink-0 text-ipv-gold-ink dark:text-ipv-gold-light" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M12 9v3.75m0 3.75h.008v.008H12v-.008ZM10.29 3.86 1.82 18a1.5 1.5 0 0 0 1.29 2.25h17.78A1.5 1.5 0 0 0 22.18 18L13.71 3.86a1.5 1.5 0 0 0-2.62 0Z" />
+                </svg>
+                <div>
+                    <p class="font-semibold text-ipv-gold-ink dark:text-ipv-gold-light">No tenés una oficina asignada</p>
+                    <p class="mt-0.5 text-ipv-gold-ink/80 dark:text-ipv-gold-light/80">
+                        No vas a poder ver ni cargar expedientes hasta que un administrador te asigne una oficina en Usuarios.
+                    </p>
+                </div>
+            </div>
+        @endif
+
+        <div class="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
             <div class="relative w-full sm:w-1/3">
-                <x-input type="text" wire:model.live="search" placeholder="Buscar expediente..."
-                    class="w-full pl-10 pr-4" />
-                <svg class="absolute left-3 top-1/2 transform -translate-y-1/2 size-5 text-gray-500" fill="none"
-                    stroke="currentColor" viewBox="0 0 24 24">
+                <svg class="pointer-events-none absolute left-3 top-1/2 size-5 -translate-y-1/2 text-ipv-ink/40 dark:text-ipv-ink-dark/45"
+                    fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                         d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                 </svg>
+                <input type="text" wire:model.live="search" placeholder="Buscar expediente..."
+                    class="w-full rounded-lg border border-ipv-blue/20 bg-white/80 py-2 pl-10 pr-4 text-sm text-ipv-ink focus:outline-none focus:ring-2 focus:ring-ipv-blue/40 dark:border-white/15 dark:bg-white/[0.06] dark:text-ipv-ink-dark" />
             </div>
             <div class="flex gap-2">
-                <flux:modal.trigger name="modal-filtro">
-                    <flux:button class="cursor-pointer">Filtrar</flux:button>
-                </flux:modal.trigger>
+                <button type="button" @click="showFiltro = true"
+                    class="cursor-pointer rounded-lg border border-ipv-blue/20 bg-white/70 px-4 py-2 text-sm font-medium text-ipv-ink/80 hover:bg-white dark:border-white/15 dark:bg-white/[0.06] dark:text-ipv-ink-dark/85 dark:hover:bg-white/[0.1]">
+                    Filtrar
+                </button>
                 @if (auth()->user()->permiso('expediente_editar'))
-                    <flux:modal.trigger name="modal-exp">
-                        <flux:button class="cursor-pointer">Nuevo Expediente</flux:button>
-                    </flux:modal.trigger>
+                    <button type="button" @click="showNuevo = true"
+                        class="cursor-pointer rounded-lg bg-ipv-blue px-4 py-2 text-sm font-semibold text-white hover:bg-ipv-blue-dark">
+                        Nuevo Expediente
+                    </button>
                 @endif
             </div>
         </div>
 
-        <div class="bg-white dark:bg-gray-900 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700">
-            <table class="w-full table-fixed divide-y divide-gray-200 dark:divide-gray-700">
-                <thead class="bg-blue-300 dark:bg-gray-800 sticky top-0 z-10 rounded-t-lg">
-                    <tr>
-                        <x-th class="w-[110px] first:rounded-tl-lg last:rounded-tr-lg">Número</x-th>
-                        <x-th class="hidden 2xl:table-cell w-[80px]">Fojas</x-th>
-                        <x-th class="w-[100px]">Ingreso</x-th>
-                        <x-th class="w-[180px]">Causante</x-th>
-                        <x-th class="hidden 2xl:table-cell w-[200px]">Asunto</x-th>
-                        <x-th class="w-[180px]">Oficina Salida</x-th>
-                        <x-th class="w-[100px]">Salida</x-th>
-                        @if (auth()->user()->permiso('expediente_editar'))
-                            <x-th class="text-center w-[80px] first:rounded-tl-lg last:rounded-tr-lg">Acciones</x-th>
-                        @endif
-                    </tr>
-                </thead>
-                <tbody class="bg-blue-50 dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-700">
-                    @forelse ($expedientes as $expediente)
-                        <tr class="hover:bg-violet-50 dark:hover:bg-gray-800/50 last:border-b-0">
-                            <x-td click="verDetalle({{ $expediente->id }})"
-                                class="cursor-pointer text-center overflow-hidden text-ellipsis rounded-bl-lg whitespace-nowrap">
-                                {{ $expediente->num_exp }}
-                            </x-td>
-                            <x-td
-                                class="hidden 2xl:table-cell text-center overflow-hidden text-ellipsis whitespace-nowrap">
-                                {{ $expediente->folio }}
-                            </x-td>
-                            <x-td class="text-center overflow-hidden text-ellipsis whitespace-nowrap">
-                                {{ $this->obtenerDMY($expediente->fecha_ingreso) }}
-                            </x-td>
-                            <x-td class="text-center overflow-hidden text-ellipsis whitespace-nowrap">
-                                {{ $this->formatearCausante($expediente->causante) }}
-                            </x-td>
-                            <x-td class="hidden 2xl:table-cell text-center">
-                                <div class="overflow-hidden text-ellipsis whitespace-nowrap">{{ $expediente->asunto }}
-                                </div>
-                            </x-td>
-                            <x-td class="text-center overflow-hidden text-ellipsis whitespace-nowrap">
-                                {{ $expediente->oficina->nombre ?? '-' }}
-                            </x-td>
-                            <x-td class="text-center overflow-hidden text-ellipsis whitespace-nowrap">
-                                {{ $this->obtenerDMY($expediente->fecha_salida) }}
-                            </x-td>
-                            @if (auth()->user()->permiso('expediente_editar'))
-                                <x-td class="text-center rounded-bl-lg">
-                                    <div class="relative inline-block" x-data="{ open: false }"
-                                        @click.outside="open = false">
-                                        <button @click="open = !open"
-                                            class="p-2 rounded-lg bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 transition-colors duration-200 cursor-pointer">
-                                            <svg class="size-5 text-gray-600 dark:text-gray-400" fill="currentColor"
-                                                viewBox="0 0 24 24">
-                                                <path
-                                                    d="M12 3c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 14c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0-7c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z" />
-                                            </svg>
+        <div class="sirex-glass-card overflow-hidden rounded-[14px]">
+            @if ($tipoVista === 'entrantes')
+                <table class="w-full table-fixed">
+                    <thead>
+                        <tr>
+                            <th class="w-[110px] px-4 py-2.5 text-center text-xs font-semibold uppercase tracking-wide text-ipv-ink/50 dark:text-ipv-ink-dark/50">Número</th>
+                            <th class="w-[180px] px-4 py-2.5 text-center text-xs font-semibold uppercase tracking-wide text-ipv-ink/50 dark:text-ipv-ink-dark/50">Causante</th>
+                            <th class="w-[180px] px-4 py-2.5 text-center text-xs font-semibold uppercase tracking-wide text-ipv-ink/50 dark:text-ipv-ink-dark/50">Origen</th>
+                            <th class="w-[100px] px-4 py-2.5 text-center text-xs font-semibold uppercase tracking-wide text-ipv-ink/50 dark:text-ipv-ink-dark/50">Fecha</th>
+                            <th class="w-[100px] px-4 py-2.5 text-center text-xs font-semibold uppercase tracking-wide text-ipv-ink/50 dark:text-ipv-ink-dark/50">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-ipv-blue/10 dark:divide-white/10">
+                        @forelse ($expedientes as $pase)
+                            <tr class="hover:bg-black/[0.02] dark:hover:bg-white/[0.03]">
+                                <td wire:click="verDetalle({{ $pase->expediente_id }})"
+                                    class="cursor-pointer overflow-hidden text-ellipsis whitespace-nowrap px-4 py-2.5 text-center text-sm text-ipv-ink dark:text-ipv-ink-dark">
+                                    {{ $pase->expediente->num_exp ?? '-' }}
+                                </td>
+                                <td class="overflow-hidden text-ellipsis whitespace-nowrap px-4 py-2.5 text-center text-sm text-ipv-ink dark:text-ipv-ink-dark">
+                                    {{ $this->formatearCausante($pase->expediente->causante ?? '-') }}
+                                </td>
+                                <td class="overflow-hidden text-ellipsis whitespace-nowrap px-4 py-2.5 text-center text-sm text-ipv-ink/70 dark:text-ipv-ink-dark/70">
+                                    {{ $pase->oficinaOrigen->nombre ?? '-' }}
+                                </td>
+                                <td class="overflow-hidden text-ellipsis whitespace-nowrap px-4 py-2.5 text-center text-sm text-ipv-ink/70 dark:text-ipv-ink-dark/70">
+                                    {{ $this->obtenerDMY($pase->fecha) }}
+                                </td>
+                                <td class="px-4 py-2.5 text-center">
+                                    @if (auth()->user()->permiso('expediente_editar'))
+                                        <button type="button" wire:click="aceptarPase({{ $pase->id }})"
+                                            class="cursor-pointer rounded-lg bg-ipv-blue px-3 py-1.5 text-xs font-semibold text-white hover:bg-ipv-blue-dark">
+                                            Aceptar
                                         </button>
+                                    @endif
+                                </td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="5" class="px-6 py-4 text-center text-sm text-ipv-ink/40 dark:text-ipv-ink-dark/40">
+                                    No hay expedientes entrantes.
+                                </td>
+                            </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            @else
+                <table class="w-full table-fixed">
+                    <thead>
+                        <tr>
+                            <th class="w-[110px] px-4 py-2.5 text-center text-xs font-semibold uppercase tracking-wide text-ipv-ink/50 dark:text-ipv-ink-dark/50">Número</th>
+                            <th class="hidden w-[80px] px-4 py-2.5 text-center text-xs font-semibold uppercase tracking-wide text-ipv-ink/50 dark:text-ipv-ink-dark/50 2xl:table-cell">Fojas</th>
+                            <th class="w-[100px] px-4 py-2.5 text-center text-xs font-semibold uppercase tracking-wide text-ipv-ink/50 dark:text-ipv-ink-dark/50">Ingreso</th>
+                            <th class="w-[180px] px-4 py-2.5 text-center text-xs font-semibold uppercase tracking-wide text-ipv-ink/50 dark:text-ipv-ink-dark/50">Causante</th>
+                            <th class="hidden w-[200px] px-4 py-2.5 text-center text-xs font-semibold uppercase tracking-wide text-ipv-ink/50 dark:text-ipv-ink-dark/50 2xl:table-cell">Asunto</th>
+                            <th class="w-[180px] px-4 py-2.5 text-center text-xs font-semibold uppercase tracking-wide text-ipv-ink/50 dark:text-ipv-ink-dark/50">Oficina Salida</th>
+                            <th class="w-[100px] px-4 py-2.5 text-center text-xs font-semibold uppercase tracking-wide text-ipv-ink/50 dark:text-ipv-ink-dark/50">Salida</th>
+                            @if (auth()->user()->permiso('expediente_editar'))
+                                <th class="w-[80px] px-4 py-2.5 text-center text-xs font-semibold uppercase tracking-wide text-ipv-ink/50 dark:text-ipv-ink-dark/50">Acciones</th>
+                            @endif
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-ipv-blue/10 dark:divide-white/10">
+                        @forelse ($expedientes as $expediente)
+                            <tr class="hover:bg-black/[0.02] dark:hover:bg-white/[0.03]">
+                                <td wire:click="verDetalle({{ $expediente->id }})"
+                                    class="cursor-pointer overflow-hidden text-ellipsis whitespace-nowrap px-4 py-2.5 text-center text-sm text-ipv-ink dark:text-ipv-ink-dark">
+                                    {{ $expediente->num_exp }}
+                                </td>
+                                <td class="hidden overflow-hidden text-ellipsis whitespace-nowrap px-4 py-2.5 text-center text-sm text-ipv-ink/70 dark:text-ipv-ink-dark/70 2xl:table-cell">
+                                    {{ $expediente->folio }}
+                                </td>
+                                <td class="overflow-hidden text-ellipsis whitespace-nowrap px-4 py-2.5 text-center text-sm text-ipv-ink/70 dark:text-ipv-ink-dark/70">
+                                    {{ $this->obtenerDMY($expediente->fecha_ingreso) }}
+                                </td>
+                                <td class="overflow-hidden text-ellipsis whitespace-nowrap px-4 py-2.5 text-center text-sm text-ipv-ink dark:text-ipv-ink-dark">
+                                    {{ $this->formatearCausante($expediente->causante) }}
+                                </td>
+                                <td class="hidden px-4 py-2.5 text-center 2xl:table-cell">
+                                    <div class="overflow-hidden text-ellipsis whitespace-nowrap text-sm text-ipv-ink/70 dark:text-ipv-ink-dark/70">{{ $expediente->asunto }}</div>
+                                </td>
+                                <td class="overflow-hidden text-ellipsis whitespace-nowrap px-4 py-2.5 text-center text-sm text-ipv-ink/70 dark:text-ipv-ink-dark/70">
+                                    {{ $expediente->oficina->nombre ?? '-' }}
+                                </td>
+                                <td class="overflow-hidden text-ellipsis whitespace-nowrap px-4 py-2.5 text-center text-sm text-ipv-ink/70 dark:text-ipv-ink-dark/70">
+                                    {{ $this->obtenerDMY($expediente->fecha_salida) }}
+                                </td>
+                                @if (auth()->user()->permiso('expediente_editar'))
+                                    <td class="px-4 py-2.5 text-center">
+                                        <div class="relative inline-block" x-data="{ open: false }" @click.outside="open = false">
+                                            <button @click="open = !open"
+                                                class="cursor-pointer rounded-lg bg-black/[0.04] p-2 transition-colors duration-200 hover:bg-black/[0.08] dark:bg-white/[0.06] dark:hover:bg-white/[0.12]">
+                                                <svg class="size-5 text-ipv-ink/70 dark:text-ipv-ink-dark/70" fill="currentColor" viewBox="0 0 24 24">
+                                                    <path d="M12 3c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 14c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0-7c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z" />
+                                                </svg>
+                                            </button>
 
-                                        <div x-show="open" x-transition:enter="transition ease-out duration-200"
-                                            x-transition:enter-start="opacity-0 scale-95"
-                                            x-transition:enter-end="opacity-100 scale-100"
-                                            x-transition:leave="transition ease-in duration-75"
-                                            x-transition:leave-start="opacity-100 scale-100"
-                                            x-transition:leave-end="opacity-0 scale-95"
-                                            class="absolute right-0 z-50 w-48 mt-2 rounded-lg bg-white dark:bg-gray-800 shadow-xl ring-1 ring-gray-200 dark:ring-gray-700 overflow-hidden origin-top-right">
-                                            <flux:modal.trigger name="modal-editarExpediente">
-                                                <button wire:click="editar({{ $expediente->id }})" @click="open = false"
-                                                    class="w-full px-4 py-3 text-sm text-left text-gray-700 dark:text-gray-200 hover:bg-gradient-to-r hover:from-blue-500 hover:to-blue-600 hover:text-white dark:hover:from-blue-600 dark:hover:to-blue-700 transition-all duration-200 flex items-center gap-2 cursor-pointer">
-                                                    <svg class="size-4" fill="none" stroke="currentColor"
-                                                        viewBox="0 0 24 24">
-                                                        <path stroke-linecap="round" stroke-linejoin="round"
-                                                            stroke-width="2"
+                                            <div x-show="open" x-transition:enter="transition ease-out duration-200"
+                                                x-transition:enter-start="opacity-0 scale-95"
+                                                x-transition:enter-end="opacity-100 scale-100"
+                                                x-transition:leave="transition ease-in duration-75"
+                                                x-transition:leave-start="opacity-100 scale-100"
+                                                x-transition:leave-end="opacity-0 scale-95"
+                                                class="absolute right-0 z-50 mt-2 w-48 origin-top-right overflow-hidden rounded-lg bg-white shadow-xl ring-1 ring-ipv-blue/15 dark:bg-slate-800 dark:ring-white/10">
+                                                <button wire:click="editar({{ $expediente->id }})" @click="open = false; showEditar = true"
+                                                    class="flex w-full cursor-pointer items-center gap-2 px-4 py-3 text-left text-sm text-ipv-ink/80 transition-all duration-200 hover:bg-ipv-blue hover:text-white dark:text-ipv-ink-dark/85">
+                                                    <svg class="size-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                                             d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                                                     </svg>
                                                     Editar expediente
                                                 </button>
-                                            </flux:modal.trigger>
-                                            <flux:modal.trigger name="modal-ConfirmarBorrado">
-                                                <button wire:click="confirmarBorrado({{ $expediente->id }})"
-                                                    @click="open = false"
-                                                    class="w-full px-4 py-3 text-sm text-left text-red-600 dark:text-red-400 hover:bg-gradient-to-r hover:from-red-500 hover:to-red-600 hover:text-white dark:hover:from-red-600 dark:hover:to-red-700 transition-all duration-200 flex items-center gap-2 cursor-pointer">
-                                                    <svg class="size-4" fill="none" stroke="currentColor"
-                                                        viewBox="0 0 24 24">
-                                                        <path stroke-linecap="round" stroke-linejoin="round"
-                                                            stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                                                <button wire:click="abrirPase({{ $expediente->id }})" @click="open = false; showPase = true"
+                                                    class="flex w-full cursor-pointer items-center gap-2 px-4 py-3 text-left text-sm text-ipv-ink/80 transition-all duration-200 hover:bg-emerald-500 hover:text-white dark:text-ipv-ink-dark/85">
+                                                    <svg class="size-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                            d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                                                    </svg>
+                                                    Realizar pase
+                                                </button>
+                                                <button wire:click="confirmarBorrado({{ $expediente->id }})" @click="open = false; showBorrar = true"
+                                                    class="flex w-full cursor-pointer items-center gap-2 px-4 py-3 text-left text-sm text-ipv-magenta transition-all duration-200 hover:bg-ipv-magenta hover:text-white">
+                                                    <svg class="size-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                                                     </svg>
                                                     Eliminar expediente
                                                 </button>
-                                            </flux:modal.trigger>
+                                            </div>
                                         </div>
-                                    </div>
-                                </x-td>
-                            @endif
-                        </tr>
-                    @empty
-                        <tr>
-                            <td colspan="8" class="px-6 py-4 text-center text-gray-500">No se encontraron
-                                expedientes.</td>
-                        </tr>
-                    @endforelse
-                </tbody>
-            </table>
+                                    </td>
+                                @endif
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="8" class="px-6 py-4 text-center text-sm text-ipv-ink/40 dark:text-ipv-ink-dark/40">
+                                    No se encontraron expedientes.
+                                </td>
+                            </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            @endif
         </div>
 
         <div class="mt-4">
@@ -135,6 +201,15 @@
         @include('livewire.modal-filtros')
         @include('livewire.Expedientes.modal-NuevoExpediente')
         @include('livewire.Expedientes.modal-EditarExpediente')
+        @include('livewire.Expedientes.modal-RealizarPase')
         @include('livewire.modal-ConfirmarBorrado')
+    @else
+        <div class="flex items-start gap-3 rounded-lg border border-ipv-magenta/30 bg-ipv-magenta/10 px-4 py-3 text-sm text-ipv-magenta">
+            <svg class="mt-0.5 size-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <rect x="4.5" y="10.5" width="15" height="9.5" rx="2" stroke-width="2" />
+                <path stroke-width="2" d="M8 10.5V7a4 4 0 0 1 8 0v3.5" />
+            </svg>
+            <p>No tenés permiso para ver expedientes. Pedile a un administrador que te lo habilite en Usuarios.</p>
+        </div>
     @endif
 </div>

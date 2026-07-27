@@ -14,5 +14,10 @@ export default defineConfig({
     ],
     server: {
         cors: true,
+        host: true,
+        origin: 'http://localhost:5173',
+        watch: {
+            usePolling: true,
+        },
     },
 });

@@ -8,13 +8,18 @@ use Illuminate\Validation\Rule;
 use Livewire\Volt\Component;
 use Livewire\WithFileUploads;
 
-new class extends Component {
+new class extends Component
+{
     use WithFileUploads;
-    
+
     public string $nombre = '';
+
     public string $apellido = '';
+
     public string $email = '';
+
     public $profilePhoto = null;
+
     public $currentPhoto = null;
 
     /**
@@ -44,7 +49,7 @@ new class extends Component {
                 'lowercase',
                 'email',
                 'max:255',
-                Rule::unique(User::class)->ignore($user->id)
+                Rule::unique(User::class)->ignore($user->id),
             ],
             'profilePhoto' => ['nullable', 'image', 'max:1024'], // Máximo 1MB
         ]);
@@ -57,10 +62,10 @@ new class extends Component {
 
         if ($this->profilePhoto) {
             // Eliminar la foto anterior si existe
-            if ($user->profile_photo_path && Storage::exists('public/' . $user->profile_photo_path)) {
-                Storage::delete('public/' . $user->profile_photo_path);
+            if ($user->profile_photo_path && Storage::exists('public/'.$user->profile_photo_path)) {
+                Storage::delete('public/'.$user->profile_photo_path);
             }
-            
+
             // Guardar la nueva foto
             $path = $this->profilePhoto->store('profile-photos', 'public');
             $user->profile_photo_path = $path;
@@ -83,14 +88,14 @@ new class extends Component {
     public function deleteProfilePhoto(): void
     {
         $user = Auth::user();
-        
-        if ($user->profile_photo_path && Storage::exists('public/' . $user->profile_photo_path)) {
-            Storage::delete('public/' . $user->profile_photo_path);
+
+        if ($user->profile_photo_path && Storage::exists('public/'.$user->profile_photo_path)) {
+            Storage::delete('public/'.$user->profile_photo_path);
         }
-        
+
         $user->profile_photo_path = null;
         $user->save();
-        
+
         $this->currentPhoto = null;
         $this->dispatch('profile-photo-deleted');
     }
@@ -104,6 +109,7 @@ new class extends Component {
 
         if ($user->hasVerifiedEmail()) {
             $this->redirectIntended(default: route('dashboard', absolute: false));
+
             return;
         }
 
@@ -116,12 +122,12 @@ new class extends Component {
 <section class="w-full">
     @include('partials.settings-heading')
 
-    <x-settings.layout :heading="__('Profile')" :subheading="__('Update your profile information')">
+    <x-settings.layout :heading="__('Perfil')" :subheading="__('Actualizá la información de tu perfil')">
         <form wire:submit="updateProfileInformation" class="my-6 w-full space-y-6">
             <!-- Sección de foto de perfil -->
             <div class="mb-6">
-                <flux:label>{{ __('Foto de Perfil') }}</flux:label>
-                
+                <label class="block text-sm font-medium text-ipv-ink/80 dark:text-ipv-ink-dark/80">{{ __('Foto de Perfil') }}</label>
+
                 <div class="mt-4 flex items-center space-x-6">
                     <div class="relative h-20 w-20 overflow-hidden rounded-full">
                         @if ($profilePhoto)
@@ -129,12 +135,12 @@ new class extends Component {
                         @elseif ($currentPhoto)
                             <img src="{{ Storage::url($currentPhoto) }}" alt="{{ __('Foto actual') }}" class="h-full w-full object-cover">
                         @else
-                            <div class="flex h-full w-full items-center justify-center rounded-full bg-neutral-200 text-black dark:bg-neutral-700 dark:text-white">
-                                {{ substr($nombre, 0, 1) . substr($apellido, 0, 1) }}
+                            <div class="flex h-full w-full items-center justify-center rounded-full bg-ipv-gold text-ipv-gold-ink dark:text-ipv-gold-ink-dark">
+                                {{ substr($nombre, 0, 1).substr($apellido, 0, 1) }}
                             </div>
                         @endif
                     </div>
-                    
+
                     <div class="flex flex-col space-y-2 p-2">
                         <input
                             type="file"
@@ -143,55 +149,72 @@ new class extends Component {
                             class="hidden"
                             accept="image/*"
                         />
-                        <button 
-                            type="button" 
+                        <button
+                            type="button"
                             onclick="document.getElementById('photo-upload').click();"
-                            class="inline-flex items-center px-4 py-2 bg-gray-200 border border-transparent rounded-md font-semibold text-xs text-gray-800 uppercase tracking-widest hover:bg-gray-300 focus:bg-gray-300 active:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition ease-in-out duration-150"
+                            class="inline-flex items-center rounded-md border border-ipv-blue/20 bg-white/70 px-4 py-2 text-xs font-semibold uppercase tracking-widest text-ipv-ink/80 transition hover:bg-white dark:border-white/15 dark:bg-white/[0.06] dark:text-ipv-ink-dark/85 dark:hover:bg-white/[0.1]"
                         >
                             {{ __('Cambiar Foto') }}
                         </button>
-                        
+
                         @if ($currentPhoto || $profilePhoto)
-                            <flux:button wire:click="deleteProfilePhoto" size="sm" color="danger">
+                            <button type="button" wire:click="deleteProfilePhoto"
+                                class="rounded-lg bg-ipv-magenta px-3 py-1.5 text-xs font-semibold text-white hover:opacity-90">
                                 {{ __('Eliminar Foto') }}
-                            </flux:button>
+                            </button>
                         @endif
                     </div>
-                                    
-                @error('profilePhoto') 
-                    <flux:text class="mt-2 text-sm text-red-600">{{ $message }}</flux:text>
+
+                @error('profilePhoto')
+                    <span class="mt-2 block text-sm text-ipv-magenta">{{ $message }}</span>
                 @enderror
-                
+
                 @if ($profilePhoto)
                     <div class="mt-2">
-                        <flux:button wire:click="$set('profilePhoto', null)" size="sm" color="secondary">
+                        <button type="button" wire:click="$set('profilePhoto', null)"
+                            class="rounded-lg border border-ipv-blue/20 px-3 py-1.5 text-xs font-semibold text-ipv-ink/75 hover:bg-black/[0.03] dark:border-white/15 dark:text-ipv-ink-dark/80 dark:hover:bg-white/5">
                             {{ __('Cancelar cambio') }}
-                        </flux:button>
+                        </button>
                     </div>
                 @endif
             </div>
 
             <!-- Campos existentes -->
-            <flux:input wire:model="nombre" :label="__('Nombre')" type="text" required autofocus autocomplete="nombre" />
-            <flux:input wire:model="apellido" :label="__('Apellido')" type="text" required autofocus autocomplete="apellido" />
+            <div>
+                <label class="mb-1 block text-sm font-medium text-ipv-ink/80 dark:text-ipv-ink-dark/80">{{ __('Nombre') }}</label>
+                <input wire:model="nombre" type="text" required autofocus autocomplete="nombre"
+                    class="w-full rounded-lg border border-ipv-blue/20 bg-white/80 px-3 py-2 text-sm text-ipv-ink focus:outline-none focus:ring-2 focus:ring-ipv-blue/40 dark:border-white/15 dark:bg-white/[0.06] dark:text-ipv-ink-dark">
+                @error('nombre') <span class="mt-1 block text-xs text-ipv-magenta">{{ $message }}</span> @enderror
+            </div>
 
             <div>
-                <flux:input wire:model="email" :label="__('Email')" type="email" required autocomplete="email" />
+                <label class="mb-1 block text-sm font-medium text-ipv-ink/80 dark:text-ipv-ink-dark/80">{{ __('Apellido') }}</label>
+                <input wire:model="apellido" type="text" required autocomplete="apellido"
+                    class="w-full rounded-lg border border-ipv-blue/20 bg-white/80 px-3 py-2 text-sm text-ipv-ink focus:outline-none focus:ring-2 focus:ring-ipv-blue/40 dark:border-white/15 dark:bg-white/[0.06] dark:text-ipv-ink-dark">
+                @error('apellido') <span class="mt-1 block text-xs text-ipv-magenta">{{ $message }}</span> @enderror
+            </div>
 
-                @if (auth()->user() instanceof \Illuminate\Contracts\Auth\MustVerifyEmail &&! auth()->user()->hasVerifiedEmail())
+            <div>
+                <label class="mb-1 block text-sm font-medium text-ipv-ink/80 dark:text-ipv-ink-dark/80">{{ __('Email') }}</label>
+                <input wire:model="email" type="email" required autocomplete="email"
+                    class="w-full rounded-lg border border-ipv-blue/20 bg-white/80 px-3 py-2 text-sm text-ipv-ink focus:outline-none focus:ring-2 focus:ring-ipv-blue/40 dark:border-white/15 dark:bg-white/[0.06] dark:text-ipv-ink-dark">
+                @error('email') <span class="mt-1 block text-xs text-ipv-magenta">{{ $message }}</span> @enderror
+
+                @if (auth()->user() instanceof \Illuminate\Contracts\Auth\MustVerifyEmail && ! auth()->user()->hasVerifiedEmail())
                     <div>
-                        <flux:text class="mt-4">
-                            {{ __('Your email address is unverified.') }}
+                        <p class="mt-4 text-sm text-ipv-ink/70 dark:text-ipv-ink-dark/75">
+                            {{ __('Tu dirección de email no está verificada.') }}
 
-                            <flux:link class="text-sm cursor-pointer" wire:click.prevent="resendVerificationNotification">
-                                {{ __('Click here to re-send the verification email.') }}
-                            </flux:link>
-                        </flux:text>
+                            <button type="button" wire:click.prevent="resendVerificationNotification"
+                                class="cursor-pointer text-sm text-ipv-blue hover:underline dark:text-ipv-blue-light">
+                                {{ __('Hacé clic acá para reenviar el email de verificación.') }}
+                            </button>
+                        </p>
 
                         @if (session('status') === 'verification-link-sent')
-                            <flux:text class="mt-2 font-medium !dark:text-green-400 !text-green-600">
-                                {{ __('A new verification link has been sent to your email address.') }}
-                            </flux:text>
+                            <p class="mt-2 text-sm font-medium text-ipv-blue dark:text-ipv-blue-light">
+                                {{ __('Se envió un nuevo enlace de verificación a tu dirección de email.') }}
+                            </p>
                         @endif
                     </div>
                 @endif
@@ -199,11 +222,13 @@ new class extends Component {
 
             <div class="flex items-center gap-4">
                 <div class="flex items-center justify-end">
-                    <flux:button variant="primary" type="submit" class="w-full">{{ __('Save') }}</flux:button>
+                    <button type="submit" class="w-full rounded-lg bg-ipv-blue px-4 py-2.5 text-sm font-semibold text-white hover:bg-ipv-blue-dark">
+                        {{ __('Guardar') }}
+                    </button>
                 </div>
 
                 <x-action-message class="me-3" on="profile-updated">
-                    {{ __('Saved.') }}
+                    {{ __('Guardado.') }}
                 </x-action-message>
             </div>
         </form>

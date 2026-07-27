@@ -25,11 +25,9 @@ class Permiso extends Model
         return $this->belongsTo(User::class);
     }
 
-    // Evitá usar esta relación si 'Oficina' está en otra conexión.
-    // Mantenla solo si SABÉS lo que hacés; lo recomendado: NO usarla.
     public function oficina(): BelongsTo
     {
-        return $this->belongsTo(Oficina::class, 'oficina_id', 'id');
+        return $this->belongsTo(Oficina::class, 'oficina_id');
     }
 
     public static function oficinaAsignada(?int $userId): ?self

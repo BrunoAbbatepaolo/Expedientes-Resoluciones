@@ -21,3 +21,12 @@ yarn-error.log
 /.nova
 /.vscode
 /.zed
+
+# Artefactos de debug locales (no deben commitearse)
+/laravel
+*.sqlite
+*.sqlite-journal
+migrate_error.*
+test_error.*
+test_migrate.php
+/.playwright-mcp

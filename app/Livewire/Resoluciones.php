@@ -2,14 +2,16 @@
 
 namespace App\Livewire;
 
-use Livewire\Component;
-use Livewire\WithFileUploads;
-use App\Models\Resolucion;
 use App\Livewire\Forms\ResolucionForm;
-use Flux\Flux; // Importante para controlar los modales desde el backend
+use App\Models\Resolucion;
+use App\Traits\AuthorizesOficina;
+use Flux\Flux;
+use Livewire\Component;
+use Livewire\WithFileUploads; // Importante para controlar los modales desde el backend
 
 class Resoluciones extends Component
 {
+    use AuthorizesOficina;
     use WithFileUploads;
 
     public ResolucionForm $resolucionForm;
@@ -24,6 +26,7 @@ class Resoluciones extends Component
     {
         $this->resetValidation();
         $resolucion = Resolucion::findOrFail($id);
+        $this->autorizarResolucion($resolucion, 'resolucion_editar');
 
         // Pasamos la data al Form Object
         $this->resolucionForm->loadResolucion($resolucion);
@@ -34,6 +37,8 @@ class Resoluciones extends Component
      */
     public function guardarEdicion()
     {
+        $this->autorizarResolucion($this->resolucionForm->resolucion, 'resolucion_editar');
+
         // Ejecuta el método update de tu Form Object
         $this->resolucionForm->update();
 
@@ -56,7 +61,10 @@ class Resoluciones extends Component
     public function borrar()
     {
         if ($this->resolucionIdParaBorrar) {
-            Resolucion::destroy($this->resolucionIdParaBorrar);
+            $resolucion = Resolucion::findOrFail($this->resolucionIdParaBorrar);
+            $this->autorizarResolucion($resolucion, 'resolucion_editar');
+
+            $resolucion->delete();
             $this->resolucionIdParaBorrar = null;
 
             Flux::modal('delete-profile')->close();
@@ -66,8 +74,22 @@ class Resoluciones extends Component
 
     public function render()
     {
-        // Se agregó latest() para que las más nuevas aparezcan arriba
-        $resolucionesConExpediente = Resolucion::with('expediente')->latest()->get();
+        $oficinaId = auth()->user()?->oficinaAsignadaId()
+            ?? auth()->user()?->oficinaIdPara('resolucion_ver');
+
+        // Se agregó latest() para que las más nuevas aparezcan arriba.
+        // Las resoluciones viejas sin oficina_id (ver implementacion_futuro.md 2.1)
+        // se siguen mostrando a todos hasta que se les asigne una oficina.
+        $resolucionesConExpediente = Resolucion::with('expediente')
+            ->where(function ($query) use ($oficinaId) {
+                $query->whereNull('oficina_id');
+
+                if ($oficinaId) {
+                    $query->orWhere('oficina_id', $oficinaId);
+                }
+            })
+            ->latest()
+            ->get();
 
         return view('livewire.resoluciones', [
             'resolucionesConExpediente' => $resolucionesConExpediente,

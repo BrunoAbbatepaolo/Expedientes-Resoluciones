@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
@@ -26,11 +25,9 @@ return new class extends Migration
         }
 
         // 2) Crear índice único SOLO si no existe
-        $exists = DB::connection($this->conn)->select(
-            "SHOW INDEX FROM `{$this->table}` WHERE Key_name = ?",
-            [$this->uniqueName]
-        );
-        if (empty($exists)) {
+        // hasIndex() en vez de "SHOW INDEX FROM" (MySQL-only) para que la migración
+        // también corra en sqlite (tests, ver phpunit.xml).
+        if (! Schema::connection($this->conn)->hasIndex($this->table, $this->uniqueName)) {
             Schema::connection($this->conn)->table($this->table, function (Blueprint $table) {
                 $table->unique(['user_id', 'nombre'], $this->uniqueName);
             });
@@ -40,11 +37,7 @@ return new class extends Migration
     public function down(): void
     {
         // Quitar índice único si existe
-        $exists = DB::connection($this->conn)->select(
-            "SHOW INDEX FROM `{$this->table}` WHERE Key_name = ?",
-            [$this->uniqueName]
-        );
-        if (! empty($exists)) {
+        if (Schema::connection($this->conn)->hasIndex($this->table, $this->uniqueName)) {
             Schema::connection($this->conn)->table($this->table, function (Blueprint $table) {
                 $table->dropUnique($this->uniqueName);
             });

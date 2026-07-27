@@ -6,7 +6,8 @@ use Illuminate\Support\Facades\Session;
 use Livewire\Attributes\Layout;
 use Livewire\Volt\Component;
 
-new #[Layout('components.layouts.auth')] class extends Component {
+new #[Layout('components.layouts.auth')] class extends Component
+{
     /**
      * Send an email verification notification to the user.
      */
@@ -35,23 +36,24 @@ new #[Layout('components.layouts.auth')] class extends Component {
 }; ?>
 
 <div class="mt-4 flex flex-col gap-6">
-    <flux:text class="text-center">
-        {{ __('Please verify your email address by clicking on the link we just emailed to you.') }}
-    </flux:text>
+    <p class="text-center text-sm text-ipv-ink/75 dark:text-ipv-ink-dark/80">
+        {{ __('Por favor verifique su dirección de email haciendo clic en el enlace que le enviamos.') }}
+    </p>
 
     @if (session('status') == 'verification-link-sent')
-        <flux:text class="text-center font-medium !dark:text-green-400 !text-green-600">
-            {{ __('A new verification link has been sent to the email address you provided during registration.') }}
-        </flux:text>
+        <p class="text-center text-sm font-medium text-ipv-blue dark:text-ipv-blue-light">
+            {{ __('Se envió un nuevo enlace de verificación al email que registró.') }}
+        </p>
     @endif
 
     <div class="flex flex-col items-center justify-between space-y-3">
-        <flux:button wire:click="sendVerification" variant="primary" class="w-full">
-            {{ __('Resend verification email') }}
-        </flux:button>
+        <button wire:click="sendVerification" type="button"
+            class="w-full rounded-lg bg-ipv-blue px-4 py-2.5 text-sm font-semibold text-white hover:bg-ipv-blue-dark">
+            {{ __('Reenviar email de verificación') }}
+        </button>
 
-        <flux:link class="text-sm cursor-pointer" wire:click="logout">
-            {{ __('Log out') }}
-        </flux:link>
+        <button wire:click="logout" type="button" class="cursor-pointer text-sm text-ipv-blue hover:underline dark:text-ipv-blue-light">
+            {{ __('Cerrar sesión') }}
+        </button>
     </div>
 </div>
