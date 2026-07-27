@@ -66,6 +66,7 @@ class Expedientes extends Component
 
     public $oficinas = [];
 
+
     public function updatedQuery()
     {
         if (empty($this->query)) {
@@ -356,14 +357,24 @@ class Expedientes extends Component
             $oficinaId = auth()->user()->oficinaAsignadaId()
                 ?? auth()->user()->oficinaIdPara('expediente_ver');
 
-            if ($oficinaId) {
-                // Buscar la oficina para obtener los códigos
-                $oficina = Oficina::find($oficinaId);
+            if (! $oficinaId) {
+                LivewireAlert::title('No tenés una oficina asignada')
+                    ->text('Pedile a un administrador que te asigne una oficina antes de cargar expedientes.')
+                    ->error()
+                    ->timer(4000)
+                    ->toast()
+                    ->position('top-end')
+                    ->show();
 
-                if ($oficina) {
-                    // Asignar la oficina del usuario al formulario
-                    $this->expedienteForm->oficina_id = $oficinaId; // o como se llame el campo
-                }
+                return;
+            }
+
+            // Buscar la oficina para obtener los códigos
+            $oficina = Oficina::find($oficinaId);
+
+            if ($oficina) {
+                // Asignar la oficina del usuario al formulario
+                $this->expedienteForm->oficina_id = $oficinaId; // o como se llame el campo
             }
 
             $this->validate();

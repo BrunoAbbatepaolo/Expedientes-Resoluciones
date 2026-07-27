@@ -5,12 +5,22 @@
     @include('partials.head')
 </head>
 
-<body class="min-h-screen overflow-x-hidden text-ipv-ink dark:text-ipv-ink-dark lg:flex" x-data="{ sidebarOpen: false }">
+<body class="min-h-screen overflow-x-hidden text-ipv-ink dark:text-ipv-ink-dark lg:flex"
+    x-data="{ 
+        sidebarOpen: false,
+        darkMode: localStorage.getItem('theme') === 'dark' || (!localStorage.getItem('theme') && window.matchMedia('(prefers-color-scheme: dark)').matches)
+    }"
+    x-init="$watch('darkMode', val => {
+        localStorage.setItem('theme', val ? 'dark' : 'light');
+        document.documentElement.classList.toggle('dark', val);
+    })"
+    x-bind:class="{ 'dark': darkMode }">
+
     <div class="fixed inset-0 z-[-1] sirex-shell" aria-hidden="true"></div>
 
     <!-- Overlay móvil -->
     <div x-show="sidebarOpen" x-cloak @click="sidebarOpen = false"
-        class="fixed inset-0 z-40 bg-[#001428]/40 backdrop-blur-sm lg:hidden"></div>
+        class="fixed inset-0 z-40 bg-[#001428]/40 backdrop-blur-sm lg:hidden" aria-hidden="true"></div>
 
     <aside
         class="sirex-glass fixed left-0 top-0 z-50 flex h-screen w-[264px] shrink-0 flex-col gap-1 border-r border-ipv-blue/12 p-3.5 transition-transform duration-200 dark:border-white/10 lg:sticky lg:top-0"
@@ -36,14 +46,14 @@
             </button>
         </div>
 
-        <!-- Buscador -->
-        <div class="relative mb-3.5">
+        <!-- Buscador (sin funcionalidad por ahora - deshabilitado para evitar confusión) -->
+        <div class="relative mb-3.5" title="Buscador próximamente">
             <svg class="pointer-events-none absolute left-[11px] top-1/2 size-3.5 -translate-y-1/2 text-ipv-ink/40 dark:text-ipv-ink-dark/45"
                 viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.3-4.3m2-5.2a7.2 7.2 0 1 1-14.4 0 7.2 7.2 0 0 1 14.4 0Z" />
             </svg>
-            <input type="text" placeholder="Buscar…"
-                class="w-full rounded-full border border-ipv-blue/15 bg-white/70 py-2 pl-[30px] pr-2.5 text-[12.5px] text-ipv-ink placeholder-ipv-ink/40 focus:outline-none focus:ring-2 focus:ring-ipv-blue/30 dark:border-white/15 dark:bg-white/[0.06] dark:text-ipv-ink-dark dark:placeholder-ipv-ink-dark/40" />
+            <input type="text" placeholder="Buscar…" disabled
+                class="w-full cursor-not-allowed rounded-full border border-ipv-blue/15 bg-white/40 py-2 pl-[30px] pr-2.5 text-[12.5px] text-ipv-ink/50 placeholder-ipv-ink/30 focus:outline-none dark:border-white/15 dark:bg-white/[0.04] dark:text-ipv-ink-dark/50 dark:placeholder-ipv-ink-dark/25" />
         </div>
 
         <nav class="flex min-h-0 flex-1 flex-col gap-0.5 overflow-y-auto">
@@ -72,7 +82,7 @@
                 Gestión
             </div>
 
-            <!-- @if (auth()->user()->permiso('expediente_ver')) -->
+            @if (auth()->user()?->permiso('expediente_ver'))
             <div x-data="{ open: {{ request()->routeIs('expedientes*') ? 'true' : 'false' }} }">
                 <button @click="open = !open" type="button"
                     class="flex w-full items-center gap-2.5 rounded-lg px-3 py-2.5 text-sm font-medium text-ipv-ink/75 hover:bg-black/[0.03] dark:text-ipv-ink-dark/82 dark:hover:bg-white/5">
@@ -121,9 +131,9 @@
                     </a>
                 </div>
             </div>
-            <!-- @endif -->
+            @endif
 
-            <!-- @if (auth()->user()->permiso('resolucion_ver')) -->
+            @if (auth()->user()?->permiso('resolucion_ver'))
             <a href="{{ route('resoluciones') }}" wire:navigate
                 class="relative flex items-center gap-2.5 rounded-lg py-2.5 pl-4 pr-3 text-sm
                        {{ request()->routeIs('resoluciones')
@@ -139,7 +149,7 @@
                 </svg>
                 {{ __('Resoluciones') }}
             </a>
-            <!-- @endif -->
+            @endif
 
             <a href="{{ route('oficinas') }}" wire:navigate
                 class="relative flex items-center gap-2.5 rounded-lg py-2.5 pl-4 pr-3 text-sm
@@ -174,23 +184,23 @@
         </nav>
 
         <!-- Switch modo oscuro -->
-        <div x-data class="flex items-center justify-between border-t border-ipv-blue/10 px-2.5 py-2.5 dark:border-white/10">
+        <div class="flex items-center justify-between border-t border-ipv-blue/10 px-2.5 py-2.5 dark:border-white/10">
             <span class="flex items-center gap-1.5 text-[13px] font-medium text-ipv-ink/75 dark:text-ipv-ink-dark/82">
-                <svg x-show="$flux.dark" x-cloak class="size-[15px]" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                <svg x-show="darkMode" x-cloak class="size-[15px]" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                     stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79Z" />
                 </svg>
-                <svg x-show="!$flux.dark" x-cloak class="size-[15px]" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                <svg x-show="!darkMode" x-cloak class="size-[15px]" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                     stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <circle cx="12" cy="12" r="4" />
                     <path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4" />
                 </svg>
                 Modo oscuro
             </span>
-            <button @click="$flux.dark = !$flux.dark" type="button"
-                class="flex h-[21px] w-[38px] items-center rounded-full bg-gray-300 p-[2px] transition-colors dark:bg-ipv-blue"
-                :class="$flux.dark ? 'justify-end' : 'justify-start'">
-                <span class="size-[17px] rounded-full bg-white shadow"></span>
+            <button @click="darkMode = !darkMode" type="button"
+                class="flex h-[21px] w-[38px] items-center rounded-full bg-gray-300 p-[2px] transition-colors dark:bg-ipv-blue">
+                <span class="size-[17px] rounded-full bg-white shadow transition-transform duration-200"
+                    :class="darkMode ? 'translate-x-[17px]' : 'translate-x-0'"></span>
             </button>
         </div>
 
@@ -199,9 +209,9 @@
             <button @click="open = !open" @click.outside="open = false" type="button"
                 class="group flex w-full items-center gap-3 rounded-[12px] bg-white/40 border border-ipv-blue/15 px-3 py-2.5 transition-all hover:bg-white/70 hover:shadow-sm hover:border-ipv-blue/30 dark:bg-white/[0.04] dark:border-white/10 dark:hover:bg-white/[0.08] dark:hover:border-white/20">
                 <span class="relative flex size-9 shrink-0 items-center justify-center overflow-hidden rounded-[10px] bg-ipv-gold text-[13px] font-bold text-ipv-gold-ink transition-transform duration-300 group-hover:scale-105 group-hover:ring-2 group-hover:ring-ipv-gold/50 group-hover:ring-offset-2 group-hover:ring-offset-transparent dark:text-ipv-gold-ink-dark">
-                    @if (auth()->user()->profile_photo_path)
+                    @if (auth()->user()->profile_photo_path && \Illuminate\Support\Facades\Storage::exists(auth()->user()->profile_photo_path))
                         <img src="{{ Storage::url(auth()->user()->profile_photo_path) }}"
-                            alt="{{ auth()->user()->name }}" class="h-full w-full object-cover">
+                            alt="{{ auth()->user()->nombre }}" class="h-full w-full object-cover">
                     @else
                         {{ auth()->user()->initials() }}
                     @endif
@@ -265,8 +275,6 @@
     <main class="min-w-0 flex-1 p-6 lg:p-8">
         {{ $slot }}
     </main>
-
-    @fluxScripts
 </body>
 
 </html>
