@@ -167,68 +167,7 @@ class CrearResolucion extends Component
     public function cargarPlantillaHtml(): void
     {
         try {
-            $datosEjemplo = [
-                'fecha_res' => '[FECHA_RESOLUCIÓN]',
-                'num_exp' => '[NÚMERO_EXPEDIENTE]',
-                'num_res' => '[NÚMERO_RESOLUCIÓN]',
-                'manzana' => '[MANZANA]',
-                'lote' => '[LOTE]',
-                'nombre_barrio' => '[NOMBRE_BARRIO]',
-                'num_foja_solicitud' => '[FOJA_SOLICITUD]',
-                'num_foja_informe' => '[FOJA_INFORME]',
-                'fecha_cancelacion' => '[FECHA_CANCELACIÓN]',
-                'num_foja_darrd' => '[FOJA_DARRD]',
-                'num_foja_dictamen' => '[FOJA_DICTAMEN]',
-                'nombre_titular' => '[NOMBRE_TITULAR]',
-                'dni_titular' => '[DNI_TITULAR]',
-                'nombre_cotitular' => '[NOMBRE_COTITULAR]',
-                'dni_cotitular' => '[DNI_COTITULAR]',
-                'num_escritura' => '[NÚMERO_ESCRITURA]',
-                'fecha_escritura' => '[FECHA_ESCRITURA]',
-                'nombre_escribano' => '[NOMBRE_ESCRIBANO]',
-                // Campos específicos de Resciciones
-                'nombre_emprendimiento' => '[NOMBRE DEL EMPRENDIMIENTO]',
-                'departamento' => '[DEPARTAMENTO]',
-                'monto_deuda' => '[MONTO DE DEUDA]',
-                'fecha_deuda' => '[FECHA DEUDA]',
-                'fecha_dictamen' => '[FECHA DICTAMEN]',
-                'num_dictamen' => '[NÚMERO DICTAMEN]',
-                'num_res_adjudicacion' => '[NÚMERO RESOLUCIÓN ADJUDICACIÓN]',
-                // Campos específicos de Transferencia
-                'nombre_plan' => '[NOMBRE DEL PLAN]',
-                'nombre_titular_nuevo' => '[NOMBRE NUEVO TITULAR]',
-                'dni_titular_nuevo' => '[DNI NUEVO TITULAR]',
-                'fecha_nacimiento_titular' => '[FECHA NACIMIENTO TITULAR]',
-                'nombre_cotitular_nuevo' => '[NOMBRE NUEVO COTITULAR]',
-                'dni_cotitular_nuevo' => '[DNI NUEVO COTITULAR]',
-                'fecha_nacimiento_cotitular' => '[FECHA NACIMIENTO COTITULAR]',
-                'fecha_instrumento' => '[FECHA INSTRUMENTO]',
-                'num_foja_plan' => '[FOJA PLAN]',
-                'num_foja_recursos' => '[FOJA RECURSOS]',
-                'num_foja_promocion' => '[FOJA PROMOCIÓN]',
-                'num_foja_ratificacion' => '[FOJA RATIFICACIÓN]',
-                'num_foja_regularizacion' => '[FOJA REGULARIZACIÓN]',
-                'num_cuotas' => '[NÚMERO DE CUOTAS]',
-                'monto_cuota' => '[MONTO CUOTA]',
-                'tasa_interes' => '[TASA DE INTERÉS]',
-                'fecha_tasa' => '[FECHA TASA]',
-                // Campos específicos de Transferencia-Cancelacion
-                'num_res_reglamentacion' => '[NÚMERO RESOLUCIÓN REGLAMENTACIÓN]',
-                'num_res_modificatoria' => '[NÚMERO RESOLUCIÓN MODIFICATORIA]',
-                'unidad' => '[UNIDAD]',
-                'sector' => '[SECTOR]',
-                'estado_civil_titular_nuevo' => '[ESTADO CIVIL]',
-                'estado_civil_cotitular_nuevo' => '[ESTADO CIVIL]',
-                // Campos específicos de ReconocimientoCuotaPagadaDosVeces
-                'quien_suscribe' => '[EL/QUE SUSCRIBE]',
-                'dni_suscribe' => '[DNI]',
-                'cuota_sin_gastos' => '[CUOTA S/GASTOS]',
-                'nro_ultima_cuota' => '[NRO ÚLTIMA CUOTA]',
-                'vencimiento_ultima_cuota' => now()->addMonth()->format('Y-m-d'),
-                'plazo_total_plan' => '[PLAZO TOTAL PLAN]',
-            ];
-
-            $datosConFunciones = array_merge($datosEjemplo, [
+            $datosConFunciones = array_merge($this->getDatosEjemplo(), [
                 'formatearFecha' => 'formatearFecha',
                 'formatearFechaLarga' => 'formatearFechaLarga',
                 'formatearMoneda' => 'formatearMoneda',
@@ -247,10 +186,113 @@ class CrearResolucion extends Component
         return "Todavía no hay una plantilla completa para \"{$this->tipo}\". Podés escribir el contenido en el modo \"Personalizado\".";
     }
 
+    private function getDatosEjemplo(): array
+    {
+        return [
+            'fecha_res' => '[FECHA_RESOLUCIÓN]',
+            'num_exp' => '[NÚMERO_EXPEDIENTE]',
+            'num_res' => '[NÚMERO_RESOLUCIÓN]',
+            'numero_tramite' => '[NÚMERO_TRÁMITE]',
+            'manzana' => '[MANZANA]',
+            'lote' => '[LOTE]',
+            'nombre_barrio' => '[NOMBRE_BARRIO]',
+            'num_foja_solicitud' => '[FOJA_SOLICITUD]',
+            'num_foja_informe' => '[FOJA_INFORME]',
+            'fecha_cancelacion' => '[FECHA_CANCELACIÓN]',
+            'num_foja_darrd' => '[FOJA_DARRD]',
+            'num_foja_dictamen' => '[FOJA_DICTAMEN]',
+            'nombre_titular' => '[NOMBRE_TITULAR]',
+            'dni_titular' => '[DNI_TITULAR]',
+            'nombre_cotitular' => '[NOMBRE_COTITULAR]',
+            'dni_cotitular' => '[DNI_COTITULAR]',
+            'num_escritura' => '[NÚMERO_ESCRITURA]',
+            'fecha_escritura' => '[FECHA_ESCRITURA]',
+            'nombre_escribano' => '[NOMBRE_ESCRIBANO]',
+            // Campos específicos de Resciciones
+            'nombre_emprendimiento' => '[NOMBRE DEL EMPRENDIMIENTO]',
+            'departamento' => '[DEPARTAMENTO]',
+            'monto_deuda' => '[MONTO DE DEUDA]',
+            'fecha_deuda' => '[FECHA DEUDA]',
+            'fecha_dictamen' => '[FECHA DICTAMEN]',
+            'num_dictamen' => '[NÚMERO DICTAMEN]',
+            'num_res_adjudicacion' => '[NÚMERO RESOLUCIÓN ADJUDICACIÓN]',
+            // Campos específicos de Transferencia y Transferencia-Cancelacion
+            'nombre_plan' => '[NOMBRE DEL PLAN]',
+            'nombre_titular_anterior' => '[NOMBRE TITULAR ANTERIOR]',
+            'dni_titular_anterior' => '[DNI TITULAR ANTERIOR]',
+            'nombre_cotitular_anterior' => '[NOMBRE COTITULAR ANTERIOR]',
+            'dni_cotitular_anterior' => '[DNI COTITULAR ANTERIOR]',
+            'num_foja_boleto' => '[FOJA BOLETO]',
+            'nombre_titular_nuevo' => '[NOMBRE NUEVO TITULAR]',
+            'dni_titular_nuevo' => '[DNI NUEVO TITULAR]',
+            'fecha_nacimiento_titular' => '[FECHA NACIMIENTO TITULAR]',
+            'nombre_cotitular_nuevo' => '[NOMBRE NUEVO COTITULAR]',
+            'dni_cotitular_nuevo' => '[DNI NUEVO COTITULAR]',
+            'fecha_nacimiento_cotitular' => '[FECHA NACIMIENTO COTITULAR]',
+            'fecha_instrumento' => '[FECHA INSTRUMENTO]',
+            'num_foja_plan' => '[FOJA PLAN]',
+            'num_foja_recursos' => '[FOJA RECURSOS]',
+            'num_foja_promocion' => '[FOJA PROMOCIÓN]',
+            'num_foja_ratificacion' => '[FOJA RATIFICACIÓN]',
+            'num_foja_regularizacion' => '[FOJA REGULARIZACIÓN]',
+            'num_cuotas' => '[NÚMERO DE CUOTAS]',
+            'monto_cuota' => '[MONTO CUOTA]',
+            'tasa_interes' => '[TASA DE INTERÉS]',
+            'fecha_tasa' => '[FECHA TASA]',
+            'num_res_reglamentacion' => '[NÚMERO RESOLUCIÓN REGLAMENTACIÓN]',
+            'num_res_modificatoria' => '[NÚMERO RESOLUCIÓN MODIFICATORIA]',
+            'unidad' => '[UNIDAD]',
+            'sector' => '[SECTOR]',
+            'estado_civil_titular_nuevo' => '[ESTADO CIVIL]',
+            'estado_civil_cotitular_nuevo' => '[ESTADO CIVIL]',
+            // Campos específicos de Rectificación
+            'texto_rectificacion' => '',
+            'texto_adjudicacion' => '',
+            'texto_donde_dice' => '',
+            'tabla_datos' => '',
+            'res_reglamentacion' => '185/2017',
+            'res_modificatoria' => '779/2017',
+            'fecha_res_adjudicacion' => '[FECHA RESOLUCIÓN ADJUDICACIÓN]',
+            'orden' => '[ORDEN]',
+            'num_foja_dni' => '[FOJA DNI]',
+            'num_foja_resolucion' => '[FOJA RESOLUCIÓN]',
+            'num_foja_darrd_conf' => '[FOJA DARRD CONF]',
+            'cantidad_viviendas' => '[CANTIDAD]',
+            'cantidad_letras' => '[CANTIDAD EN LETRAS]',
+            // Campos específicos de ReconocimientoCuotaPagadaDosVeces
+            'quien_suscribe' => '[EL/QUE SUSCRIBE]',
+            'dni_suscribe' => '[DNI]',
+            'cuota_sin_gastos' => '[CUOTA S/GASTOS]',
+            'nro_ultima_cuota' => '[NRO ÚLTIMA CUOTA]',
+            'vencimiento_ultima_cuota' => now()->addMonth()->format('Y-m-d'),
+            'plazo_total_plan' => '[PLAZO TOTAL PLAN]',
+            // Campos específicos de AplicarPagos
+            'año_cuotas' => '[AÑO]',
+            'fecha_primer_pago' => '[FECHA PRIMER PAGO]',
+            'codigo_pago' => '[CÓDIGO PAGO]',
+            'causante' => 'DEPARTAMENTO RECURSOS FINANCIEROS',
+            'fecha_documento' => '[FECHA DOCUMENTO]',
+            'jefe_computos' => '[JEFE CÓMPUTOS]',
+            'monto' => '[MONTO]',
+            'cuotas_adeudadas' => '[CUOTAS ADEUDADAS]',
+            'firma_1_nombre' => '[FIRMA 1]',
+            'firma_1_cargo' => '[CARGO 1]',
+            'firma_2_nombre' => '[FIRMA 2]',
+            'firma_2_cargo' => '[CARGO 2]',
+        ];
+    }
+
     public function cargarPlantillaConDatos(): void
     {
         try {
-            $contenidoHTML = View::make("prototipos.{$this->tipo}", $this->datos)->render();
+            $datos = array_merge($this->datos, [
+                'formatearFecha' => 'formatearFecha',
+                'formatearFechaLarga' => 'formatearFechaLarga',
+                'formatearMoneda' => 'formatearMoneda',
+                'num2letras' => 'num2letras',
+                'numero_tramite' => $this->generarNumeroTramite(),
+            ]);
+            $contenidoHTML = View::make("prototipos.{$this->tipo}", $datos)->render();
             $this->plantilla = $this->convertirHTMLaTexto($contenidoHTML);
         } catch (\Exception $e) {
             $this->plantilla = $this->mensajePlantillaNoDisponible();
@@ -534,30 +576,15 @@ class CrearResolucion extends Component
     protected function cargarPlantillaEditable(): void
     {
         try {
-            // Datos de ejemplo para generar la plantilla
-            $datosEjemplo = [
-                'fecha_res' => '[FECHA_RESOLUCIÓN]',
-                'num_exp' => '[NÚMERO_EXPEDIENTE]',
-                'num_res' => '[NÚMERO_RESOLUCIÓN]',
-                'manzana' => '[MANZANA]',
-                'lote' => '[LOTE]',
-                'nombre_barrio' => '[NOMBRE_BARRIO]',
-                'num_foja_solicitud' => '[FOJA_SOLICITUD]',
-                'num_foja_informe' => '[FOJA_INFORME]',
-                'fecha_cancelacion' => '[FECHA_CANCELACIÓN]',
-                'num_foja_darrd' => '[FOJA_DARRD]',
-                'num_foja_dictamen' => '[FOJA_DICTAMEN]',
-                'nombre_titular' => '[NOMBRE_TITULAR]',
-                'dni_titular' => '[DNI_TITULAR]',
-                'nombre_cotitular' => '[NOMBRE_COTITULAR]',
-                'dni_cotitular' => '[DNI_COTITULAR]',
-                'num_escritura' => '[NÚMERO_ESCRITURA]',
-                'fecha_escritura' => '[FECHA_ESCRITURA]',
-                'nombre_escribano' => '[NOMBRE_ESCRIBANO]',
-            ];
+            $datosConFunciones = array_merge($this->getDatosEjemplo(), [
+                'formatearFecha' => 'formatearFecha',
+                'formatearFechaLarga' => 'formatearFechaLarga',
+                'formatearMoneda' => 'formatearMoneda',
+                'num2letras' => 'num2letras',
+            ]);
 
             // Renderizar el prototipo con datos placeholder
-            $contenidoHTML = View::make("prototipos.{$this->tipo}", $datosEjemplo)->render();
+            $contenidoHTML = View::make("prototipos.{$this->tipo}", $datosConFunciones)->render();
 
             // Convertir a texto plano manteniendo estructura
             $this->plantilla = $this->convertirHTMLaTexto($contenidoHTML);
