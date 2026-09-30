@@ -59,6 +59,27 @@ class ExpedientesIpv
      */
     public function buscar(array $filtros, int $porPagina = 15, string $pagina = 'page'): LengthAwarePaginator
     {
+        return $this->consulta($filtros)
+            ->paginate($porPagina, ['*'], $pagina)
+            ->through(fn ($fila) => $this->conDias($fila));
+    }
+
+    /**
+     * Primeros resultados sin contar el total (el COUNT es lo más caro en búsquedas
+     * por texto). Para la búsqueda global del menú.
+     *
+     * @return Collection<int, \stdClass>
+     */
+    public function buscarRapido(string $texto, int $limite = 5): Collection
+    {
+        return $this->consulta(['texto' => $texto])->limit($limite)->get()->map(fn ($f) => $this->conDias($f));
+    }
+
+    /**
+     * @param  array{texto?: ?string, oficina_id?: ?int, desde?: ?string, hasta?: ?string}  $filtros
+     */
+    private function consulta(array $filtros): Builder
+    {
         $like = $this->like();
 
         $query = $this->db()->table('expedientes as e')
@@ -98,9 +119,7 @@ class ExpedientesIpv
             $query->where('e.fecha', '<=', $filtros['hasta']);
         }
 
-        return $query->orderByDesc('e.id')
-            ->paginate($porPagina, ['*'], $pagina)
-            ->through(fn ($fila) => $this->conDias($fila));
+        return $query->orderByDesc('e.id');
     }
 
     /**
@@ -132,7 +151,7 @@ class ExpedientesIpv
             });
     }
 
-    private function conDias(object $fila): object
+    private function conDias(\stdClass $fila): \stdClass
     {
         $fila->dias_en_ubicacion = $fila->ubicacion_desde
             ? (int) Carbon::parse($fila->ubicacion_desde)->startOfDay()->diffInDays(now()->startOfDay())
@@ -200,7 +219,7 @@ class ExpedientesIpv
      * Ubicación actual de varios expedientes por número (para "Mi oficina").
      *
      * @param  array<int, string>  $numeros
-     * @return Collection<string, object> keyed por número
+     * @return Collection<array-key, \stdClass> keyed por número
      */
     public function ubicaciones(array $numeros): Collection
     {

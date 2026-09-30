@@ -43,15 +43,9 @@
             </button>
         </div>
 
-        <!-- Buscador (sin funcionalidad por ahora - deshabilitado para evitar confusión) -->
-        <div class="relative mb-3.5" title="Buscador próximamente">
-            <svg class="pointer-events-none absolute left-[11px] top-1/2 size-3.5 -translate-y-1/2 text-ipv-ink/40 dark:text-ipv-ink-dark/45"
-                viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.3-4.3m2-5.2a7.2 7.2 0 1 1-14.4 0 7.2 7.2 0 0 1 14.4 0Z" />
-            </svg>
-            <input type="text" placeholder="Buscar…" disabled
-                class="w-full cursor-not-allowed rounded-full border border-ipv-blue/15 bg-white/40 py-2 pl-[30px] pr-2.5 text-[12.5px] text-ipv-ink/50 placeholder-ipv-ink/30 focus:outline-none dark:border-white/15 dark:bg-white/[0.04] dark:text-ipv-ink-dark/50 dark:placeholder-ipv-ink-dark/25" />
-        </div>
+        <!-- Búsqueda global (Ctrl+K o /): expedientes del IPV, registros de mi oficina y resoluciones -->
+        <livewire:busqueda-global />
+
 
         <nav class="flex min-h-0 flex-1 flex-col gap-0.5 overflow-y-auto">
 

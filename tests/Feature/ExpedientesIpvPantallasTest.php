@@ -99,6 +99,18 @@ test('mi oficina muestra dónde está hoy cada expediente según el IPV', functi
         ->assertDontSee('Realizar pase');
 });
 
+test('el detalle muestra el historial de cambios y el acceso al IPV', function () {
+    MitivFalso::expediente('77/440-2026', 'A');
+    $this->actingAs($this->user);
+    $exp = \App\Models\Expediente::factory()->create(['num_exp' => '77/440-2026', 'asunto' => 'VIEJO', 'oficina_id' => $this->oficina->id]);
+    $exp->update(['asunto' => 'NUEVO']);
+
+    Livewire::test(\App\Livewire\Detalles::class, ['id' => $exp->id])
+        ->assertSee('Historial de cambios')
+        ->assertSeeInOrder([$this->user->name, 'editó', 'VIEJO', 'NUEVO'])
+        ->assertSee('Ver recorrido completo en el IPV');
+});
+
 test('los pases internos quedan desactivados del lado del servidor', function () {
     $exp = \App\Models\Expediente::factory()->create(['oficina_id' => $this->oficina->id]);
 

@@ -10,6 +10,12 @@
         <div class="text-ipv-ink/70 dark:text-ipv-ink-dark/75">
             <span class="font-semibold">Oficina:</span> {{ $expediente->oficinaById->nombre ?? 'Sin oficina' }}
         </div>
+        @if ($idIpv)
+            <a href="{{ route('expedientes.ipv.ficha', $idIpv) }}" wire:navigate.hover
+                class="mt-3 inline-flex items-center gap-1.5 text-sm font-semibold text-ipv-blue transition hover:gap-2.5 dark:text-ipv-blue-light">
+                Ver recorrido completo en el IPV <span aria-hidden="true">→</span>
+            </a>
+        @endif
     </div>
 
     <!-- Tabs -->
@@ -25,10 +31,10 @@
                 class="border-b-2 px-4 py-2 text-sm font-medium transition-colors hover:text-ipv-blue dark:hover:text-ipv-blue-light">
                 Pases
             </button>
-            <button @click="activeTab = 'adjuntos'"
-                :class="activeTab === 'adjuntos' ? 'border-ipv-blue text-ipv-blue dark:text-ipv-blue-light' : 'border-transparent text-ipv-ink/60 dark:text-ipv-ink-dark/60'"
+            <button @click="activeTab = 'historial'"
+                :class="activeTab === 'historial' ? 'border-ipv-blue text-ipv-blue dark:text-ipv-blue-light' : 'border-transparent text-ipv-ink/60 dark:text-ipv-ink-dark/60'"
                 class="border-b-2 px-4 py-2 text-sm font-medium transition-colors hover:text-ipv-blue dark:hover:text-ipv-blue-light">
-                Adjuntos
+                Historial de cambios
             </button>
         </div>
     </div>
@@ -97,9 +103,30 @@
     </table>
 </div>
 
-    <!-- Adjuntos -->
-    <div x-show="activeTab === 'adjuntos'" class="rounded-lg bg-black/[0.02] p-4 dark:bg-white/[0.04]">
-        <h3 class="mb-4 text-lg font-semibold text-ipv-ink dark:text-ipv-ink-dark">Adjuntos</h3>
-        <p class="text-sm text-ipv-ink/50 dark:text-ipv-ink-dark/50">Sin adjuntos por el momento.</p>
+    <!-- Historial de cambios (tabla audits) -->
+    <div x-show="activeTab === 'historial'" x-cloak class="rounded-lg bg-black/[0.02] p-4 dark:bg-white/[0.04]">
+        <ol class="space-y-3">
+            @forelse ($cambios as $cambio)
+                <li wire:key="audit-{{ $loop->index }}" class="rounded-lg bg-white/60 p-3 dark:bg-white/[0.03]">
+                    <p class="text-sm text-ipv-ink dark:text-ipv-ink-dark">
+                        <span class="font-semibold">{{ $cambio['usuario'] }}</span> {{ mb_strtolower($cambio['evento']) }} el expediente
+                        <span class="text-xs text-ipv-ink/50 dark:text-ipv-ink-dark/50">· {{ $cambio['fecha']?->format('d/m/Y H:i') }}</span>
+                    </p>
+                    @if ($cambio['evento'] === 'Editó' && $cambio['campos']->isNotEmpty())
+                        <ul class="mt-1.5 space-y-0.5 text-xs text-ipv-ink/70 dark:text-ipv-ink-dark/70">
+                            @foreach ($cambio['campos'] as $c)
+                                <li>
+                                    <span class="font-medium capitalize">{{ $c['campo'] }}:</span>
+                                    <span class="line-through opacity-60">{{ is_scalar($c['antes']) ? $c['antes'] : '—' }}</span>
+                                    → {{ is_scalar($c['despues']) ? $c['despues'] : '—' }}
+                                </li>
+                            @endforeach
+                        </ul>
+                    @endif
+                </li>
+            @empty
+                <li class="text-sm text-ipv-ink/50 dark:text-ipv-ink-dark/50">Sin cambios registrados.</li>
+            @endforelse
+        </ol>
     </div>
 </div>
