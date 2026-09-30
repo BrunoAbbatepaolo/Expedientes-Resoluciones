@@ -1,6 +1,9 @@
 <?php
 
+use App\Http\Controllers\ImprimirExpedienteIpvController;
 use App\Http\Controllers\ResolucionArchivoController;
+use App\Livewire\ConsultaIpv;
+use App\Livewire\FichaIpv;
 use Illuminate\Support\Facades\Route;
 use Livewire\Volt\Volt;
 
@@ -30,6 +33,11 @@ Route::middleware(['auth', 'password.change'])->group(function () {
     Volt::route('expedientes/egresados', 'expedientes')->middleware('auth')->name('expedientes.egresados');
     Volt::route('expedientes/entrantes', 'expedientes')->middleware('auth')->name('expedientes.entrantes');
     Volt::route('expedientes/detalle/{id}', 'detalles')->middleware('auth')->name('expedientes.detalle');
+
+    // Consulta de todo el IPV (solo lectura sobre el sistema viejo).
+    Route::livewire('expedientes/ipv', ConsultaIpv::class)->name('expedientes.ipv');
+    Route::livewire('expedientes/ipv/{id}', FichaIpv::class)->whereNumber('id')->name('expedientes.ipv.ficha');
+    Route::get('expedientes/ipv/{id}/imprimir', ImprimirExpedienteIpvController::class)->whereNumber('id')->name('expedientes.ipv.imprimir');
     Volt::route('oficinas', 'oficinas')->middleware('auth')->name('oficinas');
     Volt::route('usuarios', 'ListaUsuario')->middleware('auth')->name('listausuarios');
     Volt::route('/resoluciones/elegir', 'ElegirResolucion')

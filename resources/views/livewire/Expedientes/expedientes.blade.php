@@ -1,4 +1,4 @@
-<div class="space-y-4" x-data="{ showFiltro: false, showNuevo: false, showEditar: false, showPase: false, showBorrar: false }"
+<div class="space-y-4" x-data="{ showFiltro: false, showNuevo: @js($abrirNuevo), showEditar: false, showPase: false, showBorrar: false }"
     x-on:modal-close.window="
         if ($event.detail.name === 'modal-filtro') showFiltro = false;
         if ($event.detail.name === 'modal-exp') showNuevo = false;
@@ -7,9 +7,25 @@
         if ($event.detail.name === 'modal-ConfirmarBorrado') showBorrar = false;
     ">
     @if (auth()->user()->permiso('expediente_ver'))
-        <h1 class="text-2xl font-semibold text-ipv-ink dark:text-ipv-ink-dark">
-            Sistema de Expedientes - {{ $oficinaUsuario->nombre ?? 'Sin oficina asignada' }}
-        </h1>
+        <x-expedientes-tabs activo="oficina" />
+
+        <div class="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+                <h1 class="text-2xl font-semibold text-ipv-ink dark:text-ipv-ink-dark">
+                    {{ $oficinaUsuario->nombre ?? 'Sin oficina asignada' }}
+                </h1>
+                <p class="text-sm text-ipv-ink/60 dark:text-ipv-ink-dark/60">Expedientes registrados en tu oficina y dónde están hoy en el IPV.</p>
+            </div>
+            <div class="flex gap-1 rounded-lg bg-black/[0.03] p-1 text-sm dark:bg-white/[0.05]" aria-label="Filtrar registro">
+                @foreach (['expedientes' => 'Todos', 'expedientes.ingresados' => 'En la oficina', 'expedientes.egresados' => 'Egresados'] as $ruta => $etiqueta)
+                    <a href="{{ route($ruta) }}" wire:navigate.hover wire:key="sub-{{ $ruta }}"
+                        @if (request()->routeIs($ruta)) aria-current="page" @endif
+                        class="rounded-md px-3 py-1.5 font-medium transition {{ request()->routeIs($ruta) ? 'bg-white text-ipv-blue shadow-sm dark:bg-white/[0.12] dark:text-ipv-ink-dark' : 'text-ipv-ink/60 hover:text-ipv-ink dark:text-ipv-ink-dark/60 dark:hover:text-ipv-ink-dark' }}">
+                        {{ $etiqueta }}
+                    </a>
+                @endforeach
+            </div>
+        </div>
 
         @if ($sinOficina)
             <div class="flex items-start gap-3 rounded-lg border border-ipv-gold/40 bg-ipv-gold/10 px-4 py-3 text-sm dark:border-ipv-gold/25">
@@ -105,7 +121,7 @@
                             <th class="w-[100px] px-4 py-2.5 text-center text-xs font-semibold uppercase tracking-wide text-ipv-ink/50 dark:text-ipv-ink-dark/50">Ingreso</th>
                             <th class="w-[180px] px-4 py-2.5 text-center text-xs font-semibold uppercase tracking-wide text-ipv-ink/50 dark:text-ipv-ink-dark/50">Causante</th>
                             <th class="hidden w-[200px] px-4 py-2.5 text-center text-xs font-semibold uppercase tracking-wide text-ipv-ink/50 dark:text-ipv-ink-dark/50 2xl:table-cell">Asunto</th>
-                            <th class="w-[180px] px-4 py-2.5 text-center text-xs font-semibold uppercase tracking-wide text-ipv-ink/50 dark:text-ipv-ink-dark/50">Oficina Salida</th>
+                            <th class="w-[220px] px-4 py-2.5 text-center text-xs font-semibold uppercase tracking-wide text-ipv-ink/50 dark:text-ipv-ink-dark/50">Hoy está en (IPV)</th>
                             <th class="w-[100px] px-4 py-2.5 text-center text-xs font-semibold uppercase tracking-wide text-ipv-ink/50 dark:text-ipv-ink-dark/50">Salida</th>
                             @if (auth()->user()->permiso('expediente_editar'))
                                 <th class="w-[80px] px-4 py-2.5 text-center text-xs font-semibold uppercase tracking-wide text-ipv-ink/50 dark:text-ipv-ink-dark/50">Acciones</th>
@@ -131,8 +147,18 @@
                                 <td class="hidden px-4 py-2.5 text-center 2xl:table-cell">
                                     <div class="overflow-hidden text-ellipsis whitespace-nowrap text-sm text-ipv-ink/70 dark:text-ipv-ink-dark/70">{{ $expediente->asunto }}</div>
                                 </td>
-                                <td class="overflow-hidden text-ellipsis whitespace-nowrap px-4 py-2.5 text-center text-sm text-ipv-ink/70 dark:text-ipv-ink-dark/70">
-                                    {{ $expediente->oficina->nombre ?? '-' }}
+                                <td class="px-4 py-2.5 text-center text-sm">
+                                    @php($ipv = $ubicacionesIpv->get($expediente->num_exp))
+                                    @if ($ipv)
+                                        <a href="{{ route('expedientes.ipv.ficha', $ipv->id) }}" wire:navigate.hover
+                                            class="group inline-flex max-w-full items-center gap-2 rounded-md px-1.5 py-0.5 transition hover:bg-ipv-blue/[0.06]"
+                                            title="Ver recorrido completo">
+                                            <span class="truncate text-ipv-ink/80 group-hover:text-ipv-blue dark:text-ipv-ink-dark/80 dark:group-hover:text-ipv-blue-light">{{ $ipv->ubicacion ?? 'Sin pases' }}</span>
+                                            <x-dias-badge :dias="$ipv->dias_en_ubicacion" />
+                                        </a>
+                                    @else
+                                        <span class="text-xs text-ipv-ink/40 dark:text-ipv-ink-dark/40">No figura en IPV</span>
+                                    @endif
                                 </td>
                                 <td class="overflow-hidden text-ellipsis whitespace-nowrap px-4 py-2.5 text-center text-sm text-ipv-ink/70 dark:text-ipv-ink-dark/70">
                                     {{ $this->obtenerDMY($expediente->fecha_salida) }}
@@ -162,6 +188,7 @@
                                                     </svg>
                                                     Editar expediente
                                                 </button>
+                                                @if ($pasesInternos)
                                                 <button wire:click="abrirPase({{ $expediente->id }})" @click="open = false; showPase = true"
                                                     class="flex w-full cursor-pointer items-center gap-2 px-4 py-3 text-left text-sm text-ipv-ink/80 transition-all duration-200 hover:bg-emerald-500 hover:text-white dark:text-ipv-ink-dark/85">
                                                     <svg class="size-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -170,6 +197,7 @@
                                                     </svg>
                                                     Realizar pase
                                                 </button>
+                                                @endif
                                                 <button wire:click="confirmarBorrado({{ $expediente->id }})" @click="open = false; showBorrar = true"
                                                     class="flex w-full cursor-pointer items-center gap-2 px-4 py-3 text-left text-sm text-ipv-magenta transition-all duration-200 hover:bg-ipv-magenta hover:text-white">
                                                     <svg class="size-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -201,7 +229,9 @@
         @include('livewire.modal-filtros')
         @include('livewire.Expedientes.modal-NuevoExpediente')
         @include('livewire.Expedientes.modal-EditarExpediente')
-        @include('livewire.Expedientes.modal-RealizarPase')
+        @if ($pasesInternos)
+            @include('livewire.Expedientes.modal-RealizarPase')
+        @endif
         @include('livewire.modal-ConfirmarBorrado')
     @else
         <div class="flex items-start gap-3 rounded-lg border border-ipv-magenta/30 bg-ipv-magenta/10 px-4 py-3 text-sm text-ipv-magenta">

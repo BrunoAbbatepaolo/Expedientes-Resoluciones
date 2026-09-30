@@ -44,6 +44,11 @@
     --color-background: #ffffff;
 }
 
+@keyframes sirex-shimmer {
+    0% { background-position: 100% 50%; }
+    100% { background-position: 0 50%; }
+}
+
 @keyframes sirex-badge-pop {
     0% { transform: scale(0.6); opacity: 0; }
     60% { transform: scale(1.15); opacity: 1; }
@@ -85,6 +90,16 @@
     .dark .sirex-glass-card {
         background: rgba(255, 255, 255, 0.06);
         box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+    }
+
+    /* Skeleton de carga: solo anima background-position (barato, sin reflow). */
+    .sirex-skeleton {
+        background: linear-gradient(90deg, rgba(0, 81, 158, 0.07) 25%, rgba(0, 81, 158, 0.14) 37%, rgba(0, 81, 158, 0.07) 63%);
+        background-size: 400% 100%;
+        animation: sirex-shimmer 1.4s ease-in-out infinite;
+    }
+    .dark .sirex-skeleton {
+        background-image: linear-gradient(90deg, rgba(255, 255, 255, 0.05) 25%, rgba(255, 255, 255, 0.11) 37%, rgba(255, 255, 255, 0.05) 63%);
     }
 
     .sirex-btn {
@@ -170,5 +185,8 @@
   .transition-opacity,
   .transition-transform {
     transition-duration: 0.01ms !important;
+  }
+  .sirex-skeleton {
+    animation: none;
   }
 }

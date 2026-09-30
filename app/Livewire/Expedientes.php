@@ -10,7 +10,9 @@ use App\Traits\AuthorizesOficina;
 use App\Traits\NotificaUi;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
+use App\Services\ExpedientesIpv;
 use Livewire\Attributes\Locked;
+use Livewire\Attributes\Url;
 use Livewire\Component;
 use Livewire\WithPagination;
 
@@ -50,6 +52,12 @@ class Expedientes extends Component
     ];
 
     public $tipoVista = 'todos';
+
+    #[Url(except: '')]
+    public string $registrar = '';
+
+    #[Locked]
+    public bool $abrirNuevo = false;
 
     public $mostrarBoton = false;
 
@@ -101,12 +109,20 @@ class Expedientes extends Component
         }
     }
 
-    public function render()
+    public function render(ExpedientesIpv $ipv)
     {
         $expedientes = $this->getExp();
 
+        // Dónde está hoy cada expediente de la página según el sistema del IPV
+        // (una sola consulta). Si mitiv no responde, la tabla se muestra igual.
+        $ubicacionesIpv = $this->tipoVista === 'entrantes'
+            ? collect()
+            : rescue(fn () => $ipv->ubicaciones(collect($expedientes->items())->pluck('num_exp')->all()), collect());
+
         return view('livewire.Expedientes.expedientes', [
             'expedientes' => $expedientes,
+            'ubicacionesIpv' => $ubicacionesIpv,
+            'pasesInternos' => config('sirex.pases_internos'),
         ]);
     }
 
@@ -122,7 +138,8 @@ class Expedientes extends Component
                 $this->tipoVista = 'egresados';
                 break;
             case 'expedientes.entrantes':
-                $this->tipoVista = 'entrantes';
+                // La bandeja de pases internos solo existe si están activados.
+                $this->tipoVista = config('sirex.pases_internos') ? 'entrantes' : 'todos';
                 break;
             default:
                 $this->tipoVista = 'todos';
@@ -133,6 +150,13 @@ class Expedientes extends Component
 
         if ($oficinaId) {
             $this->oficinaUsuario = Oficina::find($oficinaId);
+        }
+
+        // Llegada desde la ficha IPV ("Registrar en mi oficina"): abre el alta ya buscado.
+        if ($this->registrar !== '' && auth()->user()->permiso('expediente_editar')) {
+            $this->busquedaExp = $this->registrar;
+            $this->buscar();
+            $this->abrirNuevo = true;
         }
     }
 
@@ -233,6 +257,8 @@ class Expedientes extends Component
 
     public function aceptarPase($paseId)
     {
+        abort_unless(config('sirex.pases_internos'), 404);
+
         $this->autorizarPermiso('expediente_editar');
 
         $oficinaId = auth()->user()?->oficinaAsignadaId()
@@ -434,6 +460,8 @@ class Expedientes extends Component
      */
     public function abrirPase($id)
     {
+        abort_unless(config('sirex.pases_internos'), 404);
+
         $expediente = \App\Models\Expediente::findOrFail($id);
         $this->autorizarExpediente($expediente, 'expediente_editar');
 
@@ -447,6 +475,8 @@ class Expedientes extends Component
 
     public function confirmarPase()
     {
+        abort_unless(config('sirex.pases_internos'), 404);
+
         if (! $this->expedienteForm->ofi_salida) {
             $this->toast('error', 'Elegí una oficina de destino');
 
@@ -546,8 +576,6 @@ class Expedientes extends Component
             'filtro.fechaDesde' => 'nullable|date',
             'filtro.fechaHasta' => 'nullable|date',
         ]);
-        // Aplicar filtros en el método getExp()
-        $this->render();
         $this->cerrarModal('modal-filtro');
         $this->toast('success', 'Filtro Aplicado!');
     }
@@ -556,7 +584,6 @@ class Expedientes extends Component
     {
         $this->filtro['fechaDesde'] = null;
         $this->filtro['fechaHasta'] = null;
-        $this->render();
         $this->cerrarModal('modal-filtro');
     }
 

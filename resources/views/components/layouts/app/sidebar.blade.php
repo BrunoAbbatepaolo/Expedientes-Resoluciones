@@ -101,18 +101,16 @@
                     x-transition:leave="transition ease-in duration-150" x-transition:leave-start="opacity-100 translate-y-0"
                     x-transition:leave-end="opacity-0 -translate-y-2"
                     class="ml-3.5 space-y-0.5 border-l-2 border-ipv-blue/15 pl-2.5 dark:border-white/15">
-                    <a href="{{ route('expedientes') }}" wire:navigate
-                        class="block rounded-md px-2.5 py-1.5 text-[13px] text-ipv-ink/65 hover:bg-black/[0.03] dark:text-ipv-ink-dark/65 dark:hover:bg-white/5">
-                        Todos
-                    </a>
-                    <a href="{{ route('expedientes.ingresados') }}" wire:navigate
-                        class="block rounded-md px-2.5 py-1.5 text-[13px] text-ipv-ink/65 hover:bg-black/[0.03] dark:text-ipv-ink-dark/65 dark:hover:bg-white/5">
-                        Ingresados
-                    </a>
-                    <a href="{{ route('expedientes.egresados') }}" wire:navigate
-                        class="block rounded-md px-2.5 py-1.5 text-[13px] text-ipv-ink/65 hover:bg-black/[0.03] dark:text-ipv-ink-dark/65 dark:hover:bg-white/5">
-                        Egresados
-                    </a>
+                    @foreach (['expedientes' => ['Mi oficina', ['expedientes', 'expedientes.ingresados', 'expedientes.egresados', 'expedientes.detalle']], 'expedientes.ipv' => ['Expedientes IPV', ['expedientes.ipv*']]] as $ruta => [$etiqueta, $activas])
+                        <a href="{{ route($ruta) }}" wire:navigate.hover
+                            @if (request()->routeIs(...$activas)) aria-current="page" @endif
+                            class="block rounded-md px-2.5 py-1.5 text-[13px] transition-colors {{ request()->routeIs(...$activas)
+                                ? 'bg-ipv-blue/10 font-semibold text-ipv-blue dark:bg-white/[0.08] dark:text-ipv-ink-dark'
+                                : 'text-ipv-ink/65 hover:bg-black/[0.03] dark:text-ipv-ink-dark/65 dark:hover:bg-white/5' }}">
+                            {{ $etiqueta }}
+                        </a>
+                    @endforeach
+                    @if (config('sirex.pases_internos'))
                     <a href="{{ route('expedientes.entrantes') }}" wire:navigate
                         class="flex items-center justify-between rounded-md bg-ipv-gold/15 px-2.5 py-1.5 text-[13px] font-semibold text-[#7a5200] dark:text-ipv-gold-light">
                         <span class="flex items-center gap-1.5">
@@ -126,6 +124,7 @@
                         </span>
                         <livewire:entrantes-badge />
                     </a>
+                    @endif
                 </div>
             </div>
             @endif
