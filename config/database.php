@@ -68,9 +68,11 @@ return [
             'sslmode' => env('PG_SSLMODE', 'prefer'),
         ],
 
-        // Postgres mitiv (antes tenía credenciales hardcodeadas)
+        // Postgres mitiv: base del sistema viejo, SOLO LECTURA (ver AppServiceProvider).
+        // driver configurable por env: en tests apunta a sqlite in-memory (phpunit.xml)
+        // para no consultar nunca la base real.
         'pgsql_mitiv' => [
-            'driver' => 'pgsql',
+            'driver' => env('MITIV_DB_DRIVER', 'pgsql'),
             'url' => env('MITIV_PG_URL'),
             'host' => env('MITIV_PG_HOST', '127.0.0.1'),
             'port' => env('MITIV_PG_PORT', '5432'),

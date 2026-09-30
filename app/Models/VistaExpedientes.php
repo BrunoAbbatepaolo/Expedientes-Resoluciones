@@ -2,24 +2,13 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
+use App\Models\Mitiv\MitivModel;
 
-class VistaExpedientes extends Model
+/**
+ * Vista de mitivdb (sistema viejo) usada al cargar un expediente en "Mi oficina".
+ * Solo lectura: hereda el bloqueo de escritura de MitivModel.
+ */
+class VistaExpedientes extends MitivModel
 {
-    use HasFactory;
-
-    protected $connection = 'pgsql_mitiv';
-
     protected $table = 'vista_expedientes';
-
-    protected $fillable = [
-        'numero',
-        'fecha',
-        'asunto',
-        'oficina',
-        'folio',
-        'causante',
-        'asunto_id',
-    ];
 }
