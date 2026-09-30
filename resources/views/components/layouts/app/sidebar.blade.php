@@ -32,7 +32,7 @@
                         d="M6.7 13.8a42 42 0 0 1 10.6 0M6.3 18h11.4m-1.1-4.2a48 48 0 0 1 1.9.2M17.7 18l.2 2.5a1.1 1.1 0 0 1-1.1 1.2H7.2a1.1 1.1 0 0 1-1.1-1.2L6.3 18m11.3 0h1.1a2.25 2.25 0 0 0 2.3-2.25V9.5c0-1.1-.8-2-1.8-2.2M6.3 18H5.3a2.25 2.25 0 0 1-2.3-2.25V9.5c0-1.1.8-2 1.8-2.2m10.5 0a48 48 0 0 0-10.5 0M18 3.4v3.7" />
                 </svg>
             </div>
-            <a href="{{ route('dashboard') }}" wire:navigate class="min-w-0">
+            <a href="{{ route('dashboard') }}" wire:navigate.hover class="min-w-0">
                 <div class="truncate text-[16px] font-semibold leading-tight">SiRex</div>
                 <div class="truncate text-[11px] text-ipv-ink/55 dark:text-ipv-ink-dark/50">Gestión de expedientes</div>
             </a>
@@ -53,7 +53,7 @@
                 General
             </div>
 
-            <a href="{{ route('dashboard') }}" wire:navigate
+            <a href="{{ route('dashboard') }}" wire:navigate.hover
                 class="relative flex items-center gap-2.5 rounded-lg py-2.5 pl-4 pr-3 text-sm font-semibold
                        {{ request()->routeIs('dashboard')
                            ? 'bg-ipv-gold/20 text-[#7a5200] dark:bg-ipv-gold/15 dark:text-ipv-gold-light'
@@ -105,7 +105,7 @@
                         </a>
                     @endforeach
                     @if (config('sirex.pases_internos'))
-                    <a href="{{ route('expedientes.entrantes') }}" wire:navigate
+                    <a href="{{ route('expedientes.entrantes') }}" wire:navigate.hover
                         class="flex items-center justify-between rounded-md bg-ipv-gold/15 px-2.5 py-1.5 text-[13px] font-semibold text-[#7a5200] dark:text-ipv-gold-light">
                         <span class="flex items-center gap-1.5">
                             <svg class="size-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
@@ -124,7 +124,7 @@
             @endif
 
             @if (auth()->user()?->permiso('resolucion_ver'))
-            <a href="{{ route('resoluciones') }}" wire:navigate
+            <a href="{{ route('resoluciones') }}" wire:navigate.hover
                 class="relative flex items-center gap-2.5 rounded-lg py-2.5 pl-4 pr-3 text-sm
                        {{ request()->routeIs('resoluciones')
                            ? 'font-semibold bg-ipv-gold/20 text-[#7a5200] dark:bg-ipv-gold/15 dark:text-ipv-gold-light'
@@ -141,7 +141,7 @@
             </a>
             @endif
 
-            <a href="{{ route('oficinas') }}" wire:navigate
+            <a href="{{ route('oficinas') }}" wire:navigate.hover
                 class="relative flex items-center gap-2.5 rounded-lg py-2.5 pl-4 pr-3 text-sm
                        {{ request()->routeIs('oficinas')
                            ? 'font-semibold bg-ipv-gold/20 text-[#7a5200] dark:bg-ipv-gold/15 dark:text-ipv-gold-light'
@@ -156,7 +156,7 @@
                 </svg>
                 {{ __('Oficinas') }}
             </a>
-            <a href="{{ route('listausuarios') }}" wire:navigate
+            <a href="{{ route('listausuarios') }}" wire:navigate.hover
                 class="relative flex items-center gap-2.5 rounded-lg py-2.5 pl-4 pr-3 text-sm
                        {{ request()->routeIs('listausuarios')
                            ? 'font-semibold bg-ipv-gold/20 text-[#7a5200] dark:bg-ipv-gold/15 dark:text-ipv-gold-light'
@@ -233,7 +233,7 @@
                 </div>
                 
                 <div class="p-1.5">
-                    <a href="{{ route('settings.profile') }}" wire:navigate
+                    <a href="{{ route('settings.profile') }}" wire:navigate.hover
                         class="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium text-ipv-ink/80 transition-colors hover:bg-black/[0.04] dark:text-ipv-ink-dark/85 dark:hover:bg-white/5">
                         <svg class="size-[18px] text-ipv-ink/50 dark:text-ipv-ink-dark/50" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
                         {{ __('Settings') }}
@@ -263,7 +263,7 @@
         </button>
     </div>
 
-    <main class="min-w-0 flex-1 p-6 lg:p-8">
+    <main class="sirex-pagina min-w-0 flex-1 p-4 sm:p-6 lg:p-8">
         {{ $slot }}
     </main>
 </body>

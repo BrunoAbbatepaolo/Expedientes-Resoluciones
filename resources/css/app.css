@@ -44,6 +44,11 @@
     --color-background: #ffffff;
 }
 
+@keyframes sirex-entrada {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: none; }
+}
+
 @keyframes sirex-shimmer {
     0% { background-position: 100% 50%; }
     100% { background-position: 0 50%; }
@@ -92,6 +97,24 @@
         box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.06);
     }
 
+    /* Entrada de cada página (se repite en cada wire:navigate porque el <main> es nuevo).
+       Solo opacity/transform: lo compone la GPU, no bloquea el render. */
+    .sirex-pagina {
+        animation: sirex-entrada 220ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+    }
+
+    /* Luz que sigue al mouse en las tarjetas: --mx/--my los actualiza app.js con
+       requestAnimationFrame; sin JS o sin mouse no se ve nada. */
+    .sirex-glass-card {
+        transition: box-shadow 200ms ease, transform 200ms ease;
+    }
+    .sirex-glass-card:hover {
+        background-image: radial-gradient(420px circle at var(--mx, 50%) var(--my, 50%), rgba(0, 81, 158, 0.07), transparent 45%);
+    }
+    .dark .sirex-glass-card:hover {
+        background-image: radial-gradient(420px circle at var(--mx, 50%) var(--my, 50%), rgba(143, 193, 238, 0.08), transparent 45%);
+    }
+
     /* Skeleton de carga: solo anima background-position (barato, sin reflow). */
     .sirex-skeleton {
         background: linear-gradient(90deg, rgba(0, 81, 158, 0.07) 25%, rgba(0, 81, 158, 0.14) 37%, rgba(0, 81, 158, 0.07) 63%);
@@ -122,6 +145,20 @@
 @layer base {
     *, ::after, ::before, ::backdrop, ::file-selector-button {
         border-color: var(--color-gray-200, currentColor);
+    }
+
+    /* Foco visible solo con teclado (no molesta al hacer clic con el mouse). */
+    :focus-visible {
+        outline: 2px solid var(--color-ipv-blue);
+        outline-offset: 2px;
+    }
+    .dark :focus-visible {
+        outline-color: var(--color-ipv-blue-light);
+    }
+
+    /* Scroll suave para anclas; sin efecto si el usuario pidió menos movimiento. */
+    html {
+        scroll-behavior: smooth;
     }
 }
 
@@ -186,7 +223,11 @@
   .transition-transform {
     transition-duration: 0.01ms !important;
   }
-  .sirex-skeleton {
+  .sirex-skeleton,
+  .sirex-pagina {
     animation: none;
+  }
+  html {
+    scroll-behavior: auto;
   }
 }

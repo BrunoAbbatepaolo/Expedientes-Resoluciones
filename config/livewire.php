@@ -8,4 +8,10 @@ return [
     // resources/views/components/layouts/app.blade.php.
     'component_layout' => 'components.layouts.app',
 
+    // Barra de progreso de wire:navigate con el azul institucional.
+    'navigate' => [
+        'show_progress_bar' => true,
+        'progress_bar_color' => '#00519e',
+    ],
+
 ];

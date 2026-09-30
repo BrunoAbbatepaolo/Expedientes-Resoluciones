@@ -67,12 +67,12 @@
         <x-skeleton.tabla class="hidden" wire:loading.delay.class.remove="hidden" :filas="8" :columnas="5" />
 
         <div wire:loading.delay.remove class="sirex-glass-card overflow-x-auto rounded-[14px]">
-            <table class="w-full min-w-[720px]">
+            <table class="w-full min-w-[560px]">
                 <thead>
                     <tr class="text-left text-xs font-semibold uppercase tracking-wide text-ipv-ink/50 dark:text-ipv-ink-dark/50">
                         <th class="px-4 py-2.5">Número</th>
                         <th class="px-4 py-2.5">Causante / asunto</th>
-                        <th class="px-4 py-2.5">Iniciado</th>
+                        <th class="hidden px-4 py-2.5 xl:table-cell">Iniciado</th>
                         <th class="px-4 py-2.5">Está en</th>
                         <th class="px-4 py-2.5 text-right">Hace</th>
                     </tr>
@@ -92,10 +92,10 @@
                                 <div class="truncate text-sm font-medium text-ipv-ink dark:text-ipv-ink-dark">{{ $exp->causante }}</div>
                                 <div class="truncate text-xs text-ipv-ink/55 dark:text-ipv-ink-dark/55">{{ $exp->tipo_asunto ?? $exp->asunto }}</div>
                             </td>
-                            <td class="whitespace-nowrap px-4 py-3 text-sm text-ipv-ink/70 dark:text-ipv-ink-dark/70">
+                            <td class="hidden whitespace-nowrap px-4 py-3 text-sm text-ipv-ink/70 dark:text-ipv-ink-dark/70 xl:table-cell">
                                 {{ $exp->fecha ? \Carbon\Carbon::parse($exp->fecha)->format('d/m/Y') : '—' }}
                             </td>
-                            <td class="px-4 py-3 text-sm text-ipv-ink/80 dark:text-ipv-ink-dark/80">{{ $exp->ubicacion ?? 'Sin pases' }}</td>
+                            <td class="max-w-[220px] px-4 py-3 text-sm leading-snug text-ipv-ink/80 dark:text-ipv-ink-dark/80">{{ $exp->ubicacion ?? 'Sin pases' }}</td>
                             <td class="whitespace-nowrap px-4 py-3 text-right">
                                 <x-dias-badge :dias="$exp->dias_en_ubicacion" />
                             </td>

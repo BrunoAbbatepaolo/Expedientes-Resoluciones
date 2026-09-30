@@ -19,6 +19,29 @@ document.addEventListener('livewire:init', () => {
     })
 })
 
+// Luz que sigue al mouse sobre las tarjetas (.sirex-glass-card). Un solo listener
+// delegado y como mucho una actualización por frame; se desactiva en pantallas táctiles
+// y si el usuario pidió reducir el movimiento.
+if (window.matchMedia('(pointer: fine)').matches && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    let frame = null
+    let evento = null
+
+    document.addEventListener('pointermove', (e) => {
+        evento = e
+        if (frame) return
+
+        frame = requestAnimationFrame(() => {
+            frame = null
+            const tarjeta = evento.target instanceof Element ? evento.target.closest('.sirex-glass-card') : null
+            if (!tarjeta) return
+
+            const caja = tarjeta.getBoundingClientRect()
+            tarjeta.style.setProperty('--mx', `${evento.clientX - caja.left}px`)
+            tarjeta.style.setProperty('--my', `${evento.clientY - caja.top}px`)
+        })
+    }, { passive: true })
+}
+
 // Tema: 'light' | 'dark' guardado en localStorage; sin valor = sigue al sistema.
 // El script inline de partials/head aplica la clase antes de pintar (sin parpadeo).
 window.aplicarTema = function (tema) {

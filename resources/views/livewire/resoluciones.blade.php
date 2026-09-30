@@ -22,7 +22,7 @@
             @endif
         </div>
 
-        <div class="sirex-glass-card overflow-x-auto rounded-[14px]">
+        <div class="sirex-glass-card overflow-x-auto rounded-[14px] transition-opacity duration-150" wire:loading.delay.class="opacity-50 pointer-events-none" aria-live="polite">
             <table class="w-full min-w-[640px] table-fixed">
                 <thead>
                     <tr>
