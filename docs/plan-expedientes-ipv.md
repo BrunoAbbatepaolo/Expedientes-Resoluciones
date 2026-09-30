@@ -71,6 +71,25 @@ Empleados activos: 346 permanentes, 92 con contrato de locación de servicios y 
 - Caché corta (1–5 minutos) para los listados y los contadores del tablero.
 - Tests con una base SQLite simulada para mitiv. Nunca contra la base real.
 
+## Estado (2026-09-30)
+
+Implementado en la rama `feature/expedientes-ipv`. 102 tests y Larastan sin errores.
+
+- [x] Capa de solo lectura sobre mitiv: modelos que bloquean escritura, sesión `READ ONLY` verificada contra la base real y `Empleado` con columnas mínimas.
+- [x] Pestañas **Mi oficina** / **Expedientes IPV**, ficha con recorrido, impresión, **Seguir**.
+- [x] Pases internos ocultos y bloqueados (`SIREX_PASES_INTERNOS=false`).
+- [x] Alta de usuarios desde empleados activos + etiqueta "No activo en IPV".
+- [x] Tablero IPV (activos, demorados, recibidos, seguimientos) + directorio de oficinas con vínculo al IPV y personal.
+- [x] Búsqueda global (Ctrl+K) e historial de cambios.
+- [x] Rendimiento: permisos en memoria (de ~32 a ~9 consultas en Expedientes), test de presupuesto de consultas, precarga al pasar el mouse (cambio de pantalla medido en 6–12 ms), skeletons y carga diferida.
+- [x] Micro-interacciones: luz que sigue al cursor, entrada de página, foco visible y atenuado mientras carga.
+
+### Para desplegar
+1. `php artisan migrate`: crea `seguimientos` y agrega `oficinas.mitiv_oficina_id` en la base `admin`.
+2. Vincular cada oficina en **Oficinas → Vincular con IPV** (sin vínculo, el tablero no tiene métricas; la deducción por legajo solo sirve para 62 empleados).
+3. `npm run build`.
+4. Opcional en `.env`: `SIREX_DIAS_DEMORA`, `SIREX_DIAS_ACTIVIDAD`, `SIREX_PASES_INTERNOS`.
+
 ## Decisiones pendientes
 
 1. **Pases**: el sistema viejo sigue siendo el oficial. ¿Los pases del sistema nuevo quedan como registro interno (duplicando la carga) o, por ahora, las oficinas siguen pasando en el viejo y el nuevo solo registra y consulta?
