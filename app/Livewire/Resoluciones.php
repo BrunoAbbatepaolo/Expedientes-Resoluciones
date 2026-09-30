@@ -5,14 +5,15 @@ namespace App\Livewire;
 use App\Livewire\Forms\ResolucionForm;
 use App\Models\Resolucion;
 use App\Traits\AuthorizesOficina;
-use Flux\Flux;
+use App\Traits\NotificaUi;
 use Livewire\Attributes\Locked;
 use Livewire\Component;
-use Livewire\WithFileUploads; // Importante para controlar los modales desde el backend
+use Livewire\WithFileUploads;
 
 class Resoluciones extends Component
 {
     use AuthorizesOficina;
+    use NotificaUi;
     use WithFileUploads;
 
     public ResolucionForm $resolucionForm;
@@ -45,8 +46,8 @@ class Resoluciones extends Component
         $this->resolucionForm->update();
 
         // Cerramos el modal de edición
-        Flux::modal('edit-profile')->close();
-        Flux::toast('Resolución modificada con éxito', variant: 'success');
+        $this->cerrarModal('edit-profile');
+        $this->toast('success', 'Resolución modificada con éxito');
     }
 
     /**
@@ -69,8 +70,8 @@ class Resoluciones extends Component
             $resolucion->delete();
             $this->resolucionIdParaBorrar = null;
 
-            Flux::modal('delete-profile')->close();
-            Flux::toast('Resolución eliminada permanentemente', variant: 'danger');
+            $this->cerrarModal('delete-profile');
+            $this->toast('success', 'Resolución eliminada');
         }
     }
 

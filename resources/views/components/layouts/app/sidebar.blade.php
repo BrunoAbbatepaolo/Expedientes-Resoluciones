@@ -1,20 +1,17 @@
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="dark">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 
 <head>
     @include('partials.head')
 </head>
 
 <body class="min-h-screen overflow-x-hidden text-ipv-ink dark:text-ipv-ink-dark lg:flex"
-    x-data="{ 
+    x-data="{
         sidebarOpen: false,
-        darkMode: localStorage.getItem('theme') === 'dark' || (!localStorage.getItem('theme') && window.matchMedia('(prefers-color-scheme: dark)').matches)
+        {{-- La clase 'dark' del <html> la pone el script de partials/head; acá solo se refleja. --}}
+        darkMode: document.documentElement.classList.contains('dark')
     }"
-    x-init="$watch('darkMode', val => {
-        localStorage.setItem('theme', val ? 'dark' : 'light');
-        document.documentElement.classList.toggle('dark', val);
-    })"
-    x-bind:class="{ 'dark': darkMode }">
+    x-on:theme-changed.window="darkMode = $event.detail.dark">
 
     <div class="fixed inset-0 z-[-1] sirex-shell" aria-hidden="true"></div>
 
@@ -197,7 +194,8 @@
                 </svg>
                 Modo oscuro
             </span>
-            <button @click="darkMode = !darkMode" type="button"
+            <button @click="aplicarTema(darkMode ? 'light' : 'dark')" type="button"
+                role="switch" :aria-checked="darkMode.toString()" aria-label="Modo oscuro"
                 class="flex h-[21px] w-[38px] items-center rounded-full bg-gray-300 p-[2px] transition-colors dark:bg-ipv-blue">
                 <span class="size-[17px] rounded-full bg-white shadow transition-transform duration-200"
                     :class="darkMode ? 'translate-x-[17px]' : 'translate-x-0'"></span>

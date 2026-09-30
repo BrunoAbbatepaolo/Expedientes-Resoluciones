@@ -11,14 +11,16 @@ new class extends Component
     @include('partials.settings-heading')
 
     <x-settings.layout :heading="__('Apariencia')" :subheading="__('Actualizá la configuración de apariencia de tu cuenta')">
-        <div x-data class="inline-flex rounded-lg border border-ipv-blue/15 bg-white/70 p-1 dark:border-white/15 dark:bg-white/[0.06]">
+        <div x-data="{ tema: temaActual() }" x-on:theme-changed.window="tema = $event.detail.tema"
+            class="inline-flex rounded-lg border border-ipv-blue/15 bg-white/70 p-1 dark:border-white/15 dark:bg-white/[0.06]">
             @foreach ([
                 'light' => __('Claro'),
                 'dark' => __('Oscuro'),
                 'system' => __('Sistema'),
             ] as $value => $label)
-                <button type="button" @click="$flux.appearance = '{{ $value }}'"
-                    :class="$flux.appearance === '{{ $value }}' ? 'bg-ipv-blue text-white' : 'text-ipv-ink/70 dark:text-ipv-ink-dark/75'"
+                <button type="button" @click="aplicarTema('{{ $value }}')"
+                    :aria-pressed="(tema === '{{ $value }}').toString()"
+                    :class="tema === '{{ $value }}' ? 'bg-ipv-blue text-white' : 'text-ipv-ink/70 dark:text-ipv-ink-dark/75'"
                     class="rounded-md px-3.5 py-1.5 text-sm font-medium transition-colors">
                     {{ $label }}
                 </button>

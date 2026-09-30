@@ -41,6 +41,21 @@ test('editar un expediente no permite cambiar su oficina', function () {
         ->and($expediente->cod_area)->not->toBe('99');
 });
 
+test('eliminar un expediente cierra el modal y avisa con un toast', function () {
+    $oficina = Oficina::factory()->create();
+    $expediente = Expediente::factory()->create(['oficina_id' => $oficina->id]);
+    $user = usuarioConPermisos($oficina, ['expediente_ver', 'expediente_editar']);
+
+    Livewire::actingAs($user)
+        ->test(Expedientes::class)
+        ->call('confirmarBorrado', $expediente->id)
+        ->call('eliminarExpediente')
+        ->assertDispatched('modal-close', name: 'modal-ConfirmarBorrado')
+        ->assertDispatched('toast', type: 'success');
+
+    expect(Expediente::find($expediente->id))->toBeNull();
+});
+
 test('los ids de borrado y pase no se pueden setear desde el cliente', function () {
     $oficina = Oficina::factory()->create();
     $user = usuarioConPermisos($oficina, ['expediente_ver', 'expediente_editar']);

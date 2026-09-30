@@ -1430,14 +1430,10 @@
             <div class="sirex-glass-card mx-auto max-w-3xl overflow-hidden rounded-[14px]">
                 <div wire:ignore
                      x-data="quillInit()"
-                     x-init="init()"
-                     x-ref="quill-1"
                      class="[&_.ql-toolbar.ql-snow]:!border-zinc-200 dark:[&_.ql-toolbar.ql-snow]:!border-zinc-700 dark:[&_.ql-snow_.ql-toolbar]:!bg-zinc-800 dark:[&_.ql-snow_.ql-stroke]:!stroke-zinc-400 dark:[&_.ql-snow_.ql-fill]:!fill-zinc-400 dark:[&_.ql-snow_.ql-picker]:!text-zinc-400 dark:[&_.ql-snow_.ql-picker-options]:!bg-zinc-700 [&_.ql-editor]:!font-serif [&_.ql-editor]:!text-base [&_.ql-editor]:!leading-relaxed [&_.ql-editor]:!p-12 [&_.ql-editor]:!text-justify [&_.ql-container]:!border-none">
                     <div data-quill-editor></div>
                 </div>
             </div>
-
-            <input type="hidden" name="plantilla" id="plantilla-input" wire:model.live="plantilla" />
         </div>
 
         @elseif ($modo === 'plantilla')

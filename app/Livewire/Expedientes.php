@@ -7,9 +7,9 @@ use App\Models\Expediente;
 use App\Models\Oficina;
 use App\Models\Pase;
 use App\Traits\AuthorizesOficina;
+use App\Traits\NotificaUi;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
-use Jantinnerezo\LivewireAlert\Facades\LivewireAlert;
 use Livewire\Attributes\Locked;
 use Livewire\Component;
 use Livewire\WithPagination;
@@ -17,6 +17,7 @@ use Livewire\WithPagination;
 class Expedientes extends Component
 {
     use AuthorizesOficina;
+    use NotificaUi;
     use WithPagination;
 
     public $modalExp = false;
@@ -265,12 +266,7 @@ class Expedientes extends Component
             ]);
         });
 
-        LivewireAlert::title('Expediente aceptado en tu oficina')
-            ->success()
-            ->timer(2500)
-            ->toast()
-            ->position('top-end')
-            ->show();
+        $this->toast('success', 'Expediente aceptado en tu oficina');
     }
 
     public function updatedSearch()
@@ -291,7 +287,7 @@ class Expedientes extends Component
                 report($e);
                 $this->expedienteEncontrado = null;
                 $this->expedienteForm->reset();
-                LivewireAlert::title('No se pudo consultar el sistema de expedientes. Intentá más tarde.')->error()->timer(3500)->toast()->position('top-end')->show();
+                $this->toast('error', 'No se pudo consultar el sistema de expedientes. Intentá más tarde.', 3500);
 
                 return;
             }
@@ -309,12 +305,7 @@ class Expedientes extends Component
                     $oficinaName = $expedienteExistente->oficinaById->nombre
                         ?? $expedienteExistente->oficina->nombre
                         ?? 'Oficina no encontrada';
-                    LivewireAlert::title('El expediente ya se encuentra cargado en la oficina: '.$oficinaName.'!')
-                        ->error()
-                        ->timer(2500)
-                        ->toast()
-                        ->position('top-end')
-                        ->show();
+                    $this->toast('error', 'El expediente ya se encuentra cargado en la oficina: '.$oficinaName.'!');
 
                     return;
                 }
@@ -329,12 +320,7 @@ class Expedientes extends Component
                     $this->expedienteForm->folio = $this->expedienteEncontrado['folio'];
                 } else {
                     $this->expedienteForm->folio = 0;
-                    LivewireAlert::title('El expediente no tiene numero de fojas!')
-                        ->error()
-                        ->timer(2500)
-                        ->toast()
-                        ->position('top-end')
-                        ->show();
+                    $this->toast('error', 'El expediente no tiene numero de fojas!');
                 }
                 $this->expedienteForm->causante = $this->causante;
                 $this->expedienteForm->fecha_ingreso = now()->format('Y-m-d');
@@ -367,7 +353,7 @@ class Expedientes extends Component
         $this->autorizarPermiso('expediente_editar');
 
         if (! $this->expedienteEncontrado || blank($this->expedienteForm->num_exp)) {
-            LivewireAlert::title('Buscá el expediente antes de guardarlo')->error()->timer(2500)->toast()->position('top-end')->show();
+            $this->toast('error', 'Buscá el expediente antes de guardarlo');
 
             return;
         }
@@ -377,7 +363,7 @@ class Expedientes extends Component
         $expedienteExistente = \App\Models\Expediente::where('num_exp', $this->expedienteForm->num_exp)->first();
 
         if ($expedienteExistente) {
-            LivewireAlert::title('El expediente ya se encuentra cargado')->error()->timer(2500)->toast()->position('top-end')->show();
+            $this->toast('error', 'El expediente ya se encuentra cargado');
 
             return;
         } else {
@@ -386,13 +372,7 @@ class Expedientes extends Component
                 ?? auth()->user()->oficinaIdPara('expediente_ver');
 
             if (! $oficinaId) {
-                LivewireAlert::title('No tenés una oficina asignada')
-                    ->text('Pedile a un administrador que te asigne una oficina antes de cargar expedientes.')
-                    ->error()
-                    ->timer(4000)
-                    ->toast()
-                    ->position('top-end')
-                    ->show();
+                $this->toast('error', 'No tenés una oficina asignada. Pedile a un administrador que te asigne una antes de cargar expedientes.', 4000);
 
                 return;
             }
@@ -409,20 +389,15 @@ class Expedientes extends Component
             $resultado = $this->expedienteForm->store();
 
             if (! $resultado) {
-                LivewireAlert::title('No se pudo guardar el expediente. Intentá de nuevo.')->error()->timer(3500)->toast()->position('top-end')->show();
+                $this->toast('error', 'No se pudo guardar el expediente. Intentá de nuevo.', 3500);
 
                 return;
             }
 
-            LivewireAlert::title('El expediente se cargo correctamente!')
-                ->success()
-                ->timer(2500)
-                ->toast()
-                ->position('top-end')
-                ->show();
+            $this->toast('success', 'El expediente se cargo correctamente!');
         }
 
-        $this->modal('modal-exp')->close();
+        $this->cerrarModal('modal-exp');
         $this->expedienteForm->num_exp = null;
         $this->expedienteForm->asunto = null;
         $this->expedienteForm->folio = null;
@@ -458,20 +433,20 @@ class Expedientes extends Component
         $resultado = $this->expedienteForm->update();
 
         if ($resultado === 0) {
-            LivewireAlert::title('El Expediente no se pudo Editar')->error()->timer(2500)->toast()->position('top-end')->show();
+            $this->toast('error', 'El Expediente no se pudo Editar');
 
             return;
         }
 
-        $this->modal('modal-editarExpediente')->close();
+        $this->cerrarModal('modal-editarExpediente');
 
         if ($resultado === -1) {
-            LivewireAlert::title('No hay cambios para guardar')->info()->timer(2500)->toast()->position('top-end')->show();
+            $this->toast('info', 'No hay cambios para guardar');
 
             return;
         }
 
-        LivewireAlert::title('El Expediente se editó Correctamente')->success()->timer(2500)->toast()->position('top-end')->show();
+        $this->toast('success', 'El Expediente se editó Correctamente');
     }
 
     /**
@@ -494,7 +469,7 @@ class Expedientes extends Component
     public function confirmarPase()
     {
         if (! $this->expedienteForm->ofi_salida) {
-            LivewireAlert::title('Elegí una oficina de destino')->error()->timer(2500)->toast()->position('top-end')->show();
+            $this->toast('error', 'Elegí una oficina de destino');
 
             return;
         }
@@ -503,7 +478,7 @@ class Expedientes extends Component
         $this->autorizarExpediente($expediente, 'expediente_editar');
 
         if (Pase::where('expediente_id', $expediente->id)->where('estado', 'pendiente')->exists()) {
-            LivewireAlert::title('Este expediente ya tiene un pase pendiente de aceptación')->error()->timer(2500)->toast()->position('top-end')->show();
+            $this->toast('error', 'Este expediente ya tiene un pase pendiente de aceptación');
 
             return;
         }
@@ -532,17 +507,12 @@ class Expedientes extends Component
 
         $this->cancelarPase();
 
-        LivewireAlert::title('Pase iniciado, pendiente de aceptación en '.$oficina->nombre)
-            ->success()
-            ->timer(2500)
-            ->toast()
-            ->position('top-end')
-            ->show();
+        $this->toast('success', 'Pase iniciado, pendiente de aceptación en '.$oficina->nombre);
     }
 
     public function cancelarPase()
     {
-        $this->modal('modal-realizarPase')->close();
+        $this->cerrarModal('modal-realizarPase');
         $this->expedientePaseId = null;
         $this->query = '';
         $this->oficinas = [];
@@ -559,9 +529,9 @@ class Expedientes extends Component
         $this->autorizarExpediente($expediente, 'expediente_editar');
 
         $expediente->delete();
-        $this->modal('modal-ConfirmarBorrado')->close();
+        $this->cerrarModal('modal-ConfirmarBorrado');
         $this->reset('expedienteId');
-        LivewireAlert::title('Expediente eliminado')->success()->timer(2500)->toast()->position('top-end')->show();
+        $this->toast('success', 'Expediente eliminado');
     }
 
     public static function obtenerDMY($fecha = null)
@@ -577,7 +547,7 @@ class Expedientes extends Component
 
     public function cerrar()
     {
-        $this->modal('modal-exp')->close();
+        $this->cerrarModal('modal-exp');
         $this->expedienteForm->num_exp = null;
         $this->expedienteForm->asunto = null;
         $this->expedienteForm->folio = null;
@@ -588,7 +558,7 @@ class Expedientes extends Component
 
     public function cancelarModal()
     {
-        $this->modal('modal-editarExpediente')->close();
+        $this->cerrarModal('modal-editarExpediente');
     }
 
     public function toggleMenu($id)
@@ -608,22 +578,8 @@ class Expedientes extends Component
         ]);
         // Aplicar filtros en el método getExp()
         $this->render();
-        $this->modal('modal-filtro')->close();
-        LivewireAlert::title('Filtro Aplicado!')
-            ->success()
-            ->position('top-end')
-            ->timer(2500)
-            ->toast()
-            ->withOptions([
-                'background' => '#f0f0f0',
-                'customClass' => [
-                    'popup' => 'animate_animated animate_bounceIn',
-                    'title' => 'scale-85', // texto más chico
-                    'icon' => 'scale-85', // ícono más chico (Tailwind),
-                ],
-                'allowOutsideClick' => true,
-            ])
-            ->show();
+        $this->cerrarModal('modal-filtro');
+        $this->toast('success', 'Filtro Aplicado!');
     }
 
     public function limpiarFiltros()
@@ -631,7 +587,7 @@ class Expedientes extends Component
         $this->filtro['fechaDesde'] = null;
         $this->filtro['fechaHasta'] = null;
         $this->render();
-        $this->modal('modal-filtro')->close();
+        $this->cerrarModal('modal-filtro');
     }
 
     public function verDetalle($id)

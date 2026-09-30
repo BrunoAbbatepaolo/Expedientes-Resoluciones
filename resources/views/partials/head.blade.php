@@ -21,8 +21,13 @@
 
 <link rel="preconnect" href="https://fonts.bunny.net" />
 <link href="https://fonts.bunny.net/css?family=instrument-sans:400,500,600,700,800" rel="stylesheet" />
+{{-- Aplica el tema antes de pintar para evitar el parpadeo claro/oscuro (ver window.aplicarTema en app.js). --}}
+<script>
+    (function () {
+        var tema = null;
+        try { tema = localStorage.getItem('theme'); } catch (e) {}
+        var oscuro = tema === 'dark' || (!tema && window.matchMedia('(prefers-color-scheme: dark)').matches);
+        document.documentElement.classList.toggle('dark', oscuro);
+    })();
+</script>
 @vite(['resources/css/app.css', 'resources/js/app.js'])
-@fluxAppearance
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.all.min.js"></script>
-<script src="https://cdn.quilljs.com/1.3.7/quill.min.js"></script>
-<script src="{{ asset('js/quill-init.js') }}"></script>
