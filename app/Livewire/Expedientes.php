@@ -149,7 +149,9 @@ class Expedientes extends Component
             ?? auth()->user()?->oficinaIdPara('expediente_ver');
 
         if ($oficinaId) {
-            $this->oficinaUsuario = Oficina::find($oficinaId);
+            $this->oficinaUsuario = auth()->user()->oficinaAsignadaId() === (int) $oficinaId
+                ? auth()->user()->oficinaAsignada()
+                : Oficina::find($oficinaId);
         }
 
         // Llegada desde la ficha IPV ("Registrar en mi oficina"): abre el alta ya buscado.

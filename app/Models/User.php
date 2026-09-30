@@ -41,19 +41,52 @@ class User extends Authenticatable
         return $this->hasMany(\App\Models\Permiso::class, 'user_id');
     }
 
+    /**
+     * Permisos del usuario cargados una sola vez por request: el menú y las vistas
+     * llaman a permiso() decenas de veces (antes era una consulta por llamada).
+     *
+     * @var \Illuminate\Support\Collection<int, Permiso>|null
+     */
+    private ?\Illuminate\Support\Collection $permisosEnMemoria = null;
+
+    /** @return \Illuminate\Support\Collection<int, Permiso> */
+    private function permisosCargados(): \Illuminate\Support\Collection
+    {
+        return $this->permisosEnMemoria ??= $this->permisos()->get(['id', 'user_id', 'nombre', 'oficina_id'])->toBase();
+    }
+
+    /** Descarta los permisos en memoria (después de modificarlos en el mismo request). */
+    public function olvidarPermisos(): void
+    {
+        $this->permisosEnMemoria = null;
+    }
+
     public function permiso(string $permiso): bool
     {
-        return $this->permisos()->where('nombre', $permiso)->exists();
+        return $this->permisosCargados()->contains('nombre', $permiso);
     }
 
     /**
      * Devuelve la oficina asignada desde el permiso 'oficina_asignada'.
      */
+    private Oficina|false|null $oficinaEnMemoria = null;
+
+    /** Oficina asignada (una consulta por request; la usan el menú y el panel). */
+    public function oficinaAsignada(): ?Oficina
+    {
+        if ($this->oficinaEnMemoria === null) {
+            $id = $this->oficinaAsignadaId();
+            $this->oficinaEnMemoria = ($id ? Oficina::find($id) : null) ?? false;
+        }
+
+        return $this->oficinaEnMemoria ?: null;
+    }
+
     public function oficinaAsignadaId(): ?int
     {
-        return $this->permisos()
-            ->where('nombre', 'oficina_asignada')
-            ->value('oficina_id');
+        $id = $this->permisosCargados()->firstWhere('nombre', 'oficina_asignada')?->oficina_id;
+
+        return $id !== null ? (int) $id : null;
     }
 
     /**
@@ -67,9 +100,9 @@ class User extends Authenticatable
             return (int) $oficina;
         }
 
-        return $this->permisos()
-            ->where('nombre', $permisoNombre)
-            ->value('oficina_id');
+        $id = $this->permisosCargados()->firstWhere('nombre', $permisoNombre)?->oficina_id;
+
+        return $id !== null ? (int) $id : null;
     }
 
     /**

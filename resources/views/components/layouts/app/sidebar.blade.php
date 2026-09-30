@@ -210,7 +210,7 @@
                 <div class="min-w-0 flex-1 text-left">
                     <div class="truncate text-[13.5px] font-semibold tracking-tight text-ipv-ink dark:text-ipv-ink-dark">{{ auth()->user()->nombre }}</div>
                     <div class="truncate text-[11px] font-medium text-ipv-ink/60 dark:text-ipv-ink-dark/50">
-                        {{ auth()->user()->permisos()->where('nombre', 'oficina_asignada')->first()?->oficina?->nombre ?? 'Sin oficina' }}
+                        {{ auth()->user()->oficinaAsignada()?->nombre ?? 'Sin oficina' }}
                     </div>
                 </div>
                 <svg class="size-4 shrink-0 text-ipv-ink/40 transition-transform duration-200 group-hover:text-ipv-ink/70 dark:text-ipv-ink-dark/45 dark:group-hover:text-ipv-ink-dark/70" :class="open ? 'rotate-180' : ''" viewBox="0 0 20 20" fill="currentColor">

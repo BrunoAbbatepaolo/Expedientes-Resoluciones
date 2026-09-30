@@ -9,8 +9,8 @@
     </div>
 
     {{-- Filtros --}}
-    <div class="sirex-glass-card grid gap-3 rounded-[14px] p-3 sm:grid-cols-2 lg:grid-cols-[2fr_1.5fr_1fr_1fr_auto]">
-        <label class="relative block">
+    <div class="sirex-glass-card grid gap-3 rounded-[14px] p-3 sm:grid-cols-2 2xl:grid-cols-[2fr_1.5fr_1fr_1fr_auto]">
+        <label class="relative block sm:col-span-2 2xl:col-span-1">
             <span class="sr-only">Buscar</span>
             <svg class="pointer-events-none absolute left-3 top-1/2 size-5 -translate-y-1/2 text-ipv-ink/40 dark:text-ipv-ink-dark/45"
                 fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
@@ -62,7 +62,9 @@
         </div>
 
         {{-- Mientras busca se muestra el skeleton en lugar de resultados viejos. --}}
-        <x-skeleton.tabla wire:loading.delay.block :filas="8" :columnas="5" />
+        {{-- class+remove en vez de wire:loading.delay.block: Livewire solo oculta de entrada
+             las variantes simples de wire:loading. --}}
+        <x-skeleton.tabla class="hidden" wire:loading.delay.class.remove="hidden" :filas="8" :columnas="5" />
 
         <div wire:loading.delay.remove class="sirex-glass-card overflow-x-auto rounded-[14px]">
             <table class="w-full min-w-[720px]">

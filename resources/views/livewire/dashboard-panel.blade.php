@@ -8,7 +8,7 @@
         </h1>
         <p class="text-sm text-ipv-ink/55 dark:text-ipv-ink-dark/55 transition-all duration-700 ease-out delay-150"
             :class="shown ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-3'">
-            {{ Auth::user()->permisos()->where('nombre', 'oficina_asignada')->first()?->oficina?->nombre ?? 'Sistema Administrativo' }}
+            {{ Auth::user()->oficinaAsignada()?->nombre ?? 'Sistema Administrativo' }}
             — {{ now()->locale('es')->translatedFormat('d \d\e F \d\e Y') }}
         </p>
     </div>
