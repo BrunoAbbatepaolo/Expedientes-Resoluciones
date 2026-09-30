@@ -69,7 +69,7 @@
         </thead>
         <tbody class="divide-y divide-ipv-blue/10 dark:divide-white/10">
             @forelse ($pases as $pase)
-                <tr class="{{ !$pase['importado'] ? 'bg-ipv-blue/[0.04] dark:bg-ipv-blue-light/[0.06]' : '' }}">
+                <tr wire:key="pase-{{ $loop->index }}" class="{{ !$pase['importado'] ? 'bg-ipv-blue/[0.04] dark:bg-ipv-blue-light/[0.06]' : '' }}">
                     <td class="px-6 py-4 text-ipv-ink/80 dark:text-ipv-ink-dark/85">
                         {{ $pase['origen'] }}
                     </td>

@@ -1,7 +1,7 @@
 <div x-show="showBorrar" x-cloak x-on:keydown.escape.window="showBorrar = false"
     class="fixed inset-0 z-[100] flex items-center justify-center bg-[#001428]/50 p-4 backdrop-blur-sm"
     x-on:click.self="showBorrar = false">
-    <div class="w-full min-w-[22rem] max-w-sm rounded-2xl border border-ipv-blue/20 bg-white/95 p-5 shadow-2xl backdrop-blur-2xl backdrop-saturate-150 dark:border-white/10 dark:bg-[#141c26]/95">
+    <div class="w-full max-w-sm rounded-2xl border border-ipv-blue/20 bg-white/95 p-5 shadow-2xl backdrop-blur-2xl backdrop-saturate-150 dark:border-white/10 dark:bg-[#141c26]/95">
         <div class="space-y-6">
             <div>
                 <h3 class="text-lg font-semibold text-ipv-ink dark:text-ipv-ink-dark">¿Desea Borrar el Expediente?</h3>

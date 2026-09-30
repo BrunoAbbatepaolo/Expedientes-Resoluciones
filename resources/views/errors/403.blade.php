@@ -1,4 +1,5 @@
-<x-layouts.app title="Acceso denegado">
+{{-- Invitados (sin sesión) usan el layout de auth: el de la app lee auth()->user(). --}}
+<x-dynamic-component :component="auth()->check() ? 'layouts.app' : 'layouts.auth'" title="Acceso denegado">
     <div class="flex min-h-[60vh] flex-col items-center justify-center gap-4 text-center">
         <div class="flex size-16 items-center justify-center rounded-full bg-ipv-magenta/10 text-ipv-magenta">
             <svg class="size-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"
@@ -13,9 +14,9 @@
                 No tenés permiso para acceder a esta sección. Si creés que es un error, contactá a un administrador.
             </p>
         </div>
-        <a href="{{ route('dashboard') }}" wire:navigate
+        <a href="{{ auth()->check() ? route('dashboard') : route('login') }}" wire:navigate
             class="mt-2 rounded-lg bg-ipv-blue px-4 py-2 text-sm font-semibold text-white hover:bg-ipv-blue-dark">
             Volver al panel
         </a>
     </div>
-</x-layouts.app>
+</x-dynamic-component>

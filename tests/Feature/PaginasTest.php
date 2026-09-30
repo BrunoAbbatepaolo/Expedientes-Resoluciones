@@ -30,6 +30,12 @@ test('las pantallas principales renderizan con el layout propio (sin Flux)', fun
     '/settings/appearance',
 ]);
 
+test('la página 404 funciona también sin sesión iniciada', function () {
+    $this->get('/no-existe')
+        ->assertNotFound()
+        ->assertSee('No encontrado');
+});
+
 test('un tipo de resolución con caracteres inválidos da 404', function () {
     $user = User::factory()->create();
     Permiso::create(['user_id' => $user->id, 'nombre' => 'resolucion_editar']);

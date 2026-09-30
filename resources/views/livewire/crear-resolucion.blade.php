@@ -1482,7 +1482,7 @@
                 @if(count($archivosPDF) > 0)
                     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                         @foreach($archivosPDF as $index => $archivo)
-                            <div @click="mostrarModalPdf = true; pdfIndex = {{ $index }}" class="sirex-glass-card group flex cursor-pointer items-center justify-between rounded-[14px] p-4 transition-all hover:border-ipv-blue dark:hover:border-ipv-blue-light">
+                            <div wire:key="pdf-{{ $index }}-{{ $archivo->getFilename() }}" @click="mostrarModalPdf = true; pdfIndex = {{ $index }}" class="sirex-glass-card group flex cursor-pointer items-center justify-between rounded-[14px] p-4 transition-all hover:border-ipv-blue dark:hover:border-ipv-blue-light">
                                 <div class="flex items-center gap-3 overflow-hidden">
                                     <div class="bg-red-100 dark:bg-red-900 rounded p-2 flex-shrink-0 group-hover:bg-red-200 dark:group-hover:bg-red-800 transition-colors">
                                         <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-red-600 dark:text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">

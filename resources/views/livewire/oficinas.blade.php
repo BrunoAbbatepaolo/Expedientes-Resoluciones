@@ -18,7 +18,7 @@
     </div>
 
     <!-- Tabla de resultados -->
-    <div class="sirex-glass-card overflow-hidden rounded-[14px]">
+    <div class="sirex-glass-card overflow-x-auto rounded-[14px]">
         <table class="min-w-full">
             <thead>
                 <tr>
@@ -27,7 +27,7 @@
             </thead>
             <tbody class="divide-y divide-ipv-blue/10 dark:divide-white/10">
                 @forelse($oficinas as $oficina)
-                <tr class="hover:bg-black/[0.02] dark:hover:bg-white/[0.03]">
+                <tr wire:key="ofi-{{ $oficina->id }}" class="hover:bg-black/[0.02] dark:hover:bg-white/[0.03]">
                     <td class="px-4 py-3 text-sm text-ipv-ink dark:text-ipv-ink-dark">{{ $oficina->nombre }}</td>
                 </tr>
                 @empty

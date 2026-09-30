@@ -20,17 +20,9 @@ class Expedientes extends Component
     use NotificaUi;
     use WithPagination;
 
-    public $modalExp = false;
-
-    public $modalEdit = false;
-
     public $busquedaExp = '';
 
     public $expedienteEncontrado;
-
-    public $expedienteExistente;
-
-    public $selectedExpediente;
 
     public $asunto;
 
@@ -42,8 +34,6 @@ class Expedientes extends Component
     #[Locked]
     public $expedientePaseId;
 
-    public $modalFiltro;
-
     public $search = '';
 
     public $sinPermiso = false;
@@ -53,8 +43,6 @@ class Expedientes extends Component
     public $oficinaUsuario;
 
     public ExpedienteForm $expedienteForm;
-
-    public $menuVisible = null;
 
     public $filtro = [
         'fechaDesde' => null,
@@ -339,15 +327,6 @@ class Expedientes extends Component
         }
     }
 
-    public function seleccionar()
-    {
-        $this->expedienteForm->num_exp = $this->expedienteEncontrado['numero'];
-        $this->expedienteForm->asunto = $this->asunto;
-        $this->expedienteForm->folio = $this->expedienteEncontrado['folio'];
-        $this->expedienteForm->causante = $this->causante;
-        $this->expedienteForm->fecha_ingreso = now()->format('d-m-Y'); // Establece la fecha actual
-    }
-
     public function guardar()
     {
         $this->autorizarPermiso('expediente_editar');
@@ -559,15 +538,6 @@ class Expedientes extends Component
     public function cancelarModal()
     {
         $this->cerrarModal('modal-editarExpediente');
-    }
-
-    public function toggleMenu($id)
-    {
-        if ($this->menuVisible === $id) {
-            $this->menuVisible = null; // Cerrar el menú si ya está abierto
-        } else {
-            $this->menuVisible = $id; // Mostrar el menú del expediente actual
-        }
     }
 
     public function aplicarFiltros()

@@ -55,7 +55,7 @@
 
                 <tbody class="divide-y divide-ipv-blue/10 dark:divide-white/10">
                     @forelse ($usuarios as $usuario)
-                        <tr class="hover:bg-black/[0.02] dark:hover:bg-white/[0.03]">
+                        <tr wire:key="usr-{{ $usuario->id }}" class="hover:bg-black/[0.02] dark:hover:bg-white/[0.03]">
                             <td class="truncate px-4 py-2.5 text-sm text-ipv-ink dark:text-ipv-ink-dark">{{ $usuario->nombre }}</td>
                             <td class="truncate px-4 py-2.5 text-sm text-ipv-ink dark:text-ipv-ink-dark">{{ $usuario->apellido }}</td>
                             <td class="truncate px-4 py-2.5 text-sm text-ipv-ink dark:text-ipv-ink-dark">{{ $usuario->email }}</td>

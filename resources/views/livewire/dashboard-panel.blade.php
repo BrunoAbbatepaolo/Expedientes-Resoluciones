@@ -73,7 +73,7 @@
                     <tbody>
                         @forelse($recientes as $exp)
                             @php $egresado = (bool) $exp->fecha_salida; @endphp
-                            <tr class="border-t border-ipv-blue/10 transition-colors hover:bg-black/[0.03] dark:border-white/10 dark:hover:bg-white/[0.04]"
+                            <tr wire:key="reciente-{{ $exp->id }}" class="border-t border-ipv-blue/10 transition-colors hover:bg-black/[0.03] dark:border-white/10 dark:hover:bg-white/[0.04]"
                                 x-data
                                 @click="window.location.href = '{{ route('expedientes.detalle', $exp->id) }}'"
                                 style="cursor: pointer;">

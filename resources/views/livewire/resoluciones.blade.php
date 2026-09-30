@@ -22,8 +22,8 @@
             @endif
         </div>
 
-        <div class="sirex-glass-card overflow-hidden rounded-[14px]">
-            <table class="w-full table-fixed">
+        <div class="sirex-glass-card overflow-x-auto rounded-[14px]">
+            <table class="w-full min-w-[640px] table-fixed">
                 <thead>
                     <tr>
                         <th class="w-[140px] px-4 py-2.5 text-center text-xs font-semibold uppercase tracking-wide text-ipv-ink/50 dark:text-ipv-ink-dark/50">Nº de Expediente</th>
@@ -39,7 +39,7 @@
                 </thead>
                 <tbody class="divide-y divide-ipv-blue/10 dark:divide-white/10">
                     @forelse ($resolucionesConExpediente as $resolucion)
-                        <tr class="hover:bg-black/[0.02] dark:hover:bg-white/[0.03]">
+                        <tr wire:key="res-{{ $resolucion->id }}" class="hover:bg-black/[0.02] dark:hover:bg-white/[0.03]">
                             <td class="truncate px-4 py-2.5 text-center text-sm text-ipv-ink dark:text-ipv-ink-dark">
                                 @if ($resolucion->expediente)
                                     {{ $resolucion->expediente->numero }}
@@ -190,7 +190,7 @@
         <div x-show="showBorrar" x-cloak x-on:keydown.escape.window="showBorrar = false"
             class="fixed inset-0 z-[100] flex items-center justify-center bg-[#001428]/50 p-4 backdrop-blur-sm"
             x-on:click.self="showBorrar = false">
-            <div class="w-full min-w-[22rem] max-w-sm rounded-2xl border border-ipv-blue/20 bg-white/95 p-5 shadow-2xl backdrop-blur-2xl backdrop-saturate-150 dark:border-white/10 dark:bg-[#141c26]/95">
+            <div class="w-full max-w-sm rounded-2xl border border-ipv-blue/20 bg-white/95 p-5 shadow-2xl backdrop-blur-2xl backdrop-saturate-150 dark:border-white/10 dark:bg-[#141c26]/95">
                 <div class="space-y-6">
                     <div>
                         <h3 class="text-lg font-semibold text-ipv-ink dark:text-ipv-ink-dark">¿Borrar resolución?</h3>

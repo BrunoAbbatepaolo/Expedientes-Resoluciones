@@ -36,7 +36,7 @@
                 <div class="truncate text-[16px] font-semibold leading-tight">SiRex</div>
                 <div class="truncate text-[11px] text-ipv-ink/55 dark:text-ipv-ink-dark/50">Gestión de expedientes</div>
             </a>
-            <button @click="sidebarOpen = false" type="button" class="ml-auto text-ipv-ink/45 dark:text-ipv-ink-dark/45 lg:hidden">
+            <button @click="sidebarOpen = false" type="button" aria-label="Cerrar menú" class="ml-auto text-ipv-ink/45 dark:text-ipv-ink-dark/45 lg:hidden">
                 <svg class="size-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
                     <path d="M6 6l12 12M6 18 18 6" />
                 </svg>
@@ -165,10 +165,10 @@
             </a>
             <a href="{{ route('listausuarios') }}" wire:navigate
                 class="relative flex items-center gap-2.5 rounded-lg py-2.5 pl-4 pr-3 text-sm
-                       {{ request()->routeIs('listausuario')
+                       {{ request()->routeIs('listausuarios')
                            ? 'font-semibold bg-ipv-gold/20 text-[#7a5200] dark:bg-ipv-gold/15 dark:text-ipv-gold-light'
                            : 'font-medium text-ipv-ink/75 hover:bg-black/[0.03] dark:text-ipv-ink-dark/82 dark:hover:bg-white/5' }}">
-                @if (request()->routeIs('listausuario'))
+                @if (request()->routeIs('listausuarios'))
                     <span class="absolute inset-y-2 left-1 w-[3px] rounded-full bg-ipv-gold"></span>
                 @endif
                 <svg class="size-[18px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"
@@ -263,7 +263,7 @@
 
     <!-- Header móvil -->
     <div class="sirex-glass sticky top-0 z-30 flex items-center justify-end border-b border-ipv-blue/12 p-3 dark:border-white/10 lg:hidden">
-        <button @click="sidebarOpen = true" type="button" class="rounded-lg p-2 text-ipv-blue dark:text-ipv-gold-light">
+        <button @click="sidebarOpen = true" type="button" aria-label="Abrir menú" class="rounded-lg p-2 text-ipv-blue dark:text-ipv-gold-light">
             <svg class="size-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
                 <path d="M4 6h16M4 12h16M4 18h16" />
             </svg>

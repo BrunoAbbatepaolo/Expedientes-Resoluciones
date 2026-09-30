@@ -50,9 +50,9 @@
             </div>
         </div>
 
-        <div class="sirex-glass-card overflow-hidden rounded-[14px]">
+        <div class="sirex-glass-card overflow-x-auto rounded-[14px]">
             @if ($tipoVista === 'entrantes')
-                <table class="w-full table-fixed">
+                <table class="w-full min-w-[640px] table-fixed">
                     <thead>
                         <tr>
                             <th class="w-[110px] px-4 py-2.5 text-center text-xs font-semibold uppercase tracking-wide text-ipv-ink/50 dark:text-ipv-ink-dark/50">Número</th>
@@ -64,7 +64,7 @@
                     </thead>
                     <tbody class="divide-y divide-ipv-blue/10 dark:divide-white/10">
                         @forelse ($expedientes as $pase)
-                            <tr class="hover:bg-black/[0.02] dark:hover:bg-white/[0.03]">
+                            <tr wire:key="pase-{{ $pase->id }}" class="hover:bg-black/[0.02] dark:hover:bg-white/[0.03]">
                                 <td wire:click="verDetalle({{ $pase->expediente_id }})"
                                     class="cursor-pointer overflow-hidden text-ellipsis whitespace-nowrap px-4 py-2.5 text-center text-sm text-ipv-ink dark:text-ipv-ink-dark">
                                     {{ $pase->expediente->num_exp ?? '-' }}
@@ -97,7 +97,7 @@
                     </tbody>
                 </table>
             @else
-                <table class="w-full table-fixed">
+                <table class="w-full min-w-[640px] table-fixed">
                     <thead>
                         <tr>
                             <th class="w-[110px] px-4 py-2.5 text-center text-xs font-semibold uppercase tracking-wide text-ipv-ink/50 dark:text-ipv-ink-dark/50">Número</th>
@@ -114,7 +114,7 @@
                     </thead>
                     <tbody class="divide-y divide-ipv-blue/10 dark:divide-white/10">
                         @forelse ($expedientes as $expediente)
-                            <tr class="hover:bg-black/[0.02] dark:hover:bg-white/[0.03]">
+                            <tr wire:key="exp-{{ $expediente->id }}" class="hover:bg-black/[0.02] dark:hover:bg-white/[0.03]">
                                 <td wire:click="verDetalle({{ $expediente->id }})"
                                     class="cursor-pointer overflow-hidden text-ellipsis whitespace-nowrap px-4 py-2.5 text-center text-sm text-ipv-ink dark:text-ipv-ink-dark">
                                     {{ $expediente->num_exp }}

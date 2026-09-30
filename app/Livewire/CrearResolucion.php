@@ -298,58 +298,10 @@ class CrearResolucion extends Component
         ];
     }
 
-    public function cargarPlantillaConDatos(): void
-    {
-        try {
-            $datos = array_merge($this->datos, [
-                'formatearFecha' => 'formatearFecha',
-                'formatearFechaLarga' => 'formatearFechaLarga',
-                'formatearMoneda' => 'formatearMoneda',
-                'num2letras' => 'num2letras',
-                'numero_tramite' => $this->generarNumeroTramite(),
-            ]);
-            $contenidoHTML = View::make("prototipos.{$this->tipo}", $datos)->render();
-            $this->plantilla = $this->convertirHTMLaTexto($contenidoHTML);
-        } catch (\Exception $e) {
-            $this->plantilla = $this->mensajePlantillaNoDisponible();
-        }
-    }
-
-    public function copiarPlantilla()
-    {
-        try {
-            $html = $this->getVistaPrevia();
-            $this->vistaPrevia = null;
-            $this->dispatch('copiado-al-portapapeles', $html);
-        } catch (\Exception $e) {
-            report($e);
-            session()->flash('error', 'No se pudo copiar la plantilla.');
-        }
-    }
-
+    // Botón "Guardar resolución" del modo 'plantilla': mismo guardado que el personalizado.
     public function guardarPlantilla()
     {
-        $this->validate([
-            'plantilla' => 'required|min:20',
-        ]);
-
-        try {
-            $numeroTramite = $this->siguienteNumeroTramite();
-            $cantidadArchivos = count($this->archivosPDF);
-
-            $this->persistirResolucion(
-                numeroExp: $numeroTramite,
-                numeroResolucion: $this->datos['num_res'] ?? null,
-                fecha: $this->datos['fecha_res'] ?? now()->toDateString(),
-                codBarrio: $this->datos['manzana'] ?? null,
-                codCasa: $this->datos['lote'] ?? null,
-                plantilla: $this->plantilla,
-            );
-
-            session()->flash('message', 'Resolución guardada exitosamente'.($cantidadArchivos ? " con {$cantidadArchivos} archivo(s)" : ''));
-        } catch (\Exception $e) {
-            $this->flashErrorGuardado($e);
-        }
+        $this->guardarPersonalizado();
     }
 
     private function siguienteNumeroTramite(): string
@@ -472,10 +424,6 @@ class CrearResolucion extends Component
 
     public $tempArchivos = [];
 
-    public $pdfSeleccionado = null;
-
-    public $mostrarModalPdf = false;
-
     public function updatedTempArchivos()
     {
         if (! empty($this->tempArchivos)) {
@@ -503,23 +451,6 @@ class CrearResolucion extends Component
             session()->put('archivos_pdf_resolucion', $sesionArchivos);
             $this->tempArchivos = [];
         }
-    }
-
-    public function agregarArchivos()
-    {
-        // Este método queda vacío porque usamos tempArchivos con wire:model
-    }
-
-    public function abrirModalPdf($index)
-    {
-        $this->pdfSeleccionado = $index;
-        $this->mostrarModalPdf = true;
-    }
-
-    public function cerrarModalPdf()
-    {
-        $this->pdfSeleccionado = null;
-        $this->mostrarModalPdf = false;
     }
 
     public function guardar()

@@ -9,8 +9,6 @@ class Oficinas extends Component
 {
     use WithPagination;
 
-    public $BusquedaOficina = '';
-
     public $inputBusqueda = '';
 
     public function render()
