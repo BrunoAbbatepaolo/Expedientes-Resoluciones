@@ -280,8 +280,21 @@ class Expedientes extends Component
 
     public function buscar()
     {
+        $this->busquedaExp = trim($this->busquedaExp);
+
         if (strlen($this->busquedaExp) > 0) {
-            $this->expedienteEncontrado = \App\Models\VistaExpedientes::where('numero', 'ILIKE', '%'.$this->busquedaExp.'%')->first();
+            // Coincidencia exacta (sin distinguir mayúsculas): con '%...%' un número
+            // parcial traía cualquier expediente que lo contuviera.
+            try {
+                $this->expedienteEncontrado = \App\Models\VistaExpedientes::where('numero', 'ILIKE', addcslashes($this->busquedaExp, '%_\\'))->first();
+            } catch (\Throwable $e) {
+                report($e);
+                $this->expedienteEncontrado = null;
+                $this->expedienteForm->reset();
+                LivewireAlert::title('No se pudo consultar el sistema de expedientes. Intentá más tarde.')->error()->timer(3500)->toast()->position('top-end')->show();
+
+                return;
+            }
 
             if (! is_null($this->expedienteEncontrado)) { // Si el expediente se encuentra cargado en el 95 trae los datos necesarios.
                 // Verificar si el expediente ya existe en la base de datos
@@ -394,6 +407,13 @@ class Expedientes extends Component
 
             $this->validate();
             $resultado = $this->expedienteForm->store();
+
+            if (! $resultado) {
+                LivewireAlert::title('No se pudo guardar el expediente. Intentá de nuevo.')->error()->timer(3500)->toast()->position('top-end')->show();
+
+                return;
+            }
+
             LivewireAlert::title('El expediente se cargo correctamente!')
                 ->success()
                 ->timer(2500)
@@ -427,17 +447,31 @@ class Expedientes extends Component
 
     public function actualizar()
     {
-        if ($this->expedienteForm->expediente) {
-            $this->autorizarExpediente($this->expedienteForm->expediente, 'expediente_editar');
+        // Sin expediente cargado (no se pasó por editar()) no hay nada que actualizar.
+        if (! isset($this->expedienteForm->expediente)) {
+            return;
         }
 
-        try {
-            $resultado = $this->expedienteForm->update();
-            $this->modal('modal-editarExpediente')->close();
-            LivewireAlert::title('El Expediente se editó Correctamente')->success()->timer(2500)->toast()->position('top-end')->show();
-        } catch (\Exception $e) {
+        $this->autorizarExpediente($this->expedienteForm->expediente, 'expediente_editar');
+
+        // update(): 1 = guardado, -1 = sin cambios, 0 = error (ya logueado en el form).
+        $resultado = $this->expedienteForm->update();
+
+        if ($resultado === 0) {
             LivewireAlert::title('El Expediente no se pudo Editar')->error()->timer(2500)->toast()->position('top-end')->show();
+
+            return;
         }
+
+        $this->modal('modal-editarExpediente')->close();
+
+        if ($resultado === -1) {
+            LivewireAlert::title('No hay cambios para guardar')->info()->timer(2500)->toast()->position('top-end')->show();
+
+            return;
+        }
+
+        LivewireAlert::title('El Expediente se editó Correctamente')->success()->timer(2500)->toast()->position('top-end')->show();
     }
 
     /**

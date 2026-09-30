@@ -74,78 +74,62 @@ function convertNumberToLetters(int $number): string
     if ($number == 0) {
         return '';
     }
-    if ($number < 20) {
-        $units = ['', 'UNO', 'DOS', 'TRES', 'CUATRO', 'CINCO', 'SEIS', 'SIETE', 'OCHO', 'NUEVE', 'DIEZ', 'ONCE', 'DOCE', 'TRECE', 'CATORCE', 'QUINCE', 'DIECISÉIS', 'DIECISIETE', 'DIECIOCHO', 'DIECINUEVE'];
 
-        return $units[$number];
-    }
-    if ($number < 30) {
-        return 'VEINTI'.($number == 21 ? 'UNO' : convertNumberToLetters($number - 20));
-    }
-    if ($number < 40) {
-        return 'TREINTA Y '.convertNumberToLetters($number - 30);
-    }
-    if ($number < 50) {
-        return 'CUARENTA Y '.convertNumberToLetters($number - 40);
-    }
-    if ($number < 60) {
-        return 'CINCUENTA Y '.convertNumberToLetters($number - 50);
-    }
-    if ($number < 70) {
-        return 'SESENTA Y '.convertNumberToLetters($number - 60);
-    }
-    if ($number < 80) {
-        return 'SETENTA Y '.convertNumberToLetters($number - 70);
-    }
-    if ($number < 90) {
-        return 'OCHENTA Y '.convertNumberToLetters($number - 80);
-    }
-    if ($number < 100) {
-        return 'NOVENTA Y '.convertNumberToLetters($number - 90);
-    }
-    if ($number < 200) {
-        return 'CIENTO '.convertNumberToLetters($number - 100);
-    }
-    if ($number < 300) {
-        return 'DOSCIENTOS '.convertNumberToLetters($number - 200);
-    }
-    if ($number < 400) {
-        return 'TRESCIENTOS '.convertNumberToLetters($number - 300);
-    }
-    if ($number < 500) {
-        return 'CUATROCIENTOS '.convertNumberToLetters($number - 400);
-    }
-    if ($number < 600) {
-        return 'QUINIENTOS '.convertNumberToLetters($number - 500);
-    }
-    if ($number < 700) {
-        return 'SEISCIENTOS '.convertNumberToLetters($number - 600);
-    }
-    if ($number < 800) {
-        return 'SETECIENTOS '.convertNumberToLetters($number - 700);
-    }
-    if ($number < 900) {
-        return 'OCHOCIENTOS '.convertNumberToLetters($number - 800);
-    }
     if ($number < 1000) {
-        return 'NOVECIENTOS '.convertNumberToLetters($number - 900);
+        return convertirCentenas($number);
     }
-    if ($number < 2000) {
-        return 'MIL '.convertNumberToLetters($number - 1000);
-    }
+
     if ($number < 1000000) {
-        $thousands = floor($number / 1000);
-        $remainder = $number % 1000;
-        $thousandsWord = $thousands == 1 ? 'MIL' : convertNumberToLetters($thousands);
+        $miles = intdiv($number, 1000);
+        $resto = $number % 1000;
+        // 1000 = "MIL" (no "UN MIL"); 21000 = "VEINTIÚN MIL".
+        $palabra = $miles == 1 ? 'MIL' : apocoparUno(convertirCentenas($miles)).' MIL';
 
-        return $thousandsWord.($remainder > 0 ? ' '.convertNumberToLetters($remainder) : '');
-    }
-    if ($number < 2000000) {
-        return 'UN MILLÓN '.convertNumberToLetters($number - 1000000);
+        return trim($palabra.' '.convertirCentenas($resto));
     }
 
-    $millions = floor($number / 1000000);
-    $remainder = $number % 1000000;
+    $millones = intdiv($number, 1000000);
+    $resto = $number % 1000000;
+    $palabra = $millones == 1 ? 'UN MILLÓN' : apocoparUno(convertNumberToLetters($millones)).' MILLONES';
 
-    return convertNumberToLetters($millions).' MILLONES'.($remainder > 0 ? ' '.convertNumberToLetters($remainder) : '');
+    return trim($palabra.' '.convertNumberToLetters($resto));
+}
+
+/**
+ * 0-999 en letras. 100 = "CIEN", 30 = "TREINTA" (sin "Y" colgando).
+ */
+function convertirCentenas(int $number): string
+{
+    $hasta29 = ['', 'UNO', 'DOS', 'TRES', 'CUATRO', 'CINCO', 'SEIS', 'SIETE', 'OCHO', 'NUEVE',
+        'DIEZ', 'ONCE', 'DOCE', 'TRECE', 'CATORCE', 'QUINCE', 'DIECISÉIS', 'DIECISIETE', 'DIECIOCHO', 'DIECINUEVE',
+        'VEINTE', 'VEINTIUNO', 'VEINTIDÓS', 'VEINTITRÉS', 'VEINTICUATRO', 'VEINTICINCO', 'VEINTISÉIS', 'VEINTISIETE', 'VEINTIOCHO', 'VEINTINUEVE'];
+    $decenas = [3 => 'TREINTA', 'CUARENTA', 'CINCUENTA', 'SESENTA', 'SETENTA', 'OCHENTA', 'NOVENTA'];
+    $centenas = [1 => 'CIENTO', 'DOSCIENTOS', 'TRESCIENTOS', 'CUATROCIENTOS', 'QUINIENTOS', 'SEISCIENTOS', 'SETECIENTOS', 'OCHOCIENTOS', 'NOVECIENTOS'];
+
+    if ($number == 100) {
+        return 'CIEN';
+    }
+
+    $partes = [];
+    if ($number >= 100) {
+        $partes[] = $centenas[intdiv($number, 100)];
+        $number %= 100;
+    }
+
+    if ($number >= 30) {
+        $unidad = $number % 10;
+        $partes[] = $decenas[intdiv($number, 10)].($unidad ? ' Y '.$hasta29[$unidad] : '');
+    } elseif ($number > 0) {
+        $partes[] = $hasta29[$number];
+    }
+
+    return implode(' ', $partes);
+}
+
+/**
+ * "UNO" delante de MIL/MILLONES se apocopa: "VEINTIÚN MIL", "TREINTA Y UN MIL".
+ */
+function apocoparUno(string $letras): string
+{
+    return preg_replace(['/VEINTIUNO$/u', '/\bUNO$/u'], ['VEINTIÚN', 'UN'], $letras);
 }

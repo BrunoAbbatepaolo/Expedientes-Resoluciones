@@ -1545,7 +1545,7 @@
         @else
             <div class="sirex-glass-card mx-auto max-w-4xl overflow-hidden rounded-[14px]">
                 <div class="p-6">
-                    {!! $this->plantilla !!}
+                    {!! $this->plantillaCompletaHtml() !!}
                 </div>
             </div>
         @endif

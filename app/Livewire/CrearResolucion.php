@@ -5,6 +5,7 @@ namespace App\Livewire;
 use App\Models\Resolucion;
 use App\Models\ResolucionArchivo;
 use App\Traits\AuthorizesOficina;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\View;
 use Livewire\Attributes\Locked;
@@ -172,6 +173,16 @@ class CrearResolucion extends Component
 
     public function cargarPlantillaHtml(): void
     {
+        $this->plantilla = $this->plantillaCompletaHtml();
+    }
+
+    /**
+     * HTML del prototipo con datos de ejemplo. La vista lo imprime sin escapar, por
+     * eso se genera en el servidor en vez de leer $plantilla (que el cliente puede
+     * modificar vía wire:model).
+     */
+    public function plantillaCompletaHtml(): string
+    {
         try {
             $datosConFunciones = array_merge($this->getDatosEjemplo(), [
                 'formatearFecha' => 'formatearFecha',
@@ -180,10 +191,9 @@ class CrearResolucion extends Component
                 'num2letras' => 'num2letras',
             ]);
 
-            $this->plantilla = View::make("prototipos.{$this->tipo}", $datosConFunciones)->render();
-
+            return View::make("prototipos.{$this->tipo}", $datosConFunciones)->render();
         } catch (\Exception $e) {
-            $this->plantilla = $this->mensajePlantillaNoDisponible();
+            return e($this->mensajePlantillaNoDisponible());
         }
     }
 
@@ -312,7 +322,8 @@ class CrearResolucion extends Component
             $this->vistaPrevia = null;
             $this->dispatch('copiado-al-portapapeles', $html);
         } catch (\Exception $e) {
-            session()->flash('error', 'Error al copiar: '.$e->getMessage());
+            report($e);
+            session()->flash('error', 'No se pudo copiar la plantilla.');
         }
     }
 
@@ -337,7 +348,7 @@ class CrearResolucion extends Component
 
             session()->flash('message', 'Resolución guardada exitosamente'.($cantidadArchivos ? " con {$cantidadArchivos} archivo(s)" : ''));
         } catch (\Exception $e) {
-            session()->flash('error', 'Error al guardar: '.$e->getMessage());
+            $this->flashErrorGuardado($e);
         }
     }
 
@@ -364,44 +375,80 @@ class CrearResolucion extends Component
         // oficinas (ver AuthorizesOficina::autorizarResolucion()).
         $oficinaId = auth()->user()->oficinaAsignadaId();
         if (! $oficinaId) {
-            throw new \RuntimeException('No tenés una oficina asignada. Pedile a un administrador que te asigne una.');
+            throw new \DomainException('No tenés una oficina asignada. Pedile a un administrador que te asigne una.');
         }
 
-        $resolucion = Resolucion::create([
-            'oficina_id' => $oficinaId,
-            'numero_exp' => $numeroExp,
-            'numero_resolucion' => $numeroResolucion,
-            'fecha' => $fecha,
-            // cod_barrio/cod_casa son integer: los tipos que no usan manzana/lote
-            // llegan como '' (string vacío) y no como null, lo que rompe el insert
-            // en modo estricto de MySQL.
-            'cod_barrio' => $codBarrio !== '' ? $codBarrio : null,
-            'cod_casa' => $codCasa !== '' ? $codCasa : null,
-            // Sanitizado antes de guardar: 'plantilla' llega del editor Quill en modo
-            // personalizado (HTML libre del usuario) y podría contener HTML/JS
-            // malicioso si se muestra sin escapar a otros usuarios/oficinas.
-            'plantilla' => Purifier::clean($plantilla),
-        ]);
+        $rutasGuardadas = [];
 
-        foreach ($this->archivosPDF as $archivo) {
-            // Nombre generado a partir de la extensión, no del nombre original del
-            // cliente (ver updatedTempArchivos(): mismo riesgo de path traversal).
-            $nombreArchivo = uniqid('resolucion_').'.'.$archivo->getClientOriginalExtension();
-            $ruta = $archivo->storeAs('resoluciones', $nombreArchivo, 'public');
+        try {
+            $resolucion = DB::transaction(function () use ($oficinaId, $numeroExp, $numeroResolucion, $fecha, $codBarrio, $codCasa, $plantilla, &$rutasGuardadas) {
+                $resolucion = Resolucion::create([
+                    'oficina_id' => $oficinaId,
+                    'numero_exp' => $numeroExp,
+                    'numero_resolucion' => $numeroResolucion,
+                    'fecha' => $fecha,
+                    // cod_barrio/cod_casa son integer: los tipos que no usan manzana/lote
+                    // llegan como '' (string vacío) y no como null, lo que rompe el insert
+                    // en modo estricto de MySQL.
+                    'cod_barrio' => $codBarrio !== '' ? $codBarrio : null,
+                    'cod_casa' => $codCasa !== '' ? $codCasa : null,
+                    // Sanitizado antes de guardar: 'plantilla' llega del editor Quill en modo
+                    // personalizado (HTML libre del usuario) y podría contener HTML/JS
+                    // malicioso si se muestra sin escapar a otros usuarios/oficinas.
+                    'plantilla' => Purifier::clean($plantilla),
+                ]);
 
-            ResolucionArchivo::create([
-                'resolucion_id' => $resolucion->id,
-                'nombre_original' => $archivo->getClientOriginalName(),
-                'nombre_archivo' => $nombreArchivo,
-                'ruta' => $ruta,
-                'tipo' => $archivo->getMimeType(),
-                'tamano' => $archivo->getSize(),
-            ]);
+                foreach ($this->archivosPDF as $archivo) {
+                    // Nombre generado a partir de la extensión, no del nombre original del
+                    // cliente (ver updatedTempArchivos(): mismo riesgo de path traversal).
+                    // Disco privado ('local'): los PDFs tienen DNI y datos personales; se
+                    // sirven solo por la ruta autorizada 'resoluciones.archivo'.
+                    $nombreArchivo = uniqid('resolucion_').'.'.$archivo->getClientOriginalExtension();
+                    $ruta = $archivo->storeAs('resoluciones', $nombreArchivo, 'local');
+                    $rutasGuardadas[] = $ruta;
+
+                    ResolucionArchivo::create([
+                        'resolucion_id' => $resolucion->id,
+                        'nombre_original' => $archivo->getClientOriginalName(),
+                        'nombre_archivo' => $nombreArchivo,
+                        'ruta' => $ruta,
+                        'tipo' => $archivo->getMimeType(),
+                        'tamano' => $archivo->getSize(),
+                    ]);
+                }
+
+                return $resolucion;
+            });
+        } catch (\Throwable $e) {
+            // La transacción deshace la base, pero no los archivos ya copiados.
+            Storage::disk('local')->delete($rutasGuardadas);
+
+            throw $e;
         }
 
-        $this->archivosPDF = [];
+        $this->limpiarArchivosTemporales();
 
         return $resolucion;
+    }
+
+    private function limpiarArchivosTemporales(): void
+    {
+        Storage::disk('local')->delete(session()->pull('archivos_pdf_resolucion', []));
+        $this->archivosPDF = [];
+    }
+
+    private function flashErrorGuardado(\Throwable $e): void
+    {
+        // DomainException = error de negocio con mensaje pensado para el usuario;
+        // el resto se loguea y se muestra un mensaje genérico (sin SQL ni rutas).
+        if ($e instanceof \DomainException) {
+            session()->flash('error', $e->getMessage());
+
+            return;
+        }
+
+        report($e);
+        session()->flash('error', 'Ocurrió un error al guardar la resolución. Intentá de nuevo.');
     }
 
     public function removeArchivo($index)
@@ -410,16 +457,16 @@ class CrearResolucion extends Component
             // Eliminar archivo físico si existe
             $sesionArchivos = session()->get('archivos_pdf_resolucion', []);
             if (isset($sesionArchivos[$index])) {
-                Storage::disk('public')->delete($sesionArchivos[$index]);
+                Storage::disk('local')->delete($sesionArchivos[$index]);
                 unset($sesionArchivos[$index]);
                 $sesionArchivos = array_values($sesionArchivos);
                 session()->put('archivos_pdf_resolucion', $sesionArchivos);
             }
 
+            // Mismo reindexado que la sesión: la vista previa usa el índice para
+            // pedir el archivo a 'resoluciones.descargarPdf'.
             unset($this->archivosPDF[$index]);
-            unset($this->archivosUrl[$index]);
             $this->archivosPDF = array_values($this->archivosPDF);
-            $this->archivosUrl = array_values($this->archivosUrl);
         }
     }
 
@@ -428,8 +475,6 @@ class CrearResolucion extends Component
     public $pdfSeleccionado = null;
 
     public $mostrarModalPdf = false;
-
-    public $archivosUrl = [];
 
     public function updatedTempArchivos()
     {
@@ -443,14 +488,13 @@ class CrearResolucion extends Component
             $sesionArchivos = session()->get('archivos_pdf_resolucion', []);
 
             foreach ($this->tempArchivos as $archivo) {
-                // Guardar en storage público temporalmente. Nombre generado a partir
-                // de la extensión ya validada, no del nombre original del cliente:
-                // ese nombre podía traer '../' y escribir fuera de la carpeta 'temp'.
+                // Copia temporal en disco privado para la vista previa. Nombre generado
+                // a partir de la extensión ya validada, no del nombre original del
+                // cliente: ese nombre podía traer '../' y escribir fuera de 'temp'.
                 $nombreArchivo = 'temp_'.uniqid().'.'.$archivo->getClientOriginalExtension();
-                $ruta = $archivo->storeAs('temp', $nombreArchivo, 'public');
+                $ruta = $archivo->storeAs('temp', $nombreArchivo, 'local');
 
                 $this->archivosPDF[] = $archivo;
-                $this->archivosUrl[] = route('resoluciones.descargarPdf', ['index' => count($sesionArchivos)]);
 
                 // Guardar en sesión para la ruta
                 $sesionArchivos[] = $ruta;
@@ -510,7 +554,7 @@ class CrearResolucion extends Component
             session()->flash('message', 'Resolución guardada exitosamente'.($cantidadArchivos ? " con {$cantidadArchivos} archivo(s)" : ''));
             $this->resetFormulario();
         } catch (\Exception $e) {
-            session()->flash('error', 'Error al guardar: '.$e->getMessage());
+            $this->flashErrorGuardado($e);
         }
     }
 
@@ -535,7 +579,7 @@ class CrearResolucion extends Component
 
             session()->flash('message', 'Resolución guardada exitosamente'.($cantidadArchivos ? " con {$cantidadArchivos} archivo(s)" : ''));
         } catch (\Exception $e) {
-            session()->flash('error', 'Error al guardar: '.$e->getMessage());
+            $this->flashErrorGuardado($e);
         }
     }
 
@@ -569,7 +613,9 @@ class CrearResolucion extends Component
 
             return View::make("prototipos.{$this->tipo}", $datos)->render();
         } catch (\Exception $e) {
-            return "<div class='text-red-500'>Error al generar vista previa: {$e->getMessage()}</div>";
+            report($e);
+
+            return "<div class='text-red-500'>No se pudo generar la vista previa.</div>";
         }
     }
 
@@ -650,8 +696,9 @@ class CrearResolucion extends Component
             'datos.fecha_res' => 'required|date',
             'datos.num_exp' => 'required|string|max:50',
             'datos.num_res' => 'required|string|max:50',
-            'datos.manzana' => 'nullable|string|max:10',
-            'datos.lote' => 'nullable|string|max:10',
+            // Se guardan en cod_barrio/cod_casa, columnas integer.
+            'datos.manzana' => 'nullable|integer|min:0',
+            'datos.lote' => 'nullable|integer|min:0',
             'datos.nombre_barrio' => 'nullable|string|max:255',
             'datos.num_foja_solicitud' => 'nullable|string|max:50',
             'datos.num_foja_informe' => 'nullable|string|max:50',

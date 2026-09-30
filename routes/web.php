@@ -1,7 +1,7 @@
 <?php
 
+use App\Http\Controllers\ResolucionArchivoController;
 use Illuminate\Support\Facades\Route;
-use Illuminate\Support\Facades\Storage;
 use Livewire\Volt\Volt;
 
 Route::get('/', function () {
@@ -39,22 +39,15 @@ Route::middleware(['auth', 'password.change'])->group(function () {
         ->middleware('auth')
         ->name('resoluciones.crear');
 
-    // Ruta para mostrar PDFs de resoluciones (sin descargar)
-    Route::get('/resoluciones/descargar-pdf/{index}', function ($index) {
-        $archivos = session()->get('archivos_pdf_resolucion', []);
-
-        if (isset($archivos[$index]) && Storage::disk('public')->exists($archivos[$index])) {
-            $ruta = $archivos[$index];
-            $contenido = Storage::disk('public')->get($ruta);
-
-            return response($contenido, 200, [
-                'Content-Type' => 'application/pdf',
-                'Content-Disposition' => 'inline',
-            ]);
-        }
-
-        abort(404, 'Archivo no encontrado');
-    })->name('resoluciones.descargarPdf');
+    // PDFs de resoluciones: se sirven desde disco privado, con autorización.
+    Route::get('/resoluciones/descargar-pdf/{index}', [ResolucionArchivoController::class, 'temporal'])
+        ->whereNumber('index')
+        ->name('resoluciones.descargarPdf');
+    Route::get('/resoluciones/archivo/{archivo}', [ResolucionArchivoController::class, 'archivo'])
+        ->name('resoluciones.archivo');
+    Route::get('/resoluciones/{resolucion}/pdf', [ResolucionArchivoController::class, 'pdf'])
+        ->whereNumber('resolucion')
+        ->name('resoluciones.pdf');
 });
 
 require __DIR__.'/auth.php';

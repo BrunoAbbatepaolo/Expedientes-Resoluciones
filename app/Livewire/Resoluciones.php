@@ -87,7 +87,7 @@ class Resoluciones extends Component
         // Se agregó latest() para que las más nuevas aparezcan arriba.
         // Las resoluciones viejas sin oficina_id (ver implementacion_futuro.md 2.1)
         // se siguen mostrando a todos hasta que se les asigne una oficina.
-        $resolucionesConExpediente = Resolucion::with('expediente')
+        $resolucionesConExpediente = Resolucion::with('archivos')
             ->where(function ($query) use ($oficinaId) {
                 $query->whereNull('oficina_id');
 
@@ -97,6 +97,15 @@ class Resoluciones extends Component
             })
             ->latest()
             ->get();
+
+        // 'expediente' viene de pgsql_mitiv (otro servidor): si no responde, se
+        // muestra el listado igual, sin el número de expediente.
+        try {
+            $resolucionesConExpediente->load('expediente');
+        } catch (\Throwable $e) {
+            report($e);
+            $resolucionesConExpediente->each->setRelation('expediente', null);
+        }
 
         return view('livewire.resoluciones', [
             'resolucionesConExpediente' => $resolucionesConExpediente,

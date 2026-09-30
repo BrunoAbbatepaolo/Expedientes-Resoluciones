@@ -93,6 +93,8 @@ class ExpedienteForm extends Form
                 return 1;
             });
         } catch (\Exception $exception) {
+            report($exception);
+
             return 0;
         }
     }
@@ -118,6 +120,8 @@ class ExpedienteForm extends Form
                 return 1;
             });
         } catch (\Exception $exception) {
+            report($exception);
+
             return 0;
         }
     }
