@@ -38,6 +38,7 @@ class TableroIpv extends Component
     public function render(ExpedientesIpv $ipv): View
     {
         $diasDemora = config('sirex.dias_demora');
+        $ventana = config('sirex.dias_actividad');
         $error = false;
         $oficinaIpv = null;
         $resumen = null;
@@ -48,8 +49,8 @@ class TableroIpv extends Component
         try {
             $oficinaIpv = auth()->user()->permiso('expediente_ver') ? $ipv->oficinaIpvDe(auth()->user()) : null;
             if ($oficinaIpv) {
-                $resumen = $ipv->resumenOficina($oficinaIpv, $diasDemora);
-                $demorados = $ipv->enOficina($oficinaIpv, $diasDemora, 6);
+                $resumen = $ipv->resumenOficina($oficinaIpv, $diasDemora, $ventana);
+                $demorados = $ipv->enOficina($oficinaIpv, $diasDemora, 6, $ventana);
             }
             $ubicaciones = $ipv->ubicaciones($seguimientos->pluck('numero_exp')->all());
         } catch (\Throwable $e) {

@@ -76,6 +76,14 @@ test('expedientes demorados en una oficina', function () {
         ->and($this->servicio->resumenOficina($this->legal))->toMatchArray(['en_oficina' => 2, 'demorados' => 1]);
 });
 
+test('los expedientes de archivo (más de un año sin pase) no cuentan como demorados', function () {
+    MitivFalso::expediente('1/440-1995', 'VIEJO', [[$this->legal, '1995-03-01 10:00']]);
+    MitivFalso::expediente('2/440-2026', 'ACTUAL', [[$this->legal, now()->subDays(45)->format('Y-m-d H:i')]]);
+
+    expect($this->servicio->resumenOficina($this->legal, 30, 365))->toMatchArray(['en_oficina' => 2, 'activos' => 1, 'demorados' => 1])
+        ->and($this->servicio->enOficina($this->legal, 30, 10, 365)->pluck('numero')->all())->toBe(['2/440-2026']);
+});
+
 test('los empleados nunca exponen columnas sensibles', function () {
     MitivFalso::empleado(['apellido' => 'DIAZ']);
 

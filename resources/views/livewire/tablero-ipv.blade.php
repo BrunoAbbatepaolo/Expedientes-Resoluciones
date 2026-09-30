@@ -27,14 +27,15 @@
         @else
             <div class="grid grid-cols-3 gap-3">
                 @foreach ([
-                    ['Están en mi oficina', $resumen['en_oficina'], 'text-ipv-blue dark:text-ipv-blue-light'],
-                    ['Demorados (+'.$diasDemora.' días)', $resumen['demorados'], $resumen['demorados'] ? 'text-ipv-magenta dark:text-ipv-magenta-light' : 'text-ipv-ink dark:text-ipv-ink-dark'],
-                    ['Recibidos (30 días)', $resumen['recibidos_30d'], 'text-ipv-ink dark:text-ipv-ink-dark'],
-                ] as [$etiqueta, $valor, $color])
+                    ['Activos en mi oficina', $resumen['activos'], 'text-ipv-blue dark:text-ipv-blue-light', 'llegaron en el último año · '.number_format($resumen['en_oficina'] - $resumen['activos'], 0, ',', '.').' más en archivo'],
+                    ['Demorados', $resumen['demorados'], $resumen['demorados'] ? 'text-ipv-magenta dark:text-ipv-magenta-light' : 'text-ipv-ink dark:text-ipv-ink-dark', 'activos con más de '.$diasDemora.' días sin pase'],
+                    ['Recibidos', $resumen['recibidos_30d'], 'text-ipv-ink dark:text-ipv-ink-dark', 'en los últimos 30 días'],
+                ] as [$etiqueta, $valor, $color, $ayuda])
                     <div wire:key="kpi-{{ $loop->index }}"
                         class="sirex-glass-card group rounded-[14px] p-4 transition duration-200 hover:-translate-y-0.5 hover:shadow-md">
                         <p class="text-xs font-medium text-ipv-ink/55 dark:text-ipv-ink-dark/55">{{ $etiqueta }}</p>
                         <p class="mt-1 text-2xl font-bold tabular-nums {{ $color }}">{{ number_format($valor, 0, ',', '.') }}</p>
+                        <p class="mt-0.5 text-[11px] leading-tight text-ipv-ink/45 dark:text-ipv-ink-dark/45">{{ $ayuda }}</p>
                     </div>
                 @endforeach
             </div>

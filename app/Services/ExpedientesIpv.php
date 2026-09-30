@@ -240,8 +240,10 @@ class ExpedientesIpv
 
     /**
      * Expedientes que hoy están en una oficina del IPV, del más demorado al más reciente.
+     * $maxDias limita a los que llegaron hace como mucho N días (excluye el "archivo":
+     * expedientes de hace décadas que nunca se volvieron a pasar).
      */
-    public function enOficina(int $oficinaId, int $minDias = 0, int $limite = 50): Collection
+    public function enOficina(int $oficinaId, int $minDias = 0, int $limite = 50, ?int $maxDias = null): Collection
     {
         $query = $this->db()->table('expediente_pases as px')
             ->join('expedientes as e', 'e.id', '=', 'px.expediente_id')
@@ -254,6 +256,9 @@ class ExpedientesIpv
 
         if ($minDias > 0) {
             $query->where('px.fecha_hora', '<=', now()->subDays($minDias));
+        }
+        if ($maxDias !== null) {
+            $query->where('px.fecha_hora', '>=', now()->subDays($maxDias));
         }
 
         return $query->orderBy('px.fecha_hora')
@@ -269,20 +274,24 @@ class ExpedientesIpv
     /**
      * Métricas de una oficina del IPV para el tablero (cacheadas 5 minutos).
      *
-     * @return array{en_oficina: int, demorados: int, recibidos_30d: int}
+     * "Activos" = llegaron dentro de la ventana de actividad; el resto es archivo histórico.
+     *
+     * @return array{en_oficina: int, activos: int, demorados: int, recibidos_30d: int}
      */
-    public function resumenOficina(int $oficinaId, int $diasDemora = 30): array
+    public function resumenOficina(int $oficinaId, int $diasDemora = 30, int $ventana = 365): array
     {
-        return Cache::remember("ipv.resumen.$oficinaId.$diasDemora", now()->addMinutes(5), function () use ($oficinaId, $diasDemora) {
+        return Cache::remember("ipv.resumen.$oficinaId.$diasDemora.$ventana", now()->addMinutes(5), function () use ($oficinaId, $diasDemora, $ventana) {
             $enOficina = $this->db()->table('expediente_pases as px')
                 ->where('px.oficina_id', $oficinaId)->where('px.habilitado', true)
                 ->whereNotExists(fn ($q) => $this->pasePosterior($q));
+            $activos = (clone $enOficina)->where('px.fecha_hora', '>=', now()->subDays($ventana));
 
             $desde = now()->subDays(30);
 
             return [
                 'en_oficina' => (clone $enOficina)->count(),
-                'demorados' => (clone $enOficina)->where('px.fecha_hora', '<=', now()->subDays($diasDemora))->count(),
+                'activos' => (clone $activos)->count(),
+                'demorados' => (clone $activos)->where('px.fecha_hora', '<=', now()->subDays($diasDemora))->count(),
                 'recibidos_30d' => $this->db()->table('expediente_pases')
                     ->where('oficina_id', $oficinaId)->where('habilitado', true)
                     ->where('fecha_hora', '>=', $desde)->count(),

@@ -36,7 +36,7 @@ test('con vínculo muestra métricas y demorados', function () {
     Livewire::withoutLazyLoading()->actingAs($this->user)
         ->test(TableroIpv::class)
         ->assertSee('DIRECCION AREA LEGAL')
-        ->assertSee('Demorados (+30 días)')
+        ->assertSee('activos con más de 30 días sin pase')
         ->assertSee('1/440-2026')
         ->assertDontSee('2/440-2026');
 });
