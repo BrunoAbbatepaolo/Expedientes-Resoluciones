@@ -45,8 +45,19 @@ new class extends Component
     #[Computed]
     public function availableNames()
     {
-        return ['Luis Leguizamon', 'Leo Ocaranza', 'Bruno Abbatepaolo', 'Mariana Remis', 'Luis Castro', 'Diego Martin', 'Jorge Debbo',
-        ];
+        // Compañeros de la oficina del usuario (antes era una lista fija en el código).
+        $oficinaId = Auth::user()->oficinaAsignadaId();
+        if (! $oficinaId) {
+            return [Auth::user()->name];
+        }
+
+        $ids = \App\Models\Permiso::where('nombre', 'oficina_asignada')->where('oficina_id', $oficinaId)->pluck('user_id');
+
+        return User::whereIn('id', $ids)->orderBy('nombre')->get()
+            ->map(fn (User $u) => $u->name)
+            ->filter()
+            ->values()
+            ->all();
     }
 
     // public function getHasPermissionProperty()

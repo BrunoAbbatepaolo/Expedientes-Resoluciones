@@ -107,16 +107,51 @@ test('crear usuario genera una clave provisoria aleatoria', function () {
     $oficina = Oficina::factory()->create();
     $admin = usuarioConPermisos($oficina, ['lista_usuario_ver', 'lista_usuario_editar']);
 
+    \Tests\Support\MitivFalso::crear();
+    $empleadoId = \Tests\Support\MitivFalso::empleado(['legajo' => 4321, 'apellido' => 'PEREZ', 'nombre' => 'ANA', 'email' => 'ana@example.com']);
+
     $componente = Livewire::actingAs($admin)
         ->test(ListaUsuario::class)
-        ->set('nuevoNombre', 'Ana')
-        ->set('nuevoApellido', 'Pérez')
-        ->set('nuevoLegajo', 'L-1')
-        ->set('nuevoEmail', 'ana@example.com')
+        ->set('buscarEmpleado', 'pere')
+        ->assertSee('PEREZ, ANA')
+        ->call('seleccionarEmpleado', $empleadoId)
         ->set('nuevoOficinaId', $oficina->id)
         ->call('crearUsuario');
 
     $nuevo = User::where('email', 'ana@example.com')->firstOrFail();
     expect(Hash::check('12345678', $nuevo->password))->toBeFalse()
+        ->and($nuevo->legajo)->toBe('4321')
         ->and($componente->get('claveGenerada'))->toStartWith('ana@example.com: ');
+});
+
+test('no se puede crear un usuario sin elegir un empleado activo', function () {
+    \Tests\Support\MitivFalso::crear();
+    $oficina = Oficina::factory()->create();
+    $admin = usuarioConPermisos($oficina, ['lista_usuario_ver', 'lista_usuario_editar']);
+    $pasivo = \Tests\Support\MitivFalso::empleado(['espasivo' => true]);
+
+    Livewire::actingAs($admin)
+        ->test(ListaUsuario::class)
+        ->call('seleccionarEmpleado', $pasivo)
+        ->assertSet('empleadoId', null)
+        ->set('nuevoNombre', 'Inventado')
+        ->set('nuevoEmail', 'x@example.com')
+        ->set('nuevoOficinaId', $oficina->id)
+        ->call('crearUsuario')
+        ->assertHasErrors('buscarEmpleado');
+
+    expect(User::where('email', 'x@example.com')->exists())->toBeFalse();
+});
+
+test('marca a los usuarios que ya no son empleados activos', function () {
+    \Tests\Support\MitivFalso::crear();
+    \Tests\Support\MitivFalso::empleado(['legajo' => 111]);
+    $oficina = Oficina::factory()->create();
+    $admin = usuarioConPermisos($oficina, ['lista_usuario_ver', 'lista_usuario_editar']);
+    $admin->forceFill(['legajo' => '111', 'apellido' => 'ACTIVO'])->save();
+    User::factory()->create(['legajo' => '999', 'apellido' => 'DADODEBAJA']);
+
+    Livewire::actingAs($admin)
+        ->test(ListaUsuario::class)
+        ->assertSeeInOrder(['DADODEBAJA', 'No activo en IPV']);
 });

@@ -57,7 +57,15 @@
                     @forelse ($usuarios as $usuario)
                         <tr wire:key="usr-{{ $usuario->id }}" class="hover:bg-black/[0.02] dark:hover:bg-white/[0.03]">
                             <td class="truncate px-4 py-2.5 text-sm text-ipv-ink dark:text-ipv-ink-dark">{{ $usuario->nombre }}</td>
-                            <td class="truncate px-4 py-2.5 text-sm text-ipv-ink dark:text-ipv-ink-dark">{{ $usuario->apellido }}</td>
+                            <td class="truncate px-4 py-2.5 text-sm text-ipv-ink dark:text-ipv-ink-dark">
+                                {{ $usuario->apellido }}
+                                @if ($legajosActivos !== null && ! in_array((string) $usuario->legajo, $legajosActivos, true))
+                                    <span class="ml-1 rounded-full bg-ipv-magenta/12 px-2 py-0.5 text-[11px] font-semibold text-ipv-magenta dark:text-ipv-magenta-light"
+                                        title="El legajo {{ $usuario->legajo ?: '(vacío)' }} no figura como empleado activo del IPV (baja, pasivo o error de carga). Revisar si debe seguir teniendo acceso.">
+                                        No activo en IPV
+                                    </span>
+                                @endif
+                            </td>
                             <td class="truncate px-4 py-2.5 text-sm text-ipv-ink dark:text-ipv-ink-dark">{{ $usuario->email }}</td>
 
                             {{-- Columna Oficina --}}
@@ -115,23 +123,44 @@
                         <h3 class="text-lg font-semibold text-ipv-ink dark:text-ipv-ink-dark">Nuevo usuario</h3>
 
                         <div class="space-y-4">
-                            <div>
-                                <label class="mb-1 block text-sm font-medium text-ipv-ink/80 dark:text-ipv-ink-dark/80">Nombre</label>
-                                <input wire:model="nuevoNombre" type="text"
-                                    class="w-full rounded-lg border border-ipv-blue/20 bg-white/80 px-3 py-2 text-sm text-ipv-ink focus:outline-none focus:ring-2 focus:ring-ipv-blue/40 dark:border-white/15 dark:bg-white/[0.06] dark:text-ipv-ink-dark">
-                                @error('nuevoNombre') <span class="mt-1 block text-xs text-ipv-magenta">{{ $message }}</span> @enderror
-                            </div>
-                            <div>
-                                <label class="mb-1 block text-sm font-medium text-ipv-ink/80 dark:text-ipv-ink-dark/80">Apellido</label>
-                                <input wire:model="nuevoApellido" type="text"
-                                    class="w-full rounded-lg border border-ipv-blue/20 bg-white/80 px-3 py-2 text-sm text-ipv-ink focus:outline-none focus:ring-2 focus:ring-ipv-blue/40 dark:border-white/15 dark:bg-white/[0.06] dark:text-ipv-ink-dark">
-                                @error('nuevoApellido') <span class="mt-1 block text-xs text-ipv-magenta">{{ $message }}</span> @enderror
-                            </div>
-                            <div>
-                                <label class="mb-1 block text-sm font-medium text-ipv-ink/80 dark:text-ipv-ink-dark/80">Legajo</label>
-                                <input wire:model="nuevoLegajo" type="text"
-                                    class="w-full rounded-lg border border-ipv-blue/20 bg-white/80 px-3 py-2 text-sm text-ipv-ink focus:outline-none focus:ring-2 focus:ring-ipv-blue/40 dark:border-white/15 dark:bg-white/[0.06] dark:text-ipv-ink-dark">
-                                @error('nuevoLegajo') <span class="mt-1 block text-xs text-ipv-magenta">{{ $message }}</span> @enderror
+                            {{-- Empleado activo del IPV: nombre, apellido y legajo salen de ahí. --}}
+                            <div class="relative">
+                                <label for="buscarEmpleado" class="mb-1 block text-sm font-medium text-ipv-ink/80 dark:text-ipv-ink-dark/80">Empleado</label>
+                                @if ($empleadoId)
+                                    <div class="flex items-center justify-between rounded-lg border border-ipv-blue/30 bg-ipv-blue/[0.06] px-3 py-2">
+                                        <div>
+                                            <p class="text-sm font-semibold text-ipv-ink dark:text-ipv-ink-dark">{{ $nuevoApellido }}, {{ $nuevoNombre }}</p>
+                                            <p class="text-xs text-ipv-ink/60 dark:text-ipv-ink-dark/60">Legajo {{ $nuevoLegajo }}</p>
+                                        </div>
+                                        <button type="button" wire:click="quitarEmpleado" class="text-xs font-medium text-ipv-blue hover:underline dark:text-ipv-blue-light">Cambiar</button>
+                                    </div>
+                                @else
+                                    <input id="buscarEmpleado" wire:model.live.debounce.300ms="buscarEmpleado" type="search" autocomplete="off"
+                                        placeholder="Apellido o legajo"
+                                        class="w-full rounded-lg border border-ipv-blue/20 bg-white/80 px-3 py-2 text-sm text-ipv-ink focus:outline-none focus:ring-2 focus:ring-ipv-blue/40 dark:border-white/15 dark:bg-white/[0.06] dark:text-ipv-ink-dark">
+                                    <div wire:loading.delay wire:target="buscarEmpleado" class="mt-2 space-y-2">
+                                        <div class="sirex-skeleton h-8 rounded"></div>
+                                        <div class="sirex-skeleton h-8 rounded"></div>
+                                    </div>
+                                    @if ($this->empleadosSugeridos->isNotEmpty())
+                                        <ul wire:loading.remove wire:target="buscarEmpleado"
+                                            class="mt-1 max-h-56 overflow-y-auto rounded-lg border border-ipv-blue/15 bg-white shadow-lg dark:border-white/10 dark:bg-[#1a2332]">
+                                            @foreach ($this->empleadosSugeridos as $emp)
+                                                <li wire:key="emp-{{ $emp->id }}">
+                                                    <button type="button" wire:click="seleccionarEmpleado({{ $emp->id }})"
+                                                        class="flex w-full items-center justify-between px-3 py-2 text-left text-sm transition hover:bg-ipv-blue hover:text-white">
+                                                        <span>{{ $emp->nombre_completo }}</span>
+                                                        <span class="text-xs opacity-70">Leg. {{ $emp->legajo }}</span>
+                                                    </button>
+                                                </li>
+                                            @endforeach
+                                        </ul>
+                                    @elseif (mb_strlen(trim($buscarEmpleado)) >= 2)
+                                        <p wire:loading.remove wire:target="buscarEmpleado" class="mt-1 text-xs text-ipv-ink/55 dark:text-ipv-ink-dark/55">No hay empleados activos con ese dato.</p>
+                                    @endif
+                                @endif
+                                @error('buscarEmpleado') <span class="mt-1 block text-xs text-ipv-magenta">{{ $message }}</span> @enderror
+                                @error('nuevoLegajo') <span class="mt-1 block text-xs text-ipv-magenta">Ese empleado ya tiene usuario.</span> @enderror
                             </div>
                             <div>
                                 <label class="mb-1 block text-sm font-medium text-ipv-ink/80 dark:text-ipv-ink-dark/80">Email</label>

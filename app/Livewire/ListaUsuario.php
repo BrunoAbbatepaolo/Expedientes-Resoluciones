@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Livewire;
 
+use App\Models\Mitiv\Empleado;
 use App\Models\Oficina;
 use App\Models\Permiso;
 use App\Models\User;
@@ -13,6 +14,7 @@ use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+use Livewire\Attributes\Computed;
 use Livewire\Attributes\Locked;
 use Livewire\Component;
 use Livewire\WithPagination;
@@ -55,7 +57,12 @@ class ListaUsuario extends Component
 
     public array $oficinas = [];
 
-    // --- Alta de usuario ---
+    // --- Alta de usuario (solo empleados activos del IPV, fuente: sistema viejo) ---
+    public string $buscarEmpleado = '';
+
+    #[Locked]
+    public ?int $empleadoId = null;
+
     public string $nuevoNombre = '';
 
     public string $nuevoApellido = '';
@@ -201,6 +208,57 @@ class ListaUsuario extends Component
         }
     }
 
+    /**
+     * Empleados activos que coinciden con lo tipeado (apellido, nombre o legajo).
+     *
+     * @return \Illuminate\Support\Collection<int, Empleado>
+     */
+    #[Computed]
+    public function empleadosSugeridos(): \Illuminate\Support\Collection
+    {
+        $texto = trim($this->buscarEmpleado);
+        if (mb_strlen($texto) < 2 || $this->empleadoId) {
+            return collect();
+        }
+
+        return rescue(function () use ($texto) {
+            $like = \Illuminate\Support\Facades\DB::connection('pgsql_mitiv')->getDriverName() === 'pgsql' ? 'ilike' : 'like';
+
+            return Empleado::activos()
+                ->where(function ($q) use ($texto, $like) {
+                    ctype_digit($texto)
+                        ? $q->whereRaw('CAST(legajo AS TEXT) LIKE ?', [$texto.'%'])
+                        : $q->where('apellido', $like, '%'.addcslashes($texto, '%_\\').'%')
+                            ->orWhere('nombre', $like, '%'.addcslashes($texto, '%_\\').'%');
+                })
+                ->orderBy('apellido')
+                ->limit(8)
+                ->get();
+        }, collect());
+    }
+
+    public function seleccionarEmpleado(int $id): void
+    {
+        $empleado = rescue(fn () => Empleado::activos()->find($id));
+        if (! $empleado) {
+            $this->dispatch('toast', type: 'error', message: 'El empleado no está activo en el IPV.');
+
+            return;
+        }
+
+        $this->empleadoId = $empleado->id;
+        $this->nuevoNombre = $empleado->nombre;
+        $this->nuevoApellido = $empleado->apellido;
+        $this->nuevoLegajo = (string) $empleado->legajo;
+        $this->nuevoEmail = (string) $empleado->email;
+        $this->buscarEmpleado = $empleado->nombre_completo;
+    }
+
+    public function quitarEmpleado(): void
+    {
+        $this->reset(['empleadoId', 'buscarEmpleado', 'nuevoNombre', 'nuevoApellido', 'nuevoLegajo', 'nuevoEmail']);
+    }
+
     public function crearUsuario(): void
     {
         if (! auth()->user()?->permiso('lista_usuario_editar')) {
@@ -208,6 +266,17 @@ class ListaUsuario extends Component
 
             return;
         }
+
+        // Nombre, apellido y legajo salen del empleado activo (no de lo que mande el cliente).
+        $empleado = $this->empleadoId ? rescue(fn () => Empleado::activos()->find($this->empleadoId)) : null;
+        if (! $empleado) {
+            $this->addError('buscarEmpleado', 'Elegí un empleado activo del IPV.');
+
+            return;
+        }
+        $this->nuevoNombre = $empleado->nombre;
+        $this->nuevoApellido = $empleado->apellido;
+        $this->nuevoLegajo = (string) $empleado->legajo;
 
         try {
             $this->validate($this->reglasNuevoUsuario());
@@ -227,7 +296,7 @@ class ListaUsuario extends Component
             $this->claveGenerada = $usuario->email.': '.$clave;
 
             $this->dispatch('toast', type: 'success', message: 'Usuario creado. Deberá cambiar su contraseña al iniciar sesión.');
-            $this->reset(['nuevoNombre', 'nuevoApellido', 'nuevoLegajo', 'nuevoEmail', 'nuevoOficinaId']);
+            $this->reset(['nuevoNombre', 'nuevoApellido', 'nuevoLegajo', 'nuevoEmail', 'nuevoOficinaId', 'empleadoId', 'buscarEmpleado']);
             $this->dispatch('close-modal', 'modal-crear-usuario');
         } catch (\Illuminate\Validation\ValidationException $ve) {
             $this->dispatch('toast', type: 'error', message: 'Revise los campos.');
@@ -375,7 +444,16 @@ class ListaUsuario extends Component
                 : 'Sin asignar';
         }
 
+        // Legajos de esta página que siguen activos en el IPV. null = el sistema viejo
+        // no respondió y no se marca a nadie.
+        $legajosActivos = rescue(fn () => Empleado::activos()
+            ->whereIn('legajo', collect($usuarios->items())->pluck('legajo')->filter(fn ($l) => ctype_digit((string) $l))->map(fn ($l) => (int) $l)->all())
+            ->pluck('legajo')
+            ->map(fn ($l) => (string) $l)
+            ->all(), null);
+
         return view('livewire.lista-usuario', [
+            'legajosActivos' => $legajosActivos,
             'usuarios' => $usuarios,
             'oficinaPorUsuario' => $oficinaPorUsuario,
             'oficinas' => $this->oficinas,
