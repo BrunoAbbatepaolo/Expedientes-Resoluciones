@@ -10,6 +10,7 @@ use App\Traits\AuthorizesOficina;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Jantinnerezo\LivewireAlert\Facades\LivewireAlert;
+use Livewire\Attributes\Locked;
 use Livewire\Component;
 use Livewire\WithPagination;
 
@@ -34,8 +35,10 @@ class Expedientes extends Component
 
     public $causante;
 
+    #[Locked]
     public $expedienteId;
 
+    #[Locked]
     public $expedientePaseId;
 
     public $modalFiltro;
@@ -348,10 +351,22 @@ class Expedientes extends Component
 
     public function guardar()
     {
-        $expedienteExistente = \App\Models\Expediente::where('num_exp', $this->expedienteEncontrado['numero'])->first();
+        $this->autorizarPermiso('expediente_editar');
+
+        if (! $this->expedienteEncontrado || blank($this->expedienteForm->num_exp)) {
+            LivewireAlert::title('Buscá el expediente antes de guardarlo')->error()->timer(2500)->toast()->position('top-end')->show();
+
+            return;
+        }
+
+        // Se chequea el número que efectivamente se va a guardar (el del form), no el
+        // de la búsqueda: el form lo puede modificar el cliente.
+        $expedienteExistente = \App\Models\Expediente::where('num_exp', $this->expedienteForm->num_exp)->first();
 
         if ($expedienteExistente) {
+            LivewireAlert::title('El expediente ya se encuentra cargado')->error()->timer(2500)->toast()->position('top-end')->show();
 
+            return;
         } else {
             // Obtener la oficina del usuario antes de guardar
             $oficinaId = auth()->user()->oficinaAsignadaId()

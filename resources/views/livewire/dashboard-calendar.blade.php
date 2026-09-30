@@ -5,6 +5,7 @@ use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\Computed;
+use Livewire\Attributes\Locked;
 use Livewire\Volt\Component;
 
 new class extends Component
@@ -16,6 +17,7 @@ new class extends Component
     // Modal state
     public $showModal = false;
 
+    #[Locked]
     public $taskId = null;
 
     public $taskTitle = '';
@@ -31,6 +33,7 @@ new class extends Component
     public $isEditing = true;
 
     // TEMPORAL: Permisos manejados desde el front (forzamos a true para que puedas probar)
+    #[Locked]
     public $hasPermission = true;
 
     public function mount()
@@ -117,7 +120,7 @@ new class extends Component
         ]);
 
         if ($this->taskId) {
-            $task = Task::find($this->taskId);
+            $task = Task::findOrFail($this->taskId);
             $task->update([
                 'title' => $this->taskTitle,
                 'description' => $this->taskDescription,

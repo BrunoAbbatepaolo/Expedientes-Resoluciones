@@ -6,6 +6,7 @@ use App\Livewire\Forms\ResolucionForm;
 use App\Models\Resolucion;
 use App\Traits\AuthorizesOficina;
 use Flux\Flux;
+use Livewire\Attributes\Locked;
 use Livewire\Component;
 use Livewire\WithFileUploads; // Importante para controlar los modales desde el backend
 
@@ -17,6 +18,7 @@ class Resoluciones extends Component
     public ResolucionForm $resolucionForm;
 
     // Propiedad para saber qué registro eliminar
+    #[Locked]
     public $resolucionIdParaBorrar;
 
     /**
@@ -74,6 +76,11 @@ class Resoluciones extends Component
 
     public function render()
     {
+        // Sin permiso no se consulta nada (la vista ya muestra el aviso).
+        if (! auth()->user()?->permiso('resolucion_ver')) {
+            return view('livewire.resoluciones', ['resolucionesConExpediente' => collect()]);
+        }
+
         $oficinaId = auth()->user()?->oficinaAsignadaId()
             ?? auth()->user()?->oficinaIdPara('resolucion_ver');
 

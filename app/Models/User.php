@@ -46,15 +46,6 @@ class User extends Authenticatable
         return $this->permisos()->where('nombre', $permiso)->exists();
     }
 
-    public function togglePermiso(string $permiso): void
-    {
-        if ($this->permiso($permiso)) {
-            $this->permisos()->where('nombre', $permiso)->delete();
-        } else {
-            $this->permisos()->create(['nombre' => $permiso]);
-        }
-    }
-
     /**
      * Devuelve la oficina asignada desde el permiso 'oficina_asignada'.
      */

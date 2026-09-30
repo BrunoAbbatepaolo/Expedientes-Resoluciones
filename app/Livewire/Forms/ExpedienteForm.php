@@ -40,7 +40,8 @@ class ExpedienteForm extends Form
     #[Validate('required')]
     public $oficina_id;
 
-    public $campos = [
+    // protected: no viaja al cliente, así no se puede alterar qué columnas se guardan.
+    protected array $campos = [
         'num_exp',
         'folio',
         'causante',
@@ -53,6 +54,18 @@ class ExpedienteForm extends Form
         'oficina_id',
     ];
 
+    // Lo único que el usuario puede cambiar desde "Editar". oficina_id y los datos
+    // de salida (ofi_salida, cod_area, cod_oficina) solo los escribe el servidor
+    // en Expedientes::guardar() / confirmarPase() / aceptarPase().
+    protected array $editables = [
+        'num_exp',
+        'folio',
+        'causante',
+        'asunto',
+        'fecha_ingreso',
+        'fecha_salida',
+    ];
+
     public function loadExpMitiv($expediente)
     {
         $this->expediente = $expediente;
@@ -61,14 +74,19 @@ class ExpedienteForm extends Form
         }
     }
 
+    private function datos(array $campos): array
+    {
+        return collect($campos)
+            ->mapWithKeys(fn ($campo) => [$campo => $this->{$campo}])
+            ->map(fn ($valor) => $valor === '' ? null : $valor)
+            ->toArray();
+    }
+
     public function store()
     {
         try {
             return DB::connection('mysql_admin')->transaction(function () {
-                $data = collect($this->campos)
-                    ->mapWithKeys(fn ($campo) => [$campo => $this->{$campo}])
-                    ->map(fn ($valor) => $valor === '' ? null : $valor)
-                    ->toArray();
+                $data = $this->datos([...array_diff($this->editables, ['fecha_salida']), 'oficina_id']);
 
                 \App\Models\Expediente::create($data);
 
@@ -91,12 +109,7 @@ class ExpedienteForm extends Form
                 // segundo espera a que termine el primero.
                 $expediente = \App\Models\Expediente::lockForUpdate()->findOrFail($this->expediente->id);
 
-                $data = collect($this->campos)
-                    ->mapWithKeys(fn ($campo) => [$campo => $this->{$campo}])
-                    ->map(fn ($valor) => $valor === '' ? null : $valor)
-                    ->toArray();
-
-                $expediente->update($data);
+                $expediente->update($this->datos($this->editables));
                 $this->expediente = $expediente;
 
                 // Iniciar un pase (elegir oficina de destino) es una acción aparte,
@@ -111,7 +124,7 @@ class ExpedienteForm extends Form
 
     public function hayCambios()
     {
-        foreach ($this->campos as $campo) {
+        foreach ($this->editables as $campo) {
             $valorForm = $this->{$campo} === '' ? null : $this->{$campo};
             $valorModelo = $this->expediente->{$campo};
             if ($valorForm != $valorModelo) {

@@ -3,6 +3,7 @@
 
 namespace App\Livewire;
 
+use Livewire\Attributes\Locked;
 use Livewire\Component;
 use App\Models\Expediente;
 use App\Models\Resolucion;
@@ -10,6 +11,8 @@ use Illuminate\Support\Facades\Auth;
 
 class DashboardPanel extends Component
 {
+    // Locked: si el cliente pudiera cambiarlo vería métricas de otra oficina.
+    #[Locked]
     public int $oficinaId;
 
     public function mount(): void

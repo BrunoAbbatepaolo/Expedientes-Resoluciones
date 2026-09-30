@@ -27,6 +27,17 @@
             </div>
         </div>
 
+        @if ($claveGenerada)
+            <div class="flex items-start justify-between gap-3 rounded-lg border border-ipv-blue/30 bg-ipv-blue/10 px-4 py-3 text-sm text-ipv-ink dark:text-ipv-ink-dark">
+                <p>
+                    Usuario creado. Contraseña provisoria (se muestra una sola vez):
+                    <span class="font-mono font-semibold select-all">{{ $claveGenerada }}</span>
+                </p>
+                <button type="button" wire:click="ocultarClave" aria-label="Cerrar aviso"
+                    class="cursor-pointer text-ipv-ink/60 hover:text-ipv-ink dark:text-ipv-ink-dark/60">&times;</button>
+            </div>
+        @endif
+
         <div class="sirex-glass-card overflow-x-auto rounded-[14px]">
             <table class="w-full table-fixed">
                 <thead>

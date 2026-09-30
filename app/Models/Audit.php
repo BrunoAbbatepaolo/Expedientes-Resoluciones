@@ -6,7 +6,8 @@ use Illuminate\Database\Eloquent\Model;
 
 class Audit extends Model
 {
-    protected $connection = 'mysql'; 
+    // Sin $connection fija: usa la conexión por defecto, la misma donde la migración
+    // crea la tabla. Con 'mysql' fijo los tests intentaban escribir en la base real.
     protected $table = 'audits';
     protected $fillable = [
         'auditable_type',

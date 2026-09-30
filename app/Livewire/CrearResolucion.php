@@ -7,6 +7,7 @@ use App\Models\ResolucionArchivo;
 use App\Traits\AuthorizesOficina;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\View;
+use Livewire\Attributes\Locked;
 use Livewire\Component;
 use Livewire\WithFileUploads;
 use Mews\Purifier\Facades\Purifier;
@@ -16,6 +17,8 @@ class CrearResolucion extends Component
     use AuthorizesOficina;
     use WithFileUploads;
 
+    // Locked: se usa para armar el nombre de la vista (prototipos.{tipo}).
+    #[Locked]
     public string $tipo;
 
     public string $modo = ''; // 'completo' o 'personalizado'
@@ -139,6 +142,9 @@ class CrearResolucion extends Component
     public function mount($tipo)
     {
         $this->autorizarPermiso('resolucion_editar');
+
+        // Solo letras y guiones: evita que un tipo con '.' o '/' apunte a otra vista.
+        abort_unless(is_string($tipo) && preg_match('/^[\pL\-]+$/u', $tipo), 404);
 
         $this->tipo = $tipo;
         // Establecer la fecha inicial en el formato correcto
@@ -354,8 +360,15 @@ class CrearResolucion extends Component
         ?string $codCasa,
         string $plantilla
     ): Resolucion {
+        // Sin oficina la resolución quedaría visible y editable para todas las
+        // oficinas (ver AuthorizesOficina::autorizarResolucion()).
+        $oficinaId = auth()->user()->oficinaAsignadaId();
+        if (! $oficinaId) {
+            throw new \RuntimeException('No tenés una oficina asignada. Pedile a un administrador que te asigne una.');
+        }
+
         $resolucion = Resolucion::create([
-            'oficina_id' => auth()->user()->oficinaAsignadaId(),
+            'oficina_id' => $oficinaId,
             'numero_exp' => $numeroExp,
             'numero_resolucion' => $numeroResolucion,
             'fecha' => $fecha,

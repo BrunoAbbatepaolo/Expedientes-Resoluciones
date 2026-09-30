@@ -4,12 +4,14 @@ namespace App\Livewire;
 
 use App\Models\Expediente;
 use App\Traits\AuthorizesOficina;
+use Livewire\Attributes\Locked;
 use Livewire\Component;
 
 class Detalles extends Component
 {
     use AuthorizesOficina;
 
+    #[Locked]
     public $id;
 
     public $expediente;

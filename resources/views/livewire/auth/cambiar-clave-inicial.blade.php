@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules;
 use Livewire\Attributes\Layout;
 use Livewire\Volt\Component;
@@ -14,7 +15,15 @@ new #[Layout('components.layouts.auth')] class extends Component
     public function guardar(): void
     {
         $validated = $this->validate([
-            'password' => ['required', 'string', 'confirmed', Rules\Password::defaults()],
+            'password' => [
+                'required', 'string', 'confirmed', Rules\Password::defaults(),
+                // No permitir reutilizar la contraseña provisoria.
+                function ($attribute, $value, $fail) {
+                    if (Hash::check($value, Auth::user()->password)) {
+                        $fail('La nueva contraseña debe ser distinta de la provisoria.');
+                    }
+                },
+            ],
         ]);
 
         $user = Auth::user();

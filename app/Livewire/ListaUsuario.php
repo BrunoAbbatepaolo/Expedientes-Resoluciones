@@ -11,6 +11,9 @@ use App\Traits\AuthorizesOficina;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
+use Livewire\Attributes\Locked;
 use Livewire\Component;
 use Livewire\WithPagination;
 
@@ -23,6 +26,15 @@ class ListaUsuario extends Component
 
     public ?User $usuarioSeleccionado = null;
 
+    private const PERMISOS_UI = [
+        'expediente_ver',
+        'expediente_editar',
+        'resolucion_ver',
+        'resolucion_editar',
+        'lista_usuario_ver',
+        'lista_usuario_editar',
+    ];
+
     public array $permisos = [
         'expediente_ver' => false,
         'expediente_editar' => false,
@@ -32,7 +44,12 @@ class ListaUsuario extends Component
         'lista_usuario_editar' => false,
     ];
 
+    #[Locked]
     public ?int $editingUserId = null;
+
+    // Clave provisoria del último usuario creado, para que el admin se la comunique.
+    #[Locked]
+    public ?string $claveGenerada = null;
 
     public ?int $oficina_id = null;
 
@@ -200,13 +217,14 @@ class ListaUsuario extends Component
                 'apellido' => $this->nuevoApellido,
                 'legajo' => $this->nuevoLegajo,
                 'email' => $this->nuevoEmail,
-                // Contraseña genérica: el usuario está obligado a cambiarla en su
-                // primer login (ver App\Http\Middleware\EnsurePasswordIsChanged).
-                'password' => '12345678',
+                // Contraseña provisoria aleatoria: el usuario está obligado a cambiarla
+                // en su primer login (ver App\Http\Middleware\EnsurePasswordIsChanged).
+                'password' => $clave = Str::password(12, symbols: false),
                 'require_password_change' => true,
             ]);
 
             Permiso::setOficinaAsignada($usuario->id, (int) $this->nuevoOficinaId);
+            $this->claveGenerada = $usuario->email.': '.$clave;
 
             $this->dispatch('toast', type: 'success', message: 'Usuario creado. Deberá cambiar su contraseña al iniciar sesión.');
             $this->reset(['nuevoNombre', 'nuevoApellido', 'nuevoLegajo', 'nuevoEmail', 'nuevoOficinaId']);
@@ -241,24 +259,26 @@ class ListaUsuario extends Component
 
         try {
             $userId = $this->usuarioSeleccionado->id;
-            $permisosUI = array_keys($this->permisos);
+            // Lista blanca: el array $permisos viene del cliente y podría traer claves
+            // nuevas (ej. 'oficina_asignada'); solo se tocan los permisos de esta UI.
+            $permisosUI = self::PERMISOS_UI;
 
-            // Borrar solo los permisos administrables desde esta UI
-            Permiso::query()
-                ->where('user_id', $userId)
-                ->whereIn('nombre', $permisosUI)
-                ->delete();
+            DB::connection((new Permiso)->getConnectionName())->transaction(function () use ($userId, $permisosUI) {
+                Permiso::query()
+                    ->where('user_id', $userId)
+                    ->whereIn('nombre', $permisosUI)
+                    ->delete();
 
-            // Insertar nuevamente los que quedaron en true
-            foreach ($this->permisos as $nombre => $activo) {
-                if ($activo) {
-                    Permiso::query()->create([
-                        'user_id' => $userId,
-                        'nombre' => $nombre,
-                        'oficina_id' => null,
-                    ]);
+                foreach ($permisosUI as $nombre) {
+                    if (! empty($this->permisos[$nombre])) {
+                        Permiso::query()->create([
+                            'user_id' => $userId,
+                            'nombre' => $nombre,
+                            'oficina_id' => null,
+                        ]);
+                    }
                 }
-            }
+            });
 
             $this->dispatch('toast', type: 'success', message: 'Permisos guardados correctamente.');
             $this->dispatch('close-modal', 'modal-permisos');
@@ -273,23 +293,9 @@ class ListaUsuario extends Component
         }
     }
 
-    public function togglePermiso(int $usuarioId, string $permiso): void
+    public function ocultarClave(): void
     {
-        if (! auth()->user()?->permiso('lista_usuario_editar')) {
-            $this->dispatch('toast', type: 'error', message: 'No tenés permiso para editar usuarios.');
-
-            return;
-        }
-
-        $usuario = User::on('mysql_admin')->find($usuarioId);
-
-        if (! $usuario) {
-            $this->dispatch('toast', type: 'error', message: 'Usuario no encontrado.');
-
-            return;
-        }
-
-        $usuario->togglePermiso($permiso);
+        $this->claveGenerada = null;
     }
 
     public function seleccionarTodos(): void
