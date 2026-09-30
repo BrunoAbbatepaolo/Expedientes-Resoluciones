@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Pase extends Model
 {
@@ -34,27 +35,27 @@ class Pase extends Model
         'firmado' => 'boolean',
     ];
 
-    public function expediente()
+    public function expediente(): BelongsTo
     {
         return $this->belongsTo(Expediente::class);
     }
 
-    public function oficina()
+    public function oficina(): BelongsTo
     {
         return $this->belongsTo(Oficina::class, 'oficina_id');
     }
 
-    public function oficinaDestino()
+    public function oficinaDestino(): BelongsTo
     {
         return $this->belongsTo(Oficina::class, 'oficina_destino_id');
     }
 
-    public function user()
+    public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
     }
 
-    public function oficinaOrigen()
+    public function oficinaOrigen(): BelongsTo
     {
         return $this->belongsTo(Oficina::class, 'oficina_origen_id');
     }

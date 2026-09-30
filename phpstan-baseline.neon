@@ -1,0 +1,13 @@
+parameters:
+	ignoreErrors:
+		-
+			message: '#^Array has 2 duplicate keys with value 285 \(285, 285\)\.$#'
+			identifier: array.duplicateKey
+			count: 1
+			path: app/Console/Commands/ImportarPases.php
+
+		-
+			message: '#^Array has 2 duplicate keys with value 98 \(98, 98\)\.$#'
+			identifier: array.duplicateKey
+			count: 1
+			path: app/Console/Commands/ImportarPases.php

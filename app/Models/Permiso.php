@@ -7,6 +7,12 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
+/**
+ * @property int $id
+ * @property int $user_id
+ * @property string $nombre
+ * @property int|null $oficina_id
+ */
 class Permiso extends Model
 {
     // Importante: esta tabla vive en mysql_admin

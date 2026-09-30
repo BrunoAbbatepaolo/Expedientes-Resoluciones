@@ -4,6 +4,8 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Oficina extends Model
 {
@@ -19,12 +21,12 @@ class Oficina extends Model
         'codigo',
     ];
 
-    public function area()
+    public function area(): BelongsTo
     {
         return $this->belongsTo(Area::class, 'cod_area', 'codigo');
     }
 
-    public function expedientes()
+    public function expedientes(): HasMany
     {
         return $this->hasMany(Expediente::class, 'cod_oficina', 'codigo')
             ->where('cod_area', $this->cod_area);

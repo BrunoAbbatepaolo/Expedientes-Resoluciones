@@ -148,8 +148,8 @@ class Expedientes extends Component
         }
 
         // 2) Oficina desde 'oficina_asignada' (fallback a 'expediente_ver' si no existiera)
-        $oficinaId = auth()->user()?->oficinaAsignadaId()
-            ?? auth()->user()?->oficinaIdPara('expediente_ver');
+        $oficinaId = auth()->user()->oficinaAsignadaId()
+            ?? auth()->user()->oficinaIdPara('expediente_ver');
 
         if (! $oficinaId) {
             $this->sinOficina = true;

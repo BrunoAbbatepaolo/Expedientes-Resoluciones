@@ -31,7 +31,7 @@ class ResolucionArchivoController extends Controller
 
     public function archivo(ResolucionArchivo $archivo): Response
     {
-        $this->autorizarResolucion($archivo->resolucion()->firstOrFail(), 'resolucion_ver');
+        $this->autorizarResolucion(Resolucion::findOrFail($archivo->resolucion_id), 'resolucion_ver');
 
         return $this->servir($archivo->ruta, $archivo->nombre_original);
     }

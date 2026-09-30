@@ -1,0 +1,12 @@
+includes:
+    - vendor/larastan/larastan/extension.neon
+    # Pendiente de decisión de negocio: claves 98 y 285 duplicadas en ImportarPases::$mapeoEO.
+    - phpstan-baseline.neon
+
+parameters:
+    paths:
+        - app/
+        - routes/
+
+    # Nivel 5: tipos de argumentos y retornos. Subir de a uno a medida que se limpia.
+    level: 5

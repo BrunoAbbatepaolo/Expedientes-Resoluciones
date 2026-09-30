@@ -82,8 +82,8 @@ class Resoluciones extends Component
             return view('livewire.resoluciones', ['resolucionesConExpediente' => collect()]);
         }
 
-        $oficinaId = auth()->user()?->oficinaAsignadaId()
-            ?? auth()->user()?->oficinaIdPara('resolucion_ver');
+        $oficinaId = auth()->user()->oficinaAsignadaId()
+            ?? auth()->user()->oficinaIdPara('resolucion_ver');
 
         // Se agregó latest() para que las más nuevas aparezcan arriba.
         // Las resoluciones viejas sin oficina_id (ver implementacion_futuro.md 2.1)

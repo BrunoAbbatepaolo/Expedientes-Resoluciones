@@ -56,11 +56,11 @@ if (! function_exists('num2letras')) {
             return 'CERO';
         }
 
-        $integerPart = floor($numero);
-        $decimalPart = round(($numero - $integerPart) * 100);
+        $integerPart = (int) floor($numero);
+        $decimalPart = (int) round(($numero - $integerPart) * 100);
 
         $letters = convertNumberToLetters($integerPart);
-        $result = $letters.' con '.str_pad($decimalPart, 2, '0', STR_PAD_LEFT).'/100';
+        $result = $letters.' con '.str_pad((string) $decimalPart, 2, '0', STR_PAD_LEFT).'/100';
 
         return $result;
     }

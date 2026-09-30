@@ -6,6 +6,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
@@ -29,12 +30,12 @@ class Resolucion extends Model
         'pdf',
     ];
 
-    public function expediente()
+    public function expediente(): BelongsTo
     {
         return $this->belongsTo(VistaExpedientes::class, 'numero_exp', 'numero');
     }
 
-    public function oficina()
+    public function oficina(): BelongsTo
     {
         return $this->belongsTo(Oficina::class, 'oficina_id');
     }

@@ -6,6 +6,8 @@ use App\Traits\Auditable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Expediente extends Model
@@ -31,13 +33,13 @@ class Expediente extends Model
         'oficina_id',
     ];
 
-    public function oficina()
+    public function oficina(): BelongsTo
     {
         return $this->belongsTo(Oficina::class, 'cod_oficina', 'codigo')
             ->where('cod_area', $this->cod_area); // Asegura que también coincida el área
     }
 
-    public function area()
+    public function area(): BelongsTo
     {
         return $this->belongsTo(Area::class, 'cod_area', 'codigo');
     }
@@ -47,11 +49,11 @@ class Expediente extends Model
         return $query->where('oficina_id', $oficinaId);
     }
 
-    public function oficinaById()
+    public function oficinaById(): BelongsTo
     {
         return $this->belongsTo(Oficina::class, 'oficina_id', 'id');
     }
-    public function pases()
+    public function pases(): HasMany
     {
         return $this->hasMany(Pase::class)->orderBy('fecha')->orderBy('hora');
     }

@@ -352,7 +352,7 @@ class ListaUsuario extends Component
 
         $userIds = collect($usuarios->items())->pluck('id')->all();
 
-        /** @var EloquentCollection $permisosOficina */
+        /** @var EloquentCollection<int, Permiso> $permisosOficina */
         $permisosOficina = Permiso::query()
             ->whereIn('user_id', $userIds)
             ->where('nombre', 'oficina_asignada')

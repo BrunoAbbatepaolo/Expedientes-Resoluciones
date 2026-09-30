@@ -62,8 +62,7 @@ class CrearResolucion extends Component
         'sector' => '',
         'estado_civil_titular_nuevo' => '',
         'estado_civil_cotitular_nuevo' => '',
-        // Campos específicos de AplicarPagos
-        'nombre_barrio' => '',
+        // Campos específicos de AplicarPagos (nombre_barrio ya está arriba)
         'año_cuotas' => '',
         'fecha_primer_pago' => '',
         'codigo_pago' => '',
@@ -85,7 +84,6 @@ class CrearResolucion extends Component
         'res_modificatoria' => '779/2017',
         'fecha_res_adjudicacion' => '',
         'orden' => '',
-        'num_foja_darrd' => '',
         'num_foja_dni' => '',
         'num_foja_resolucion' => '',
         'num_foja_darrd_conf' => '',
@@ -614,7 +612,7 @@ class CrearResolucion extends Component
     {
         $año = date('Y');
         do {
-            $numero = str_pad(rand(1, 9999), 4, '0', STR_PAD_LEFT);
+            $numero = str_pad((string) rand(1, 9999), 4, '0', STR_PAD_LEFT);
             $numeroTramite = "{$numero}/440-{$año}";
         } while (\App\Models\Resolucion::where('numero_exp', $numeroTramite)->exists());
 
@@ -634,7 +632,6 @@ class CrearResolucion extends Component
             'datos.num_foja_solicitud' => 'nullable|string|max:50',
             'datos.num_foja_informe' => 'nullable|string|max:50',
             'datos.fecha_cancelacion' => 'nullable|date',
-            'datos.num_foja_darrd' => 'nullable|string|max:50',
             'datos.num_foja_dictamen' => 'nullable|string|max:50',
             'datos.nombre_titular' => 'required|string|max:255',
             'datos.dni_titular' => 'required|string|max:20',
@@ -691,7 +688,6 @@ class CrearResolucion extends Component
             'datos.cantidad_viviendas' => 'nullable|string|max:20',
             'datos.cantidad_letras' => 'nullable|string|max:100',
             // Campos específicos de AplicarPagos
-            'datos.nombre_barrio' => 'nullable|string|max:255',
             'datos.año_cuotas' => 'nullable|integer|min:2020|max:2100',
             'datos.fecha_primer_pago' => 'nullable|date',
         ];
