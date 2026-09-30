@@ -19,7 +19,13 @@ class Oficina extends Model
         'cod_area',
         'nombre',
         'codigo',
+        'mitiv_oficina_id',
     ];
+
+    protected function casts(): array
+    {
+        return ['mitiv_oficina_id' => 'integer'];
+    }
 
     public function area(): BelongsTo
     {

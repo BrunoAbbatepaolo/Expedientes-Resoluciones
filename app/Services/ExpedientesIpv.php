@@ -2,7 +2,10 @@
 
 namespace App\Services;
 
+use App\Models\Mitiv\Empleado;
 use App\Models\Mitiv\Expediente;
+use App\Models\Oficina;
+use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Connection;
@@ -266,6 +269,50 @@ class ExpedientesIpv
                     ->where('fecha_hora', '>=', $desde)->count(),
             ];
         });
+    }
+
+    /**
+     * Oficina del IPV (expediente_oficinas.id) del usuario: primero el vínculo cargado
+     * en su oficina de SiRex; si no hay, la oficina del IPV de su legajo (si es una sola).
+     */
+    public function oficinaIpvDe(User $user): ?int
+    {
+        $oficinaId = $user->oficinaAsignadaId();
+        $vinculada = $oficinaId ? Oficina::whereKey($oficinaId)->value('mitiv_oficina_id') : null;
+        if ($vinculada) {
+            return (int) $vinculada;
+        }
+
+        if (! ctype_digit((string) $user->legajo)) {
+            return null;
+        }
+
+        $ids = $this->db()->table('empleado_expediente_oficinas as eo')
+            ->join('empleados as emp', 'emp.id', '=', 'eo.empleado_id')
+            ->where('emp.legajo', (int) $user->legajo)
+            ->where('eo.habilitado', true)
+            ->pluck('eo.expediente_oficina_id')
+            ->unique();
+
+        return $ids->count() === 1 ? (int) $ids->first() : null;
+    }
+
+    /**
+     * Personal activo de una oficina del IPV (solo datos de contacto no sensibles).
+     *
+     * @return Collection<int, Empleado>
+     */
+    public function personal(int $oficinaId): Collection
+    {
+        return Empleado::activos()
+            ->join('empleado_expediente_oficinas as eo', 'eo.empleado_id', '=', 'empleados.id')
+            ->where('eo.expediente_oficina_id', $oficinaId)
+            ->where('eo.habilitado', true)
+            ->orderBy('empleados.apellido')
+            ->orderBy('empleados.nombre')
+            ->get()
+            ->unique('id')
+            ->values();
     }
 
     /** Oficinas del IPV (destinos de pase) habilitadas, para filtros y selects. */
