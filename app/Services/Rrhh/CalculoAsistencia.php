@@ -18,6 +18,7 @@ class CalculoAsistencia
         private int $toleranciaDefault,
         private int $tipoAusente,
         private int $tipoTarde,
+        private int $limiteFalta = 30,
     ) {}
 
     /**
@@ -68,17 +69,22 @@ class CalculoAsistencia
             return $nuevo(EstadoDia::Franco, 'Sin horario asignado para este día');
         }
 
-        $limite = $entrada->addMinutes($tolerancia);
+        // Regla del IPV: dentro de la tolerancia es presente; hasta el límite de falta es
+        // llegada tarde; después, falta. Se compara por minuto (07:10:45 cuenta como 07:10).
+        $limiteFalta = $entrada->addMinutes(max($this->limiteFalta, $tolerancia));
         if ($marcas === []) {
-            return $fecha->isSameDay($ahora) && $ahora->lte($limite)
-                ? $nuevo(EstadoDia::Pendiente, 'Todavía dentro del horario de entrada')
+            return $fecha->isSameDay($ahora) && $ahora->lte($limiteFalta)
+                ? $nuevo(EstadoDia::Pendiente, 'Todavía puede fichar la entrada')
                 : $nuevo(EstadoDia::Falta, 'Sin fichadas (no registrado aún por RRHH)');
         }
 
-        if ($marcas[0]->gt($limite)) {
-            $minutos = (int) $entrada->diffInMinutes($marcas[0]);
+        $primera = $marcas[0]->startOfMinute();
+        if ($primera->gt($entrada->addMinutes($tolerancia))) {
+            $minutos = (int) $entrada->diffInMinutes($primera);
 
-            return $nuevo(EstadoDia::Tarde, "Entró {$minutos} min después de las {$entrada->format('H:i')}", $minutos);
+            return $primera->gt($limiteFalta)
+                ? $nuevo(EstadoDia::Falta, "Entró {$minutos} min tarde (más de ".max($this->limiteFalta, $tolerancia).'): cuenta como falta', $minutos)
+                : $nuevo(EstadoDia::Tarde, "Entró {$minutos} min después de las {$entrada->format('H:i')}", $minutos);
         }
 
         if ($this->faltaTurnoTarde($fecha, $horario, $marcas, $ahora)) {

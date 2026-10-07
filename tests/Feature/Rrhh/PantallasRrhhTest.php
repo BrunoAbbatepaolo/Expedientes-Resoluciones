@@ -19,7 +19,7 @@ beforeEach(function () {
     $this->ana = MitivFalso::empleadoRrhh(['apellido' => 'GOMEZ', 'nombre' => 'ANA', 'legajo' => 321, 'card_id' => 321, 'oficina_id' => $this->computos]);
     $this->luis = MitivFalso::empleadoRrhh(['apellido' => 'DIAZ', 'nombre' => 'LUIS', 'oficina_id' => $this->legal]);
     MitivFalso::horarioSemana($this->ana);
-    MitivFalso::fichada(321, '2026-10-20 08:40');
+    MitivFalso::fichada(321, '2026-10-20 08:20');
 
     $this->rrhh = User::factory()->create();
     Permiso::create(['user_id' => $this->rrhh->id, 'nombre' => 'rrhh_ver']);
@@ -62,7 +62,7 @@ test('las fichadas crudas se filtran por legajo', function () {
         ->set('vista', 'fichadas')
         ->assertSee('Tarjeta 999')
         ->set('legajo', '321')
-        ->assertSee('20/10/2026 08:40')
+        ->assertSee('20/10/2026 08:20')
         ->assertDontSee('Tarjeta 999');
 });
 

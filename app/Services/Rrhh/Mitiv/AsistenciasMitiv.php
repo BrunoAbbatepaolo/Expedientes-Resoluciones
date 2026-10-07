@@ -147,6 +147,7 @@ class AsistenciasMitiv implements Asistencias
         $licencias = Ausencia::with('tipo:id,descripcion')
             ->whereIn('empleado_id', $ids)
             ->entre($d, $h)
+            ->whereNotIn('tipo_ausencias_id', (array) config('sirex.rrhh_tipos_ignorados') ?: [0])
             ->get(['id', 'empleado_id', 'desde', 'hasta', 'tipo_ausencias_id'])
             ->groupBy('empleado_id');
 

@@ -15,39 +15,47 @@ function marcas(string ...$horas): array
 }
 
 beforeEach(function () {
-    $this->calc = new CalculoAsistencia(toleranciaDefault: 30, tipoAusente: 82, tipoTarde: 7);
+    // Regla del IPV: 10 min de tolerancia; de 10 a 30 min es llegada tarde; más de 30, falta.
+    $this->calc = new CalculoAsistencia(toleranciaDefault: 10, tipoAusente: 82, tipoTarde: 7, limiteFalta: 30);
     $this->fecha = CarbonImmutable::parse('2026-10-06');
     $this->despues = CarbonImmutable::parse('2026-10-07 10:00');
+    $this->h7 = horario(dm: '07:00:00', hm: '14:00:00', tm: 10);
 });
 
-test('presente si entra dentro de la tolerancia', function () {
-    $dia = $this->calc->dia($this->fecha, horario(), marcas('08:20', '14:05'), false, null, null, $this->despues);
+test('hasta 10 minutos después de la entrada es presente', function () {
+    $dia = $this->calc->dia($this->fecha, $this->h7, marcas('07:10', '14:05'), false, null, null, $this->despues);
 
-    expect($dia->estado)->toBe(EstadoDia::Presente)->and($dia->marcas)->toBe(['08:20', '14:05']);
+    expect($dia->estado)->toBe(EstadoDia::Presente)->and($dia->marcas)->toBe(['07:10', '14:05']);
 });
 
-test('tarde si la primera fichada supera entrada más tolerancia', function () {
-    $dia = $this->calc->dia($this->fecha, horario(tm: 10), marcas('08:25'), false, null, null, $this->despues);
+test('de 10 a 30 minutos es llegada tarde', function (string $hora, int $minutos) {
+    $dia = $this->calc->dia($this->fecha, $this->h7, marcas($hora), false, null, null, $this->despues);
 
-    expect($dia->estado)->toBe(EstadoDia::Tarde)->and($dia->minutosTarde)->toBe(25);
+    expect($dia->estado)->toBe(EstadoDia::Tarde)->and($dia->minutosTarde)->toBe($minutos);
+})->with([['07:11', 11], ['07:30', 30]]);
+
+test('más de 30 minutos tarde cuenta como falta', function () {
+    $dia = $this->calc->dia($this->fecha, $this->h7, marcas('07:31'), false, null, null, $this->despues);
+
+    expect($dia->estado)->toBe(EstadoDia::Falta)
+        ->and($dia->minutosTarde)->toBe(31)
+        ->and($dia->motivo)->toContain('31 min');
 });
 
-test('tolerancia cero en el horario usa la de configuración', function () {
-    $dia = $this->calc->dia($this->fecha, horario(tm: 0), marcas('08:29'), false, null, null, $this->despues);
-
-    expect($dia->estado)->toBe(EstadoDia::Presente);
+test('tolerancia cero en el horario usa la de configuración (10)', function () {
+    expect($this->calc->dia($this->fecha, horario(dm: '07:00:00', tm: 0), marcas('07:10'), false, null, null, $this->despues)->estado)->toBe(EstadoDia::Presente)
+        ->and($this->calc->dia($this->fecha, horario(dm: '07:00:00', tm: 0), marcas('07:12'), false, null, null, $this->despues)->estado)->toBe(EstadoDia::Tarde);
 });
 
 test('falta si no fichó en un día laboral pasado', function () {
-    $dia = $this->calc->dia($this->fecha, horario(), [], false, null, null, $this->despues);
+    $dia = $this->calc->dia($this->fecha, $this->h7, [], false, null, null, $this->despues);
 
     expect($dia->estado)->toBe(EstadoDia::Falta)->and($dia->motivo)->toContain('Sin fichadas');
 });
 
-test('pendiente si es hoy y todavía no venció la tolerancia', function () {
-    $dia = $this->calc->dia($this->fecha, horario(), [], false, null, null, CarbonImmutable::parse('2026-10-06 08:15'));
-
-    expect($dia->estado)->toBe(EstadoDia::Pendiente);
+test('sin fichada hoy queda pendiente hasta los 30 minutos y después es falta', function () {
+    expect($this->calc->dia($this->fecha, $this->h7, [], false, null, null, CarbonImmutable::parse('2026-10-06 07:25'))->estado)->toBe(EstadoDia::Pendiente)
+        ->and($this->calc->dia($this->fecha, $this->h7, [], false, null, null, CarbonImmutable::parse('2026-10-06 07:31'))->estado)->toBe(EstadoDia::Falta);
 });
 
 test('futuro para días que no llegaron', function () {

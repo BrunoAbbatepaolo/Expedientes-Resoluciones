@@ -140,3 +140,16 @@ test('el lector de relojes avisa si se cortó el latido', function () {
 
     expect($lector->estado(CarbonImmutable::now())['alerta'])->toBeFalse();
 });
+
+test('los contratados (CONT) fichan igual: el período de contrato no justifica la falta', function () {
+    MitivFalso::horarioSemana($this->ana, '07:00', '14:00', 10);
+    DB::connection('pgsql_mitiv')->table('empleados')->where('id', $this->ana)->update(['card_id' => 5001]);
+    DB::connection('pgsql_mitiv')->table('tipo_ausencias')->insert(['id' => 131, 'descripcion' => 'CONT']);
+    DB::connection('pgsql_mitiv')->table('ausencias')->insert(['empleado_id' => $this->ana, 'desde' => '2026-07-18', 'hasta' => '2027-06-13', 'tipo_ausencias_id' => 131]);
+    MitivFalso::fichada(5001, '2026-10-19 07:05');
+
+    $dias = collect(app(Asistencias::class)->mes(alcance($this->rrhh), $this->ana, 2026, 10))->keyBy(fn ($d) => $d->fecha->day);
+
+    expect($dias[19]->estado)->toBe(EstadoDia::Presente)
+        ->and($dias[16]->estado)->toBe(EstadoDia::Falta);
+});

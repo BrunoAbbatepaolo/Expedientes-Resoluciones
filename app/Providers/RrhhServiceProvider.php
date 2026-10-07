@@ -32,6 +32,7 @@ class RrhhServiceProvider extends ServiceProvider
             toleranciaDefault: (int) config('sirex.rrhh_tolerancia_minutos'),
             tipoAusente: (int) config('sirex.rrhh_tipo_ausente_id'),
             tipoTarde: (int) config('sirex.rrhh_tipo_tarde_id'),
+            limiteFalta: (int) config('sirex.rrhh_limite_falta_minutos'),
         ));
 
         foreach (self::MITIV as $contrato => $implementacion) {

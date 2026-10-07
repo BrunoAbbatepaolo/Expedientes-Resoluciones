@@ -18,8 +18,10 @@ return [
     // lectura del sistema viejo (fase 1). 'sirex' = tablas propias (fase 2, aún no disponible).
     'rrhh_fuente' => env('SIREX_RRHH_FUENTE', 'mitiv'),
 
-    // Minutos de tolerancia de entrada cuando el horario del empleado no trae la suya.
-    'rrhh_tolerancia_minutos' => (int) env('SIREX_RRHH_TOLERANCIA', 30),
+    // Regla de entrada del IPV: hasta la tolerancia es presente (la del horario del empleado o
+    // esta si no trae); pasada la tolerancia es llegada tarde; pasado el límite, cuenta como falta.
+    'rrhh_tolerancia_minutos' => (int) env('SIREX_RRHH_TOLERANCIA', 10),
+    'rrhh_limite_falta_minutos' => (int) env('SIREX_RRHH_LIMITE_FALTA', 30),
 
     // Minutos sin fichadas (en horario laboral) para avisar que el lector de relojes no carga.
     'rrhh_reloj_alerta_minutos' => (int) env('SIREX_RRHH_RELOJ_ALERTA', 30),
@@ -28,11 +30,18 @@ return [
     'rrhh_zona_horaria' => env('SIREX_RRHH_ZONA', 'America/Argentina/Tucuman'),
 
     // Tipos de "ausencia" del sistema viejo que no son licencias sino regímenes que eximen de
-    // fichar (contratados, planta justificada, jerárquicos, gabinete, retiro voluntario, ley
-    // sindical, etc.): se muestran como "Justificado" y no como "Licencia". Ids de tipo_ausencias,
-    // relevados el 2026-10-07; RRHH puede ajustarlos con SIREX_RRHH_TIPOS_SIN_FICHAR=131,77,...
+    // fichar (planta justificada, jerárquicos, gabinete, retiro voluntario, ley sindical, etc.):
+    // se muestran como "Justificado" y no como "Licencia". Ids de tipo_ausencias relevados el
+    // 2026-10-07; RRHH puede ajustarlos con SIREX_RRHH_TIPOS_SIN_FICHAR=77,69,...
     'rrhh_tipos_sin_fichar' => array_map('intval', array_filter(explode(',', (string) env(
-        'SIREX_RRHH_TIPOS_SIN_FICHAR', '131,77,69,80,62,76,65,78,130,138,132,148'
+        'SIREX_RRHH_TIPOS_SIN_FICHAR', '77,69,80,62,76,65,78,130,138,132,148'
+    )))),
+
+    // Tipos de "ausencia" que no afectan la asistencia: solo marcan un período (ej. CONT, la
+    // vigencia del contrato). Se ignoran y el día se calcula por fichadas: los contratados
+    // fichan todos los días, sin marca es falta.
+    'rrhh_tipos_ignorados' => array_map('intval', array_filter(explode(',', (string) env(
+        'SIREX_RRHH_TIPOS_IGNORADOS', '131'
     )))),
 
     // Tipos de inasistencia del sistema viejo que genera su proceso de reloj.
