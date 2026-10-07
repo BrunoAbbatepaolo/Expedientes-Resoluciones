@@ -24,6 +24,7 @@ class CalculoAsistencia
      * @param  object|null  $horario  fila de horarios (desde/hasta/tolerancia de mañana y tarde)
      * @param  list<CarbonImmutable>  $marcas  fichadas del día, en orden
      * @param  object|null  $inasistencia  {tipo_inasistencia_id, nombre}
+     * @param  bool  $sinFichar  la "licencia" es un régimen que exime de fichar (contratado, gabinete, etc.)
      */
     public function dia(
         CarbonImmutable $fecha,
@@ -33,6 +34,7 @@ class CalculoAsistencia
         ?string $licencia,
         ?object $inasistencia,
         CarbonImmutable $ahora,
+        bool $sinFichar = false,
     ): DiaAsistencia {
         $fecha = $fecha->startOfDay();
         $horas = array_map(fn (CarbonImmutable $m) => $m->format('H:i'), $marcas);
@@ -52,7 +54,9 @@ class CalculoAsistencia
         }
 
         if ($licencia !== null) {
-            return $nuevo(EstadoDia::Licencia, $licencia);
+            return $sinFichar
+                ? $nuevo(EstadoDia::Justificado, $licencia.' (no ficha)')
+                : $nuevo(EstadoDia::Licencia, $licencia);
         }
 
         if ($feriado) {

@@ -11,13 +11,14 @@
         [EstadoDia::Tarde, 'Tarde'],
         [EstadoDia::Falta, 'Sin fichar / ausentes'],
         [EstadoDia::Licencia, 'De licencia'],
+        [EstadoDia::Justificado, 'Justificados / no fichan'],
         [EstadoDia::Pendiente, 'Por entrar'],
     ];
     $grupos = $agrupar ? collect($filas)->groupBy(fn ($f) => $f['empleado']->oficinaRrhh?->nombre ?? 'Sin oficina') : collect(['' => collect($filas)]);
 @endphp
 
 <div class="space-y-4">
-    <div class="grid grid-cols-2 gap-2 sm:grid-cols-5">
+    <div class="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-6">
         @foreach ($resumen as [$estado, $etiqueta])
             <div class="rounded-[12px] px-3 py-2 {{ $estado->clases() }}">
                 <p class="text-2xl font-semibold">{{ $totales[$estado->value] ?? 0 }}</p>

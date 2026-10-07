@@ -91,3 +91,9 @@ test('turno partido sin fichada a la tarde queda incompleto', function () {
     expect($this->calc->dia($this->fecha, $h, marcas('08:00', '12:00'), false, null, null, $this->despues)->estado)->toBe(EstadoDia::Incompleto)
         ->and($this->calc->dia($this->fecha, $h, marcas('08:00', '12:00', '16:05', '20:00'), false, null, null, $this->despues)->estado)->toBe(EstadoDia::Presente);
 });
+
+test('un régimen que exime de fichar se muestra como justificado y no como licencia', function () {
+    $dia = $this->calc->dia($this->fecha, horario(), [], false, 'CONT', null, $this->despues, sinFichar: true);
+
+    expect($dia->estado)->toBe(EstadoDia::Justificado)->and($dia->motivo)->toBe('CONT (no ficha)');
+});

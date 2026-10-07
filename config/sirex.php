@@ -27,6 +27,14 @@ return [
     // Zona horaria de las fechas sin zona del sistema viejo (fichadas, horarios).
     'rrhh_zona_horaria' => env('SIREX_RRHH_ZONA', 'America/Argentina/Tucuman'),
 
+    // Tipos de "ausencia" del sistema viejo que no son licencias sino regímenes que eximen de
+    // fichar (contratados, planta justificada, jerárquicos, gabinete, retiro voluntario, ley
+    // sindical, etc.): se muestran como "Justificado" y no como "Licencia". Ids de tipo_ausencias,
+    // relevados el 2026-10-07; RRHH puede ajustarlos con SIREX_RRHH_TIPOS_SIN_FICHAR=131,77,...
+    'rrhh_tipos_sin_fichar' => array_map('intval', array_filter(explode(',', (string) env(
+        'SIREX_RRHH_TIPOS_SIN_FICHAR', '131,77,69,80,62,76,65,78,130,138,132,148'
+    )))),
+
     // Tipos de inasistencia del sistema viejo que genera su proceso de reloj.
     'rrhh_tipo_ausente_id' => (int) env('SIREX_RRHH_TIPO_AUSENTE', 82),
     'rrhh_tipo_tarde_id' => (int) env('SIREX_RRHH_TIPO_TARDE', 7),

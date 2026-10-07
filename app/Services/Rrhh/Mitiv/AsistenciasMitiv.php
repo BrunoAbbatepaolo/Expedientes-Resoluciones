@@ -159,6 +159,7 @@ class AsistenciasMitiv implements Asistencias
 
         $feriados = $this->calendario->dias($desde, $hasta);
         $ahora = Hora::ahora();
+        $sinFichar = (array) config('sirex.rrhh_tipos_sin_fichar');
         $periodo = array_map(fn ($x) => CarbonImmutable::instance($x), CarbonPeriod::create($desde->startOfDay(), $hasta->startOfDay())->toArray());
 
         $resultado = [];
@@ -179,6 +180,7 @@ class AsistenciasMitiv implements Asistencias
                     $licencia ? ($licencia->tipo->descripcion ?? 'Licencia') : null,
                     $inasistencia ? (object) ['tipo_inasistencia_id' => $inasistencia->tipo_inasistencia_id, 'nombre' => $inasistencia->tipo->nombre ?? 'Inasistencia'] : null,
                     $ahora,
+                    $licencia !== null && in_array((int) $licencia->tipo_ausencias_id, $sinFichar, true),
                 );
             }
         }
