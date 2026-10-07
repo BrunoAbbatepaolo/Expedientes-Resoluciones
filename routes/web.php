@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\ImprimirExpedienteIpvController;
 use App\Http\Controllers\ResolucionArchivoController;
+use App\Http\Controllers\Rrhh\ArchivoEmpleadoController;
 use App\Livewire\ConsultaIpv;
 use App\Livewire\FichaIpv;
 use App\Livewire\Rrhh;
@@ -43,6 +44,11 @@ Route::middleware(['auth', 'password.change'])->group(function () {
     Route::prefix('rrhh')->name('rrhh.')->group(function () {
         Route::livewire('/', Rrhh\MiRrhh::class)->name('mio');
         Route::livewire('calendario', Rrhh\Calendario::class)->name('calendario');
+        Route::livewire('equipo', Rrhh\MiEquipo::class)->name('equipo');
+        Route::livewire('personal/{empleado}', Rrhh\FichaEmpleado::class)->whereNumber('empleado')->name('ficha');
+        Route::get('personal/{empleado}/archivos/{archivo}', ArchivoEmpleadoController::class)
+            ->whereNumber(['empleado', 'archivo'])
+            ->name('archivo');
     });
 
     Volt::route('oficinas', 'oficinas')->middleware('auth')->name('oficinas');

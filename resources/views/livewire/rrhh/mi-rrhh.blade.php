@@ -52,11 +52,7 @@
         <section class="sirex-glass-card space-y-4 rounded-[14px] p-4">
             <div class="flex items-center justify-between gap-2">
                 <h2 class="font-semibold text-ipv-ink dark:text-ipv-ink-dark">Mis fichadas</h2>
-                <div class="flex items-center gap-1">
-                    <button type="button" wire:click="moverMes(-1)" class="rounded-lg px-2 py-1 text-ipv-ink/70 hover:bg-black/[0.04] dark:text-ipv-ink-dark/70 dark:hover:bg-white/5" aria-label="Mes anterior">‹</button>
-                    <span class="min-w-32 text-center text-sm font-medium capitalize text-ipv-ink dark:text-ipv-ink-dark">{{ $mesActual->translatedFormat('F Y') }}</span>
-                    <button type="button" wire:click="moverMes(1)" class="rounded-lg px-2 py-1 text-ipv-ink/70 hover:bg-black/[0.04] dark:text-ipv-ink-dark/70 dark:hover:bg-white/5" aria-label="Mes siguiente">›</button>
-                </div>
+                <x-rrhh.selector-mes :mes="$mesActual" />
             </div>
             <div wire:loading.class="opacity-50" class="transition-opacity">
                 <x-rrhh.calendario-mes :dias="$dias" />

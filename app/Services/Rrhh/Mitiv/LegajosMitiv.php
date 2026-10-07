@@ -65,7 +65,7 @@ class LegajosMitiv implements Legajos
         return $query->orderBy('empleados.apellido')->orderBy('empleados.nombre')->paginate($porPagina);
     }
 
-    public function ficha(Alcance $alcance, int $empleadoId): array
+    public function ficha(Alcance $alcance, int $empleadoId, bool $registrarAcceso = true): array
     {
         $nivel = $this->nivelDe($alcance, $empleadoId);
         $propio = $empleadoId === $alcance->empleadoId;
@@ -82,7 +82,7 @@ class LegajosMitiv implements Legajos
                 ->each(fn (Familiar $f) => $f->setAttribute('parentesco', $parentescos[$f->parentesco_id] ?? null));
         }
 
-        if (! $propio && $personal) {
+        if ($registrarAcceso && ! $propio && $personal) {
             RrhhAcceso::create(['user_id' => $alcance->userId, 'empleado_id' => $empleadoId, 'nivel' => $nivel->etiqueta()]);
         }
 

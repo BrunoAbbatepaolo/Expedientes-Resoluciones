@@ -4,15 +4,14 @@ namespace App\Livewire\Rrhh;
 
 use App\Enums\EstadoDia;
 use App\Livewire\Rrhh\Concerns\ConAlcance;
+use App\Livewire\Rrhh\Concerns\NavegaMeses;
 use App\Services\Rrhh\Contracts\Asistencias;
 use App\Services\Rrhh\Contracts\Calendario;
 use App\Services\Rrhh\Contracts\Legajos;
 use App\Services\Rrhh\Contracts\Licencias;
 use App\Services\Rrhh\Hora;
-use Carbon\CarbonImmutable;
 use Illuminate\Contracts\View\View;
 use Livewire\Attributes\Title;
-use Livewire\Attributes\Url;
 use Livewire\Component;
 
 /**
@@ -23,24 +22,12 @@ use Livewire\Component;
 class MiRrhh extends Component
 {
     use ConAlcance;
-
-    #[Url]
-    public string $mes = '';
-
-    public function mount(): void
-    {
-        $this->mes = $this->mesValido($this->mes)->format('Y-m');
-    }
-
-    public function moverMes(int $delta): void
-    {
-        $this->mes = $this->mesValido($this->mes)->addMonths($delta)->format('Y-m');
-    }
+    use NavegaMeses;
 
     public function render(Legajos $legajos, Asistencias $asistencias, Licencias $licencias, Calendario $calendario): View
     {
         $alcance = $this->alcance();
-        $mes = $this->mesValido($this->mes);
+        $mes = $this->mesActual();
         $hoy = Hora::hoy();
         $datos = ['mesActual' => $mes, 'empleado' => null, 'sinLegajo' => trim((string) auth()->user()->legajo) === ''];
 
@@ -65,12 +52,5 @@ class MiRrhh extends Component
             'tardes' => $dias->where('estado', EstadoDia::Tarde)->count(),
             'error' => $this->errorFuente,
         ]);
-    }
-
-    private function mesValido(string $mes): CarbonImmutable
-    {
-        return preg_match('/^\d{4}-\d{2}$/', $mes)
-            ? CarbonImmutable::createFromFormat('!Y-m', $mes)
-            : Hora::hoy()->startOfMonth();
     }
 }

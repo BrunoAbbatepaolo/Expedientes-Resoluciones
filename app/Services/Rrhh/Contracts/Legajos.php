@@ -28,7 +28,7 @@ interface Legajos
      *
      * @return array{empleado: Empleado, nivel: NivelDatoRrhh, propio: bool, familia: Collection, fojas: Collection, movimientos: Collection, archivos: Collection}
      */
-    public function ficha(Alcance $alcance, int $empleadoId): array;
+    public function ficha(Alcance $alcance, int $empleadoId, bool $registrarAcceso = true): array;
 
     /** Archivo del legajo con su contenido (solo nivel personal o superior). */
     public function archivo(Alcance $alcance, int $empleadoId, int $archivoId): ?object;
