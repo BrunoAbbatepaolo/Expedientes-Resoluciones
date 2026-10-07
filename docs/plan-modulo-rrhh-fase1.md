@@ -51,8 +51,8 @@
 - `Empleado::conNivel(NivelDatoRrhh $n)` scope.
 - `MitivFalso::oficinaRrhh(string $nombre): int`, `empleadoRrhh(array $datos = []): int` (card_id y oficina por defecto), `horarioSemana(int $empleadoId, string $desde='08:00', string $hasta='14:00', int $tol=0, array $dias=[1,2,3,4,5])`, `fichada(int $cardId, string $fechaHora)`, `ausencia(int $empleadoId, string $desde, string $hasta, string $tipo='LIC. ANUAL', bool $afectaVac=true, ?string $obs=null)`, `inasistencia(int $empleadoId, string $fecha, int $tipoId)`, `feriado(string $fecha, string $tipo='Feriado nacional')`.
 
-- [ ] Test: `conNivel(Basico)` nunca trae `clave_fiscal`/`password`/`enfermedad`; `conNivel(Sensible)` trae `enfermedad` pero no `clave_fiscal`; guardar un `Ausencia` lanza `LogicException`.
-- [ ] Implementar; migrar; tests verdes; commit `feat: modelos y tablas base del módulo RRHH`.
+- [x] Test: `conNivel(Basico)` nunca trae `clave_fiscal`/`password`/`enfermedad`; `conNivel(Sensible)` trae `enfermedad` pero no `clave_fiscal`; guardar un `Ausencia` lanza `LogicException`.
+- [x] Implementar; migrar; tests verdes; commit `feat: modelos y tablas base del módulo RRHH`.
 
 ### Task 2: Organigrama (dependencia entre oficinas RRHH)
 
@@ -60,8 +60,8 @@
 
 **Interfaces:** `padres(): array<int,int|null>`; `descendientes(array $ids): list<int>` (incluye los ids, BFS con visitados); `asignarPadre(int $oficina, ?int $padre): void` (lanza `InvalidArgumentException` si es ella misma o crea ciclo); `oficinas(): Collection<OficinaRrhh>` (habilitadas, cache 1 h); `arbol(): list<array{oficina: OficinaRrhh, nivel: int}>` (DFS, raíces = sin padre, huérfanas al final).
 
-- [ ] Tests: descendientes recursivos; ciclo insertado a mano no cuelga; `asignarPadre` rechaza ciclo y auto-referencia; `arbol` ordena por nivel.
-- [ ] Implementar; commit `feat: organigrama de oficinas RRHH`.
+- [x] Tests: descendientes recursivos; ciclo insertado a mano no cuelga; `asignarPadre` rechaza ciclo y auto-referencia; `arbol` ordena por nivel.
+- [x] Implementar; commit `feat: organigrama de oficinas RRHH`.
 
 ### Task 3: Alcance
 
@@ -69,8 +69,8 @@
 
 **Interfaces:** `Alcance` (readonly): `userId`, `?empleadoId`, `rrhh`, `sensibles`, `oficinasEquipo: list<int>`; `esJefe()`, `puedeEntrar()`, `oficinasVisibles(): ?list<int>` (null = todas), `nivelPara(int $empleadoId, int $oficinaId): ?NivelDatoRrhh`, `veObservacion(int $empleadoId): bool`. `AlcanceFactory::para(User $u): Alcance` (memo por user; legajo inválido o mitiv caída → `empleadoId` null).
 
-- [ ] Tests: propio → Sensible; RRHH → Personal, con sensibles → Sensible; jefe de padre ve hija (Basico) y no la hermana (null); legajo vacío/"abc"/inexistente → null sin excepción.
-- [ ] Implementar; commit `feat: alcance de RRHH por empleado, jefe y RRHH`.
+- [x] Tests: propio → Sensible; RRHH → Personal, con sensibles → Sensible; jefe de padre ve hija (Basico) y no la hermana (null); legajo vacío/"abc"/inexistente → null sin excepción.
+- [x] Implementar; commit `feat: alcance de RRHH por empleado, jefe y RRHH`.
 
 ### Task 4: Cálculo de asistencia
 
@@ -78,8 +78,8 @@
 
 **Interface:** `dia(CarbonImmutable $fecha, ?object $horario, list<CarbonImmutable> $marcas, bool $feriado, ?string $licencia, ?object $inasistencia, CarbonImmutable $ahora): DiaAsistencia`. Orden: futuro → inasistencia registrada → licencia → feriado → sin horario (franco) → sin marcas (pendiente si hoy antes del límite, si no falta) → primera marca > entrada+tolerancia (tarde, minutos) → turno tarde partido sin marca (incompleto) → presente. Tolerancia del horario si > 0, si no `rrhh_tolerancia_minutos`.
 
-- [ ] Tests: cada estado + horario solo tarde + tolerancia 0 usa default.
-- [ ] Implementar; commit `feat: cálculo de asistencia diaria`.
+- [x] Tests: cada estado + horario solo tarde + tolerancia 0 usa default.
+- [x] Implementar; commit `feat: cálculo de asistencia diaria`.
 
 ### Task 5: Servicios de datos (contratos + mitiv)
 
@@ -92,53 +92,53 @@
 - `Calendario`: `feriados(int $anio): Collection`; `proximo(CarbonImmutable $desde): ?Feriado`.
 - `LectorReloj`: `estado(CarbonImmutable $ahora): array{ultima_fichada: ?Carbon, ultimo_chequeo: ?Carbon, alerta: bool, mensaje: string}`.
 
-- [ ] Tests: alcance aplicado en buscar/ficha/mes (403 fuera de alcance); ficha de jefe sin DNI; observación oculta al jefe; registro de acceso; mes arma 28–31 días con licencia/feriado/falta registrada; fichadas clamp 31 días; lector en alerta.
-- [ ] Implementar; commit `feat: servicios de consulta RRHH sobre el sistema viejo`.
+- [x] Tests: alcance aplicado en buscar/ficha/mes (403 fuera de alcance); ficha de jefe sin DNI; observación oculta al jefe; registro de acceso; mes arma 28–31 días con licencia/feriado/falta registrada; fichadas clamp 31 días; lector en alerta.
+- [x] Implementar; commit `feat: servicios de consulta RRHH sobre el sistema viejo`.
 
 ### Task 6: Rutas, menú y permisos
 
 **Files:** Modify `routes/web.php` (grupo `rrhh`), `resources/views/components/layouts/app/sidebar.blade.php` (grupo RRHH), `app/Livewire/ListaUsuario.php` + `resources/views/livewire/modal-permisos.blade.php` (`rrhh_ver`, `rrhh_sensibles`; el preset "solo lectura" no los otorga).
 
-- [ ] Commit junto con la Tarea 7.
+- [x] Commit junto con la Tarea 7.
 
 ### Task 7: Mi RRHH + Calendario
 
 **Files:** Create `app/Livewire/Rrhh/{MiRrhh,Calendario}.php`, vistas `resources/views/livewire/rrhh/{mi-rrhh,calendario}.blade.php`, componentes `resources/views/components/rrhh/{calendario-mes,estado,aviso-error,encabezado}.blade.php`; Test `tests/Feature/Rrhh/MiRrhhTest.php`.
 
-- [ ] Tests: sin legajo → aviso; con legajo → saldo, faltas del mes, calendario; mitiv caída → aviso; calendario lista feriados.
-- [ ] Commit `feat: Mi RRHH y calendario de feriados`.
+- [x] Tests: sin legajo → aviso; con legajo → saldo, faltas del mes, calendario; mitiv caída → aviso; calendario lista feriados.
+- [x] Commit `feat: Mi RRHH y calendario de feriados`.
 
 ### Task 8: Mi equipo + Ficha del empleado + archivos
 
 **Files:** Create `app/Livewire/Rrhh/{MiEquipo,FichaEmpleado}.php`, `app/Http/Controllers/Rrhh/ArchivoEmpleadoController.php`, vistas; Test `tests/Feature/Rrhh/EquipoYFichaTest.php`.
 
-- [ ] Tests: jefe ve hoy/mes de su oficina e hijas; ficha fuera de alcance → 403; jefe no ve DNI ni observación; RRHH ve personales y no sensibles; acceso registrado.
-- [ ] Commit `feat: Mi equipo y ficha del empleado`.
+- [x] Tests: jefe ve hoy/mes de su oficina e hijas; ficha fuera de alcance → 403; jefe no ve DNI ni observación; RRHH ve personales y no sensibles; acceso registrado.
+- [x] Commit `feat: Mi equipo y ficha del empleado`.
 
 ### Task 9: Personal, Asistencia, Licencias (RRHH)
 
 **Files:** Create `app/Livewire/Rrhh/{Personal,Asistencia,Licencias}.php`, vistas; Test `tests/Feature/Rrhh/PantallasRrhhTest.php`.
 
-- [ ] Tests: sin `rrhh_ver` → 403; filtros del listado; tablero del día con totales; fichadas crudas; licencias filtradas; adeudadas.
-- [ ] Commit `feat: pantallas de RRHH (personal, asistencia, licencias)`.
+- [x] Tests: sin `rrhh_ver` → 403; filtros del listado; tablero del día con totales; fichadas crudas; licencias filtradas; adeudadas.
+- [x] Commit `feat: pantallas de RRHH (personal, asistencia, licencias)`.
 
 ### Task 10: Organigrama (pantalla + comando)
 
 **Files:** Create `app/Livewire/Rrhh/Organigrama.php`, vista, `app/Console/Commands/CargarOrganigramaRrhh.php`, `database/data/organigrama_rrhh.php`; Test `tests/Feature/Rrhh/OrganigramaPantallaTest.php`.
 
-- [ ] Tests: solo `lista_usuario_editar` edita; ciclo → error visible; asignar/quitar jefe; comando aplica por id con nombre coincidente y saltea el resto sin pisar.
-- [ ] Commit `feat: pantalla de organigrama y carga inicial`.
+- [x] Tests: solo `lista_usuario_editar` edita; ciclo → error visible; asignar/quitar jefe; comando aplica por id con nombre coincidente y saltea el resto sin pisar.
+- [x] Commit `feat: pantalla de organigrama y carga inicial`.
 
 ### Task 11: Reportes
 
 **Files:** Create `app/Livewire/Rrhh/Reportes.php`, `app/Http/Controllers/Rrhh/ReporteController.php`, vistas `resources/views/rrhh/reportes/{ficha,presentismo,adeudadas,licencias}.blade.php` + layout de impresión; Test `tests/Feature/Rrhh/ReportesTest.php`.
 
-- [ ] Tests: cada reporte HTML 200 con `rrhh_ver`, 403 sin él; CSV con BOM y `;`.
-- [ ] Commit `feat: reportes de RRHH imprimibles y CSV`.
+- [x] Tests: cada reporte HTML 200 con `rrhh_ver`, 403 sin él; CSV con BOM y `;`.
+- [x] Commit `feat: reportes de RRHH imprimibles y CSV`.
 
 ### Task 12: Búsqueda global + rendimiento + cierre
 
 **Files:** Modify `app/Livewire/BusquedaGlobal.php`, `tests/Feature/BusquedaGlobalTest.php`, `tests/Feature/RendimientoTest.php`; Modify `docs/spec-modulo-rrhh.md` (estado), `HANDOFF.md`.
 
-- [ ] Tests: búsqueda devuelve empleados solo en alcance; presupuesto de consultas en pantallas RRHH.
-- [ ] `php artisan test` completo, `pint`, `phpstan`; commit `feat: búsqueda de empleados y cierre de fase 1 RRHH`.
+- [x] Tests: búsqueda devuelve empleados solo en alcance; presupuesto de consultas en pantallas RRHH.
+- [x] `php artisan test` completo, `pint`, `phpstan`; commit `feat: búsqueda de empleados y cierre de fase 1 RRHH`.

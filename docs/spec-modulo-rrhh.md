@@ -1,6 +1,6 @@
 # Módulo RRHH — especificación de diseño
 
-**Fecha:** 2026-10-07 · **Rama:** `feature/modulo-rrhh` · **Estado:** diseño aprobado en chat, pendiente revisión de este documento.
+**Fecha:** 2026-10-07 · **Rama:** `feature/modulo-rrhh` · **Estado:** fase 1 (consulta) implementada; fases 1b y 2 pendientes.
 
 ## 1. Objetivo y contexto
 
@@ -47,6 +47,12 @@ Lógica del viejo a reemplazar: `RegistroRelojController::sincronizar_relojes()`
 - **`App\Services\Rrhh\CalculoAsistencia`** — puro, sin I/O: recibe fecha, horario del día, fichadas, feriado, licencia, inasistencia registrada y "ahora", y devuelve un `DiaAsistencia` (estado `presente | tarde | incompleto | falta | justificado | licencia | feriado | franco | pendiente | futuro`, marcas, minutos de tarde, motivo legible). **Una inasistencia ya registrada en mitivdb manda** (es el registro oficial: id 82 = AUSENTE → falta, id 7 = LLEGADA TARDE → tarde, otro tipo → justificado); lo demás se calcula para mostrar. Evalúa ambos turnos.
 - **Datos propios de SiRex** (`mysql_admin`): `rrhh_oficina_padres` (dependencia entre oficinas RRHH), `rrhh_jefaturas` (jefe ↔ oficina RRHH), `rrhh_accesos` (registro de accesos), permisos nuevos `rrhh_ver` y `rrhh_sensibles`.
 - **Config** (`config/sirex.php`): `rrhh_fuente` (`SIREX_RRHH_FUENTE`, default `mitiv`), `rrhh_tolerancia_minutos` (default 30), `rrhh_reloj_alerta_minutos` (default 30), `rrhh_pedidos` (`SIREX_RRHH_PEDIDOS`, default `false`), `rrhh_pedido_dias_atras` (default 0), `rrhh_tipo_ausente_id` (default 82), `rrhh_tipo_tarde_id` (default 7).
+
+### Reglas descubiertas al implementar (2026-10-07)
+
+- **"Ausencias" que no son licencias:** el sistema viejo usa `ausencias` también para regímenes que eximen de fichar por meses o años (CONT, planta justificada de obra, jerárquicos, gabinete, funcionarios, ley sindical, retiro voluntario, etc.). Esos tipos (`sirex.rrhh_tipos_sin_fichar`, env `SIREX_RRHH_TIPOS_SIN_FICHAR`) se muestran como **Justificado (no ficha)** y no como Licencia. Con datos reales del 07/10: 276 justificados, 11 de licencia. **RRHH debe validar la lista.**
+- **Hora local:** la base vieja guarda fechas sin zona (hora de Tucumán). `App\Services\Rrhh\Hora` arma "ahora" en hora local (`SIREX_RRHH_ZONA`, default `America/Argentina/Tucuman`).
+- `card_id` no es columna pública de `Empleado`: se pide con `conNivel(Basico)`.
 
 ## 4. Pantallas (fase 1)
 
