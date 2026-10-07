@@ -141,6 +141,45 @@
             </a>
             @endif
 
+            @php($menuRrhh = \App\Services\Rrhh\MenuRrhh::para(auth()->user()))
+            @if ($menuRrhh !== [])
+            <div x-data="{ open: {{ request()->routeIs('rrhh.*') ? 'true' : 'false' }} }">
+                <button @click="open = !open" type="button"
+                    class="flex w-full items-center gap-2.5 rounded-lg px-3 py-2.5 text-sm font-medium text-ipv-ink/75 hover:bg-black/[0.03] dark:text-ipv-ink-dark/82 dark:hover:bg-white/5">
+                    <svg class="size-[18px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="9" cy="8" r="3.5" />
+                        <path d="M2.5 20a6.5 6.5 0 0 1 13 0" />
+                        <path d="M16 4.5a3.5 3.5 0 0 1 0 7M18 14.5a6.5 6.5 0 0 1 3.5 5.5" />
+                    </svg>
+                    <span class="flex-1 text-left">{{ __('RRHH') }}</span>
+                    <svg class="size-3.5 transition-transform" :class="{ 'rotate-180': open }" viewBox="0 0 20 20"
+                        fill="currentColor">
+                        <path fill-rule="evenodd"
+                            d="M5.23 7.21a.75.75 0 0 1 1.06.02L10 10.94l3.71-3.71a.75.75 0 1 1 1.06 1.06l-4.24 4.25a.75.75 0 0 1-1.06 0L5.25 8.27a.75.75 0 0 1-.02-1.06Z"
+                            clip-rule="evenodd" />
+                    </svg>
+                </button>
+
+                <div x-show="open" x-cloak x-transition:enter="transition ease-out duration-200"
+                    x-transition:enter-start="opacity-0 -translate-y-2" x-transition:enter-end="opacity-100 translate-y-0"
+                    x-transition:leave="transition ease-in duration-150" x-transition:leave-start="opacity-100 translate-y-0"
+                    x-transition:leave-end="opacity-0 -translate-y-2"
+                    class="ml-3.5 space-y-0.5 border-l-2 border-ipv-blue/15 pl-2.5 dark:border-white/15">
+                    @foreach ($menuRrhh as $item)
+                        @php($activa = request()->routeIs($item['ruta'] === 'rrhh.personal' ? 'rrhh.personal*' : $item['ruta']) || ($item['ruta'] === 'rrhh.personal' && request()->routeIs('rrhh.ficha')))
+                        <a href="{{ route($item['ruta']) }}" wire:navigate.hover
+                            @if ($activa) aria-current="page" @endif
+                            class="block rounded-md px-2.5 py-1.5 text-[13px] transition-colors {{ $activa
+                                ? 'bg-ipv-blue/10 font-semibold text-ipv-blue dark:bg-white/[0.08] dark:text-ipv-ink-dark'
+                                : 'text-ipv-ink/65 hover:bg-black/[0.03] dark:text-ipv-ink-dark/65 dark:hover:bg-white/5' }}">
+                            {{ $item['etiqueta'] }}
+                        </a>
+                    @endforeach
+                </div>
+            </div>
+            @endif
+
             <a href="{{ route('oficinas') }}" wire:navigate.hover
                 class="relative flex items-center gap-2.5 rounded-lg py-2.5 pl-4 pr-3 text-sm
                        {{ request()->routeIs('oficinas')

@@ -14,6 +14,7 @@ use App\Services\Rrhh\Contracts\Asistencias;
 use App\Services\Rrhh\Contracts\Calendario;
 use App\Services\Rrhh\Contracts\Legajos;
 use App\Services\Rrhh\DiaAsistencia;
+use App\Services\Rrhh\Hora;
 use Carbon\CarbonImmutable;
 use Carbon\CarbonPeriod;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
@@ -68,7 +69,7 @@ class AsistenciasMitiv implements Asistencias
     {
         $this->soloRrhh($alcance);
 
-        $hoy = CarbonImmutable::today();
+        $hoy = Hora::hoy();
         $desde = ! empty($filtros['desde']) ? CarbonImmutable::parse($filtros['desde']) : $hoy->subDays(6);
         $hasta = ! empty($filtros['hasta']) ? CarbonImmutable::parse($filtros['hasta']) : $hoy;
         if ($hasta->lt($desde)) {
@@ -101,7 +102,7 @@ class AsistenciasMitiv implements Asistencias
     public function relojes(): array
     {
         return Cache::remember('rrhh.relojes', now()->addHour(), fn () => RegistroReloj::query()
-            ->where('fecha_hora', '>=', CarbonImmutable::today()->subDays(30)->toDateTimeString())
+            ->where('fecha_hora', '>=', Hora::hoy()->subDays(30)->toDateTimeString())
             ->whereNotNull('nombre_reloj')
             ->distinct()
             ->orderBy('nombre_reloj')
@@ -153,7 +154,7 @@ class AsistenciasMitiv implements Asistencias
             ->keyBy(fn (Inasistencia $i) => $i->empleado_id.'|'.$i->fecha->toDateString());
 
         $feriados = $this->calendario->dias($desde, $hasta);
-        $ahora = CarbonImmutable::now();
+        $ahora = Hora::ahora();
         $periodo = array_map(fn ($x) => CarbonImmutable::instance($x), CarbonPeriod::create($desde->startOfDay(), $hasta->startOfDay())->toArray());
 
         $resultado = [];

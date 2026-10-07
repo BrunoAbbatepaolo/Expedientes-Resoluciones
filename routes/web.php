@@ -4,6 +4,7 @@ use App\Http\Controllers\ImprimirExpedienteIpvController;
 use App\Http\Controllers\ResolucionArchivoController;
 use App\Livewire\ConsultaIpv;
 use App\Livewire\FichaIpv;
+use App\Livewire\Rrhh;
 use Illuminate\Support\Facades\Route;
 use Livewire\Volt\Volt;
 
@@ -38,6 +39,12 @@ Route::middleware(['auth', 'password.change'])->group(function () {
     Route::livewire('expedientes/ipv', ConsultaIpv::class)->name('expedientes.ipv');
     Route::livewire('expedientes/ipv/{id}', FichaIpv::class)->whereNumber('id')->name('expedientes.ipv.ficha');
     Route::get('expedientes/ipv/{id}/imprimir', ImprimirExpedienteIpvController::class)->whereNumber('id')->name('expedientes.ipv.imprimir');
+    // RRHH (fase 1: consulta de solo lectura del sistema viejo). Ver docs/spec-modulo-rrhh.md.
+    Route::prefix('rrhh')->name('rrhh.')->group(function () {
+        Route::livewire('/', Rrhh\MiRrhh::class)->name('mio');
+        Route::livewire('calendario', Rrhh\Calendario::class)->name('calendario');
+    });
+
     Volt::route('oficinas', 'oficinas')->middleware('auth')->name('oficinas');
     Volt::route('usuarios', 'ListaUsuario')->middleware('auth')->name('listausuarios');
     Volt::route('/resoluciones/elegir', 'ElegirResolucion')

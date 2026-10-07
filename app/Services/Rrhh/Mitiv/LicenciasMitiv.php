@@ -10,6 +10,7 @@ use App\Models\Mitiv\SaldoVacaciones;
 use App\Models\Mitiv\TipoAusencia;
 use App\Services\Rrhh\Alcance;
 use App\Services\Rrhh\Contracts\Licencias;
+use App\Services\Rrhh\Hora;
 use Carbon\CarbonImmutable;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
@@ -71,8 +72,8 @@ class LicenciasMitiv implements Licencias
     {
         $this->soloRrhh($alcance);
 
-        $desde = ($filtros['desde'] ?? null) ?: CarbonImmutable::now()->startOfMonth()->toDateString();
-        $hasta = ($filtros['hasta'] ?? null) ?: CarbonImmutable::now()->endOfMonth()->toDateString();
+        $desde = ($filtros['desde'] ?? null) ?: Hora::ahora()->startOfMonth()->toDateString();
+        $hasta = ($filtros['hasta'] ?? null) ?: Hora::ahora()->endOfMonth()->toDateString();
 
         $query = Ausencia::with(['tipo:id,descripcion', 'empleado'])
             ->entre($desde, $hasta)

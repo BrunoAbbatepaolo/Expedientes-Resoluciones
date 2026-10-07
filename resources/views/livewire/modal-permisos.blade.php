@@ -123,6 +123,18 @@
                         'icon' =>
                             '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.5v15M19.5 12h-15" />',
                     ],
+                    'rrhh_ver' => [
+                        'title' => 'RRHH: ver personal',
+                        'description' => 'Legajos (datos personales), asistencia, licencias y reportes de todo el personal.',
+                        'icon' =>
+                            '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />',
+                    ],
+                    'rrhh_sensibles' => [
+                        'title' => 'RRHH: datos sensibles',
+                        'description' => 'Salud, discapacidad, datos judiciales y cuenta bancaria. Solo jefatura de RRHH.',
+                        'icon' =>
+                            '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />',
+                    ],
                 ];
             @endphp
 

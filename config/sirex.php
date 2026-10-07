@@ -24,6 +24,9 @@ return [
     // Minutos sin fichadas (en horario laboral) para avisar que el lector de relojes no carga.
     'rrhh_reloj_alerta_minutos' => (int) env('SIREX_RRHH_RELOJ_ALERTA', 30),
 
+    // Zona horaria de las fechas sin zona del sistema viejo (fichadas, horarios).
+    'rrhh_zona_horaria' => env('SIREX_RRHH_ZONA', 'America/Argentina/Tucuman'),
+
     // Tipos de inasistencia del sistema viejo que genera su proceso de reloj.
     'rrhh_tipo_ausente_id' => (int) env('SIREX_RRHH_TIPO_AUSENTE', 82),
     'rrhh_tipo_tarde_id' => (int) env('SIREX_RRHH_TIPO_TARDE', 7),

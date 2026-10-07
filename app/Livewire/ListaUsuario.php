@@ -14,6 +14,7 @@ use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Locked;
 use Livewire\Component;
@@ -35,9 +36,13 @@ class ListaUsuario extends Component
         'resolucion_editar',
         'lista_usuario_ver',
         'lista_usuario_editar',
+        'rrhh_ver',
+        'rrhh_sensibles',
     ];
 
     public array $permisos = [
+        'rrhh_ver' => false,
+        'rrhh_sensibles' => false,
         'expediente_ver' => false,
         'expediente_editar' => false,
         'resolucion_ver' => false,
@@ -194,7 +199,7 @@ class ListaUsuario extends Component
             $this->dispatch('toast', type: 'success', message: 'Oficina actualizada.');
             $this->reset(['editingUserId', 'oficina_id']);
             $this->dispatch('close-modal', 'modal-oficina');
-        } catch (\Illuminate\Validation\ValidationException $ve) {
+        } catch (ValidationException $ve) {
             $this->dispatch('toast', type: 'error', message: 'Revise los campos.');
             throw $ve;
         } catch (\Throwable $e) {
@@ -211,10 +216,10 @@ class ListaUsuario extends Component
     /**
      * Empleados activos que coinciden con lo tipeado (apellido, nombre o legajo).
      *
-     * @return \Illuminate\Support\Collection<int, Empleado>
+     * @return Collection<int, Empleado>
      */
     #[Computed]
-    public function empleadosSugeridos(): \Illuminate\Support\Collection
+    public function empleadosSugeridos(): Collection
     {
         $texto = trim($this->buscarEmpleado);
         if (mb_strlen($texto) < 2 || $this->empleadoId) {
@@ -222,7 +227,7 @@ class ListaUsuario extends Component
         }
 
         return rescue(function () use ($texto) {
-            $like = \Illuminate\Support\Facades\DB::connection('pgsql_mitiv')->getDriverName() === 'pgsql' ? 'ilike' : 'like';
+            $like = DB::connection('pgsql_mitiv')->getDriverName() === 'pgsql' ? 'ilike' : 'like';
 
             return Empleado::activos()
                 ->where(function ($q) use ($texto, $like) {
@@ -298,7 +303,7 @@ class ListaUsuario extends Component
             $this->dispatch('toast', type: 'success', message: 'Usuario creado. Deberá cambiar su contraseña al iniciar sesión.');
             $this->reset(['nuevoNombre', 'nuevoApellido', 'nuevoLegajo', 'nuevoEmail', 'nuevoOficinaId', 'empleadoId', 'buscarEmpleado']);
             $this->dispatch('close-modal', 'modal-crear-usuario');
-        } catch (\Illuminate\Validation\ValidationException $ve) {
+        } catch (ValidationException $ve) {
             $this->dispatch('toast', type: 'error', message: 'Revise los campos.');
             throw $ve;
         } catch (\Throwable $e) {
@@ -379,8 +384,9 @@ class ListaUsuario extends Component
 
     public function aplicarPermisosSoloLectura(): void
     {
+        // RRHH da acceso a datos personales de todo el personal: nunca por preset.
         foreach ($this->permisos as $key => $value) {
-            $this->permisos[$key] = str_contains($key, '_ver');
+            $this->permisos[$key] = str_contains($key, '_ver') && ! str_starts_with($key, 'rrhh_');
         }
     }
 
