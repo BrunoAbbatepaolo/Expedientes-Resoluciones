@@ -3,6 +3,7 @@
 use App\Http\Controllers\ImprimirExpedienteIpvController;
 use App\Http\Controllers\ResolucionArchivoController;
 use App\Http\Controllers\Rrhh\ArchivoEmpleadoController;
+use App\Http\Controllers\Rrhh\ReporteController;
 use App\Livewire\ConsultaIpv;
 use App\Livewire\FichaIpv;
 use App\Livewire\Rrhh;
@@ -49,6 +50,8 @@ Route::middleware(['auth', 'password.change'])->group(function () {
         Route::livewire('asistencia', Rrhh\Asistencia::class)->name('asistencia');
         Route::livewire('licencias', Rrhh\Licencias::class)->name('licencias');
         Route::livewire('organigrama', Rrhh\Organigrama::class)->name('organigrama');
+        Route::livewire('reportes', Rrhh\Reportes::class)->name('reportes');
+        Route::get('reportes/{reporte}', ReporteController::class)->name('reportes.ver');
         Route::livewire('personal/{empleado}', Rrhh\FichaEmpleado::class)->whereNumber('empleado')->name('ficha');
         Route::get('personal/{empleado}/archivos/{archivo}', ArchivoEmpleadoController::class)
             ->whereNumber(['empleado', 'archivo'])
