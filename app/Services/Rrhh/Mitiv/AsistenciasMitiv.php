@@ -83,8 +83,12 @@ class AsistenciasMitiv implements Asistencias
             ->whereBetween('fecha_hora', [$desde->startOfDay()->toDateTimeString(), $hasta->endOfDay()->toDateTimeString()])
             ->when(! empty($filtros['reloj']), fn ($q) => $q->where('nombre_reloj', $filtros['reloj']));
 
-        if (! empty($filtros['empleado_id'])) {
-            $card = Empleado::whereKey((int) $filtros['empleado_id'])->value('card_id');
+        if (! empty($filtros['empleado_id']) || ! empty($filtros['legajo'])) {
+            // card_id no está entre las columnas públicas: se pide con el nivel básico.
+            $empleados = Empleado::conNivel(NivelDatoRrhh::Basico);
+            $card = ! empty($filtros['empleado_id'])
+                ? $empleados->whereKey((int) $filtros['empleado_id'])->value('card_id')
+                : $empleados->where('empleados.legajo', (int) $filtros['legajo'])->value('card_id');
             $query->where('card_id', $card !== null ? (int) $card : -1);
         }
 

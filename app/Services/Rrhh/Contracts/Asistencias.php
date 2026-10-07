@@ -33,7 +33,7 @@ interface Asistencias
     public function grilla(Alcance $alcance, int $anio, int $mes, int $oficinaId): array;
 
     /**
-     * Fichadas crudas (solo RRHH). Filtros: empleado_id, reloj, desde, hasta (Y-m-d);
+     * Fichadas crudas (solo RRHH). Filtros: empleado_id o legajo, reloj, desde, hasta (Y-m-d);
      * el rango se recorta a MAX_DIAS_FICHADAS.
      *
      * @param  array<string, mixed>  $filtros
