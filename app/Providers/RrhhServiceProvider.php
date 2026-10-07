@@ -4,14 +4,26 @@ namespace App\Providers;
 
 use App\Services\Rrhh\AlcanceFactory;
 use App\Services\Rrhh\CalculoAsistencia;
+use App\Services\Rrhh\Contracts;
+use App\Services\Rrhh\Mitiv;
 use App\Services\Rrhh\Organigrama;
 use Illuminate\Support\ServiceProvider;
+use LogicException;
 
 /**
  * Módulo RRHH: servicios por request y la fuente de datos (config sirex.rrhh_fuente).
  */
 class RrhhServiceProvider extends ServiceProvider
 {
+    /** Implementación de cada contrato con fuente 'mitiv' (fase 1, solo lectura). */
+    private const MITIV = [
+        Contracts\Legajos::class => Mitiv\LegajosMitiv::class,
+        Contracts\Asistencias::class => Mitiv\AsistenciasMitiv::class,
+        Contracts\Licencias::class => Mitiv\LicenciasMitiv::class,
+        Contracts\Calendario::class => Mitiv\CalendarioMitiv::class,
+        Contracts\LectorReloj::class => Mitiv\LectorRelojMitiv::class,
+    ];
+
     public function register(): void
     {
         $this->app->scoped(Organigrama::class);
@@ -21,5 +33,15 @@ class RrhhServiceProvider extends ServiceProvider
             tipoAusente: (int) config('sirex.rrhh_tipo_ausente_id'),
             tipoTarde: (int) config('sirex.rrhh_tipo_tarde_id'),
         ));
+
+        foreach (self::MITIV as $contrato => $implementacion) {
+            $this->app->scoped($contrato, function ($app) use ($implementacion) {
+                if (config('sirex.rrhh_fuente') !== 'mitiv') {
+                    throw new LogicException('La fuente de RRHH "'.config('sirex.rrhh_fuente').'" llega en la fase 2; usá SIREX_RRHH_FUENTE=mitiv.');
+                }
+
+                return $app->make($implementacion);
+            });
+        }
     }
 }
