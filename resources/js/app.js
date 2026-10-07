@@ -62,6 +62,25 @@ window.aplicarTema = function (tema) {
     window.dispatchEvent(new CustomEvent('theme-changed', { detail: { dark: oscuro, tema } }))
 }
 
+function reaplicarTema() {
+    let tema = null
+    try {
+        tema = localStorage.getItem('theme')
+    } catch (e) {
+        // localStorage bloqueado: se sigue al sistema.
+    }
+    const oscuro = tema === 'dark' || (!tema && window.matchMedia('(prefers-color-scheme: dark)').matches)
+    document.documentElement.classList.toggle('dark', oscuro)
+}
+
+// wire:navigate copia los atributos del <html> que manda el servidor (sin la clase 'dark') y
+// no vuelve a correr el script inline del <head>: hay que reaplicar el tema en cada navegación.
+// onSwap lo hace antes de pintar (sin parpadeo); 'navigated' queda de respaldo.
+document.addEventListener('livewire:navigating', (e) => {
+    e.detail?.onSwap?.(reaplicarTema)
+})
+document.addEventListener('livewire:navigated', reaplicarTema)
+
 window.temaActual = function () {
     try {
         return localStorage.getItem('theme') || 'system'
