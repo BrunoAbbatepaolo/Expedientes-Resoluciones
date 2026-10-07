@@ -15,6 +15,7 @@ Llevar a SiRex el RRHH del sistema viejo (MITIV, Laravel 5.2 + AngularJS en `srv
 | Fase | Contenido | Estado al terminar |
 |---|---|---|
 | 1. Consulta | Secciones 2–6 y 8 | Activa en producción |
+| 1b. Pedido de licencias | Sección 7 bis | Construida; se enciende con `SIREX_RRHH_PEDIDOS=true` |
 | 2. Cargas + importador | Sección 7 | Construida, apagada (`SIREX_RRHH_FUENTE=mitiv`) |
 | 3. Lector de relojes | Automatizar el programa que llena `registros_reloj` | Fuera de esta spec |
 
@@ -44,7 +45,7 @@ Lógica del viejo a reemplazar: `RegistroRelojController::sincronizar_relojes()`
 - **`App\Services\Rrhh\Rrhh`** (interfaz) — única puerta a los datos. Todo método recibe el `User` que consulta y aplica el alcance (sección 5). Implementaciones: `RrhhMitiv` (fase 1) y `RrhhSirex` (fase 2). Se elige por `config('sirex.rrhh_fuente')`.
 - **`App\Services\Rrhh\CalculoAsistencia`** — puro, sin I/O: recibe horario del día, fichadas, feriado, ausencia e inasistencias registradas y devuelve un `DiaAsistencia` (estado: `presente | tarde | falta | licencia | feriado | franco | sin_horario | futuro`, marcas, minutos de tarde por turno, motivo legible). Evalúa ambos turnos. Tolerancias desde config.
 - **Datos propios de SiRex:** `oficinas.oficina_padre_id` (nullable, FK a `oficinas`), permisos nuevos, tabla `rrhh_accesos` (registro de accesos, sección 5).
-- **Config** (`config/sirex.php`): `rrhh_fuente` (`SIREX_RRHH_FUENTE`, default `mitiv`), `rrhh_tolerancia_minutos` (default 30), `rrhh_reloj_alerta_minutos` (default 30).
+- **Config** (`config/sirex.php`): `rrhh_fuente` (`SIREX_RRHH_FUENTE`, default `mitiv`), `rrhh_tolerancia_minutos` (default 30), `rrhh_reloj_alerta_minutos` (default 30), `rrhh_pedidos` (`SIREX_RRHH_PEDIDOS`, default `false`), `rrhh_pedido_dias_atras` (default 0).
 
 ## 4. Pantallas (fase 1)
 
@@ -82,6 +83,7 @@ Grupo **RRHH** en el sidebar; cada ítem se muestra según permiso. Mobile-first
 | RRHH | `rrhh_ver` | Todo el personal |
 | RRHH sensible | `rrhh_sensibles` (hoy: solo la jefa de RRHH) | + datos sensibles |
 | Carga | `rrhh_carga` + fuente `sirex` | Pantallas de la sección 7 |
+| Confirma pedidos | `rrhh_confirmar_pedidos` + `SIREX_RRHH_PEDIDOS=true` | Pedidos por confirmar (sección 7 bis) |
 
 Alcance de jefe: las oficinas SiRex se traducen a oficinas mitiv por `oficinas.mitiv_oficina_id`; oficinas sin vínculo no aportan empleados (se avisa en Mi equipo).
 
@@ -110,7 +112,22 @@ Alcance de jefe: las oficinas SiRex se traducen a oficinas mitiv por `oficinas.m
 - **`php artisan rrhh:importar [--dry-run]`:** copia mitiv → SiRex, idempotente (upsert por `mitiv_id`), reporta cantidades e inconsistencias. Excluye columnas del nivel "Nunca".
 - **Pantallas de carga:** alta/edición de legajo, familia, foja, archivos y foto; pase a pasivo/activo; licencia individual y masiva (validación de saldo de vacaciones y superposición); justificar/anular inasistencia (motivo obligatorio); horarios y plantillas (aplicación masiva); feriados; tipos de ausencia e inasistencia; tolerancias.
 - **Proceso `rrhh:procesar-asistencia`** (programado cada hora): genera faltas/tardanzas usando `CalculoAsistencia`. No corre con fuente `mitiv` ni si el lector de relojes está caído. Las fichadas se siguen leyendo de `registros_reloj` hasta la fase 3.
-- **Anotado para después (no en esta spec):** pedido de licencia por el empleado con aprobación de jefe y RRHH.
+
+## 7 bis. Pedido de licencias desde Mi RRHH
+
+No escribe en mitivdb ni choca con el viejo (un pedido no es una licencia hasta que RRHH lo confirma), así que funciona con cualquier fuente. Tiene su propio interruptor `SIREX_RRHH_PEDIDOS` (default `false`); apagado → pantallas ocultas y acciones `abort(404)`.
+
+- **Tabla SiRex `rrhh_pedidos_licencia`:** user_id, empleado (id mitiv), tipo de ausencia (id de la fuente activa), desde, hasta, días hábiles, observación, adjunto opcional (certificado, mismo almacenamiento privado que archivos de resoluciones), estado, y por cada paso: quién, cuándo, motivo de rechazo. Auditada con `Auditable`.
+- **Estados:** `pendiente_jefe` → `aprobado_jefe` | `rechazado_jefe` → `confirmado` | `rechazado_rrhh`. El empleado puede `cancelado` mientras esté pendiente de jefe.
+- **Quién aprueba:** cualquier usuario cuyo alcance de jefe (sección 5) incluya la oficina del empleado. Sin jefe asignado → pasa directo a RRHH. Nadie aprueba su propio pedido: el de un jefe lo aprueba un jefe de una oficina superior o, si no hay, RRHH.
+- **Confirmación (permiso nuevo `rrhh_confirmar_pedidos`):**
+  - Fuente `mitiv`: RRHH carga la licencia en el sistema viejo y marca el pedido "Confirmado — cargado en sistema viejo".
+  - Fuente `sirex`: confirmar crea la `rrhh_ausencias` automáticamente.
+- **Validaciones al pedir:** desde ≤ hasta; no superpone licencias existentes ni pedidos activos; días hábiles = excluye fines de semana y feriados; si el tipo `afecta_vacaciones`, no supera el saldo; fecha de inicio no anterior a `rrhh_pedido_dias_atras` (config, default 0; retroactivo solo para tipos marcados).
+- **Tipos pedibles:** tabla SiRex `rrhh_tipos_pedibles` (id de tipo + permite retroactivo + requiere adjunto), administrada por RRHH. Los tipos del viejo no se tocan.
+- **Pantallas:** Mi RRHH → "Pedir licencia" (muestra días hábiles y saldo resultante antes de enviar) y "Mis pedidos". Mi equipo → "Pedidos por aprobar". Licencias (RRHH) → "Pedidos por confirmar".
+- **Avisos:** contador en el sidebar (como pases pendientes) para jefe y RRHH; el empleado ve el estado en Mis pedidos. Email queda para después.
+- **Pruebas:** circuito completo de estados; jefe fuera de alcance → 403; auto-aprobación imposible; validaciones de superposición, saldo y feriados; con interruptor apagado → 404.
 
 ## 8. Errores, rendimiento y pruebas
 
