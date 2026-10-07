@@ -136,7 +136,12 @@ class LicenciasMitiv implements Licencias
                     return $fin->gte($inicio) ? (int) $inicio->diffInDays($fin) + 1 : 0;
                 });
 
-                return (object) ['tipo' => $grupo->first()->tipo?->descripcion ?? 'Sin tipo', 'cantidad' => $grupo->count(), 'dias' => $dias];
+                $fila = new \stdClass;
+                $fila->tipo = (string) ($grupo->first()->tipo->descripcion ?? 'Sin tipo');
+                $fila->cantidad = $grupo->count();
+                $fila->dias = (int) $dias;
+
+                return $fila;
             })
             ->sortByDesc('dias')
             ->values();

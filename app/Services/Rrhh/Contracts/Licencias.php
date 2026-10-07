@@ -41,7 +41,7 @@ interface Licencias
     /**
      * Cantidad de licencias y días por tipo en un período (solo RRHH).
      *
-     * @return Collection<int, object{tipo: string, cantidad: int, dias: int}>
+     * @return Collection<int, \stdClass> cada uno con tipo, cantidad y dias
      */
     public function porTipo(Alcance $alcance, CarbonImmutable $desde, CarbonImmutable $hasta, ?int $oficinaId = null): Collection;
 

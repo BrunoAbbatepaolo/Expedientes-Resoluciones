@@ -16,6 +16,8 @@ use Illuminate\Support\Carbon;
  * @property int $tipo_ausencias_id
  * @property int|null $anio
  * @property string|null $observacion
+ * @property-read TipoAusencia|null $tipo
+ * @property-read Empleado|null $empleado
  */
 class Ausencia extends MitivModel
 {

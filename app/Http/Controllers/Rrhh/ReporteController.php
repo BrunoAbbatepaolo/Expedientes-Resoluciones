@@ -71,7 +71,7 @@ class ReporteController extends Controller
         $legajo = (string) $request->query('legajo', '');
         abort_unless(ctype_digit($legajo), 404);
 
-        $empleado = $this->legajos->buscar($alcance, ['texto' => $legajo, 'estado' => 'todos'], 1)->first();
+        $empleado = collect($this->legajos->buscar($alcance, ['texto' => $legajo, 'estado' => 'todos'], 1)->items())->first();
         abort_if($empleado === null || (string) $empleado->legajo !== $legajo, 404);
 
         $ficha = $this->legajos->ficha($alcance, $empleado->id);

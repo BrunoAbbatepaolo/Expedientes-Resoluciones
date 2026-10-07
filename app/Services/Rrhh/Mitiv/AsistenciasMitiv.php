@@ -176,8 +176,8 @@ class AsistenciasMitiv implements Asistencias
                     $tarjeta === null ? [] : ($marcas[$tarjeta.'|'.$ymd] ?? collect())
                         ->map(fn (RegistroReloj $r) => CarbonImmutable::instance($r->fecha_hora))->values()->all(),
                     isset($feriados[$ymd]),
-                    $licencia ? ($licencia->tipo?->descripcion ?? 'Licencia') : null,
-                    $inasistencia ? (object) ['tipo_inasistencia_id' => $inasistencia->tipo_inasistencia_id, 'nombre' => $inasistencia->tipo?->nombre ?? 'Inasistencia'] : null,
+                    $licencia ? ($licencia->tipo->descripcion ?? 'Licencia') : null,
+                    $inasistencia ? (object) ['tipo_inasistencia_id' => $inasistencia->tipo_inasistencia_id, 'nombre' => $inasistencia->tipo->nombre ?? 'Inasistencia'] : null,
                     $ahora,
                 );
             }

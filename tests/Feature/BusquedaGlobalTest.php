@@ -35,3 +35,23 @@ test('no busca con menos de 3 caracteres ni muestra lo que no puede ver', functi
     Livewire::actingAs($this->user)->test(BusquedaGlobal::class)->set('q', '44')->assertDontSee('4455/440-2026');
     Livewire::actingAs($sinPermiso)->test(BusquedaGlobal::class)->set('q', '4455')->assertDontSee('4455/440-2026');
 });
+
+test('RRHH encuentra empleados y quien no tiene permiso no los ve', function () {
+    $oficina = MitivFalso::oficinaRrhh('DPTO. COMPUTOS');
+    $empleado = MitivFalso::empleadoRrhh(['apellido' => 'ZAPATA', 'nombre' => 'RITA', 'oficina_id' => $oficina]);
+
+    Livewire::actingAs($this->user)
+        ->test(BusquedaGlobal::class)
+        ->set('q', 'zapata')
+        ->assertDontSee('ZAPATA');
+
+    Permiso::create(['user_id' => $this->user->id, 'nombre' => 'rrhh_ver']);
+    $this->app->forgetScopedInstances(); // en la app real, cada request arma su alcance
+
+    Livewire::actingAs($this->user->fresh())
+        ->test(BusquedaGlobal::class)
+        ->set('q', 'zapata')
+        ->assertSee('Personal')
+        ->assertSee('ZAPATA, RITA')
+        ->assertSee(route('rrhh.ficha', $empleado));
+});

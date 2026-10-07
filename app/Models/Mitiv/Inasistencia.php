@@ -16,6 +16,7 @@ use Illuminate\Support\Carbon;
  * @property Carbon $fecha
  * @property string|null $observacion
  * @property bool|null $habilitado
+ * @property-read TipoInasistencia|null $tipo
  */
 class Inasistencia extends MitivModel
 {

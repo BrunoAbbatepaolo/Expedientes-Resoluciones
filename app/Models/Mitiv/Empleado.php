@@ -6,6 +6,7 @@ use App\Enums\NivelDatoRrhh;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Support\Carbon;
 
 /**
  * Empleado del IPV (fuente: sistema viejo).
@@ -22,6 +23,51 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
  * @property int $situacion_laboral_id
  * @property bool $habilitado
  * @property bool|null $espasivo
+ *
+ * Columnas de RRHH (solo presentes si se pidieron con conNivel()):
+ * @property int|string|null $card_id
+ * @property string|null $funcion
+ * @property int|null $categoria_titular_id
+ * @property int|null $categoria_interina_id
+ * @property Carbon|null $fecha_ingreso
+ * @property string|null $horario
+ * @property string|null $numero_documento
+ * @property string|null $cuil
+ * @property string|null $domicilio
+ * @property string|null $telefono
+ * @property string|null $telefono_celular
+ * @property Carbon|null $fecha_nacimiento
+ * @property string|null $lugar_nacimiento
+ * @property string|null $sexo
+ * @property string|null $nacionalidad
+ * @property string|null $nivel_estudio
+ * @property string|null $matricula_profesional
+ * @property int|string|null $numero_obra_social
+ * @property string|null $otra_obra_social
+ * @property int|string|null $numero_ipss
+ * @property string|null $aseguradora
+ * @property string|null $otra_aseguradora
+ * @property int|string|null $numero_poliza
+ * @property string|null $emergencia
+ * @property string|null $telefono_emergencia
+ * @property string|null $resolucion
+ * @property string|null $fecha_resolucion
+ * @property string|null $fecha_contratado
+ * @property string|null $res_dec_contrato
+ * @property string|null $observacion
+ * @property string|null $conyuge_nombre
+ * @property string|null $conyuge_cuil
+ * @property bool|null $es_discapacitado
+ * @property string|null $tipo_discapacidad
+ * @property string|null $grado_discapacidad
+ * @property string|null $vigencia_certificado_discapacidad
+ * @property string|null $enfermedad
+ * @property string|null $tratamiento
+ * @property string|null $nro_cuenta_bancaria
+ * @property-read OficinaRrhh|null $oficinaRrhh
+ * @property-read SituacionLaboral|null $situacionLaboral
+ * @property-read Categoria|null $categoriaTitular
+ * @property-read Categoria|null $categoriaInterina
  */
 class Empleado extends MitivModel
 {

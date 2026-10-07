@@ -5,6 +5,8 @@ namespace App\Livewire;
 use App\Models\Expediente as ExpedienteOficina;
 use App\Models\Resolucion;
 use App\Services\ExpedientesIpv;
+use App\Services\Rrhh\AlcanceFactory;
+use App\Services\Rrhh\Contracts\Legajos;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Collection;
 use Livewire\Component;
@@ -28,6 +30,7 @@ class BusquedaGlobal extends Component
         }
 
         $user = auth()->user();
+        /** @var array<string, Collection<int, array{titulo: string, detalle: ?string, url: string}>> $grupos */
         $grupos = [];
         $esc = addcslashes($q, '%_\\');
 
@@ -63,6 +66,17 @@ class BusquedaGlobal extends Component
                     'url' => route('resoluciones'),
                 ]);
         }
+
+        // Personal: solo RRHH y jefes, y dentro de su alcance.
+        $grupos['Personal'] = rescue(function () use ($user, $q) {
+            $alcance = app(AlcanceFactory::class)->para($user);
+
+            return app(Legajos::class)->buscarRapido($alcance, $q, 5)->map(fn ($e) => [
+                'titulo' => $e->apellido.', '.$e->nombre,
+                'detalle' => 'Legajo '.$e->legajo.' · '.($e->oficinaRrhh->nombre ?? 'sin oficina'),
+                'url' => route('rrhh.ficha', $e->id),
+            ]);
+        }, collect());
 
         return array_filter($grupos, fn ($g) => $g->isNotEmpty());
     }

@@ -9,6 +9,7 @@ namespace App\Models\Mitiv;
  * @property int $id
  * @property int $empleado_id
  * @property string $apellido_nombre
+ * @property int|null $parentesco_id
  */
 class Familiar extends MitivModel
 {
