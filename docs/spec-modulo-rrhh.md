@@ -50,7 +50,9 @@ Lógica del viejo a reemplazar: `RegistroRelojController::sincronizar_relojes()`
 
 ### Reglas descubiertas al implementar (2026-10-07)
 
-- **"Ausencias" que no son licencias:** el sistema viejo usa `ausencias` también para regímenes que eximen de fichar por meses o años (CONT, planta justificada de obra, jerárquicos, gabinete, funcionarios, ley sindical, retiro voluntario, etc.). Esos tipos (`sirex.rrhh_tipos_sin_fichar`, env `SIREX_RRHH_TIPOS_SIN_FICHAR`) se muestran como **Justificado (no ficha)** y no como Licencia. Con datos reales del 07/10: 276 justificados, 11 de licencia. **RRHH debe validar la lista.**
+- **"Ausencias" que no son licencias:** el sistema viejo usa `ausencias` también para regímenes que eximen de fichar por meses o años (planta justificada de obra, jerárquicos, gabinete, funcionarios, ley sindical, retiro voluntario, etc.). Esos tipos (`sirex.rrhh_tipos_sin_fichar`, env `SIREX_RRHH_TIPOS_SIN_FICHAR`) se muestran como **Justificado (no ficha)** y no como Licencia. **RRHH debe validar la lista.**
+- **Contratados (CONT, id 131):** la "ausencia" CONT solo marca la vigencia del contrato; **los contratados fichan todos los días**. Se ignora (`sirex.rrhh_tipos_ignorados`) y el día se calcula por fichadas: sin marca es falta (confirmado por el usuario).
+- **Regla de entrada (confirmada por el usuario):** horarios de 7 a 12 o de 7 a 14. Hasta 10 min después de la entrada = presente; de 10 a 30 min = llegada tarde; más de 30 min = falta. Se usa la tolerancia del horario del empleado (el 82 % tiene 10) o `SIREX_RRHH_TOLERANCIA` (10); el límite de falta es `SIREX_RRHH_LIMITE_FALTA` (30). Sin fichada hoy, el día queda "pendiente" hasta el límite de falta. Se compara por minuto (07:10:45 cuenta como 07:10).
 - **Hora local:** la base vieja guarda fechas sin zona (hora de Tucumán). `App\Services\Rrhh\Hora` arma "ahora" en hora local (`SIREX_RRHH_ZONA`, default `America/Argentina/Tucuman`).
 - `card_id` no es columna pública de `Empleado`: se pide con `conNivel(Basico)`.
 
