@@ -48,6 +48,7 @@ Route::middleware(['auth', 'password.change'])->group(function () {
         Route::livewire('personal', Rrhh\Personal::class)->name('personal');
         Route::livewire('asistencia', Rrhh\Asistencia::class)->name('asistencia');
         Route::livewire('licencias', Rrhh\Licencias::class)->name('licencias');
+        Route::livewire('organigrama', Rrhh\Organigrama::class)->name('organigrama');
         Route::livewire('personal/{empleado}', Rrhh\FichaEmpleado::class)->whereNumber('empleado')->name('ficha');
         Route::get('personal/{empleado}/archivos/{archivo}', ArchivoEmpleadoController::class)
             ->whereNumber(['empleado', 'archivo'])
