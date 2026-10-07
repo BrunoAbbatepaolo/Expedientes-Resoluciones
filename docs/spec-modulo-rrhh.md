@@ -40,12 +40,13 @@ Lógica del viejo a reemplazar: `RegistroRelojController::sincronizar_relojes()`
 
 **Lectura en vivo** de mitivdb (opción A), mismo patrón que Expedientes IPV:
 
-- **Modelos** `App\Models\Mitiv\*` (extienden `MitivModel`, que bloquea escritura; sesión `READ ONLY`): `Ausencia`, `TipoAusencia`, `Inasistencia`, `TipoInasistencia`, `RegistroReloj`, `Horario`, `Feriado`, `SaldoVacaciones`, `GrupoFamiliar`, `FojaServicio`, `EmpleadoMovimiento`, `EmpleadoHistorial`, `EmpleadoArchivo`, `OperacionReloj`. `Empleado` se amplía.
-- **Columnas por nivel** en `Empleado`: listas explícitas `COLUMNAS_BASICAS`, `COLUMNAS_PERSONALES`, `COLUMNAS_SENSIBLES`. El scope global sigue seleccionando solo básicas; los niveles superiores se piden explícitamente y solo desde el servicio. `password`, `clave_fiscal`, `clave_seguridad_social`, `roles` no figuran en ninguna lista → nunca se leen.
-- **`App\Services\Rrhh\Rrhh`** (interfaz) — única puerta a los datos. Todo método recibe el `User` que consulta y aplica el alcance (sección 5). Implementaciones: `RrhhMitiv` (fase 1) y `RrhhSirex` (fase 2). Se elige por `config('sirex.rrhh_fuente')`.
-- **`App\Services\Rrhh\CalculoAsistencia`** — puro, sin I/O: recibe horario del día, fichadas, feriado, ausencia e inasistencias registradas y devuelve un `DiaAsistencia` (estado: `presente | tarde | falta | licencia | feriado | franco | sin_horario | futuro`, marcas, minutos de tarde por turno, motivo legible). Evalúa ambos turnos. Tolerancias desde config.
-- **Datos propios de SiRex:** `oficinas.oficina_padre_id` (nullable, FK a `oficinas`), permisos nuevos, tabla `rrhh_accesos` (registro de accesos, sección 5).
-- **Config** (`config/sirex.php`): `rrhh_fuente` (`SIREX_RRHH_FUENTE`, default `mitiv`), `rrhh_tolerancia_minutos` (default 30), `rrhh_reloj_alerta_minutos` (default 30), `rrhh_pedidos` (`SIREX_RRHH_PEDIDOS`, default `false`), `rrhh_pedido_dias_atras` (default 0).
+- **Dos catálogos de oficinas en mitivdb (relevado):** `oficinas` (80, catálogo de RRHH: `empleados.oficina_id` apunta acá) y `expediente_oficinas` (514, catálogo de expedientes: `App\Models\Oficina.mitiv_oficina_id` de SiRex apunta acá). Los ids coinciden por casualidad. **Todo RRHH usa el catálogo `oficinas`.**
+- **Modelos** `App\Models\Mitiv\*` (extienden `MitivModel`, que bloquea escritura; sesión `READ ONLY`): `OficinaRrhh` (`oficinas`), `Categoria`, `Ausencia`, `TipoAusencia`, `Inasistencia`, `TipoInasistencia`, `RegistroReloj`, `Horario`, `Feriado`, `SaldoVacaciones` (`vista_saldo_vacaciones`), `Familiar` (`grupo_familiares`), `FojaServicio`, `EmpleadoMovimiento`, `EmpleadoArchivo` (sin la columna `contenido` salvo al descargar), `OperacionReloj`. `Empleado` se amplía.
+- **Columnas por nivel** en `Empleado`: enum `NivelDatoRrhh` (`Basico`, `Personal`, `Sensible`) con la lista explícita de columnas de cada nivel. El scope global sigue seleccionando solo las públicas; los niveles superiores se piden explícitamente y solo desde el servicio. `password`, `clave_fiscal`, `clave_seguridad_social`, `roles` no figuran en ninguna lista → nunca se leen.
+- **Servicios por área** en `App\Services\Rrhh` (interfaces en `Contracts\`, implementación mitiv en `Mitiv\`): `Legajos`, `Asistencias`, `Licencias`, `Calendario`, `LectorReloj`. Cada método recibe el `Alcance` del usuario (sección 5) y lo aplica; ninguna pantalla consulta mitivdb directo. `RrhhServiceProvider` enlaza la implementación según `config('sirex.rrhh_fuente')`; la implementación `sirex` llega en fase 2.
+- **`App\Services\Rrhh\CalculoAsistencia`** — puro, sin I/O: recibe fecha, horario del día, fichadas, feriado, licencia, inasistencia registrada y "ahora", y devuelve un `DiaAsistencia` (estado `presente | tarde | incompleto | falta | justificado | licencia | feriado | franco | pendiente | futuro`, marcas, minutos de tarde, motivo legible). **Una inasistencia ya registrada en mitivdb manda** (es el registro oficial: id 82 = AUSENTE → falta, id 7 = LLEGADA TARDE → tarde, otro tipo → justificado); lo demás se calcula para mostrar. Evalúa ambos turnos.
+- **Datos propios de SiRex** (`mysql_admin`): `rrhh_oficina_padres` (dependencia entre oficinas RRHH), `rrhh_jefaturas` (jefe ↔ oficina RRHH), `rrhh_accesos` (registro de accesos), permisos nuevos `rrhh_ver` y `rrhh_sensibles`.
+- **Config** (`config/sirex.php`): `rrhh_fuente` (`SIREX_RRHH_FUENTE`, default `mitiv`), `rrhh_tolerancia_minutos` (default 30), `rrhh_reloj_alerta_minutos` (default 30), `rrhh_pedidos` (`SIREX_RRHH_PEDIDOS`, default `false`), `rrhh_pedido_dias_atras` (default 0), `rrhh_tipo_ausente_id` (default 82), `rrhh_tipo_tarde_id` (default 7).
 
 ## 4. Pantallas (fase 1)
 
@@ -57,7 +58,7 @@ Grupo **RRHH** en el sidebar; cada ítem se muestra según permiso. Mobile-first
    - Mis licencias y faltas: listado por año.
    - Mis datos: básicos + personales propios (los sensibles propios también, sección 5).
    - Sin legajo o legajo inexistente: aviso explicativo, no error.
-2. **Mi equipo** (`rrhh_equipo`)
+2. **Mi equipo** (jefes: fila en `rrhh_jefaturas`)
    - Hoy: presentes / tarde / ausentes / licencia por oficina (refresco con `wire:poll`, 60 s).
    - Mes: grilla empleados × días con colores.
    - Mi gente: listado → ficha en nivel básico + asistencia + licencias.
@@ -71,21 +72,22 @@ Grupo **RRHH** en el sidebar; cada ítem se muestra según permiso. Mobile-first
    - Estado del lector: última fichada y último `CHEQUEO_ESTADO_SERVICIO`; alerta si supera `rrhh_reloj_alerta_minutos` en horario laboral (lun–vie 7–15 h, no feriado).
 5. **Licencias** (`rrhh_ver`): listado filtrable (tipo, fechas, oficina, empleado) y vacaciones adeudadas por empleado/año.
 6. **Calendario** (todos): feriados y días no laborables del año.
-7. **Reportes** (`rrhh_ver`): ficha personal (PDF), presentismo mensual por oficina, vacaciones adeudadas, licencias por tipo. Exportación Excel y PDF.
-8. **Integraciones:** búsqueda global (Ctrl+K) incluye empleados (según alcance); **Oficinas** suma el campo "Depende de" y vista en árbol.
+7. **Reportes** (`rrhh_ver`): ficha personal, presentismo mensual por oficina, vacaciones adeudadas, licencias por tipo. PDF = vista lista para imprimir / "Guardar como PDF" desde el navegador (mismo enfoque que la impresión de expedientes IPV); Excel = CSV con BOM y `;`. Sin dependencias nuevas.
+8. **Organigrama** (`rrhh_ver` ve; `lista_usuario_editar` edita): árbol de las oficinas RRHH, campo "Depende de" por oficina y jefes asignados a cada oficina.
+9. **Integraciones:** búsqueda global (Ctrl+K) incluye empleados (según alcance).
 
 ## 5. Permisos y visibilidad
 
 | Rol | Origen | Alcance |
 |---|---|---|
 | Empleado | Automático por `users.legajo` = `empleados.legajo` | Solo él |
-| Jefe | Permiso `rrhh_equipo` + oficina (uno o varios) | Esa oficina y todas sus descendientes por `oficina_padre_id` (recursivo, con corte de ciclos) |
+| Jefe | Fila en `rrhh_jefaturas` (user + oficina RRHH; uno o varios), asignada en Organigrama | Esa oficina y todas sus descendientes por `rrhh_oficina_padres` (recursivo, con corte de ciclos) |
 | RRHH | `rrhh_ver` | Todo el personal |
 | RRHH sensible | `rrhh_sensibles` (hoy: solo la jefa de RRHH) | + datos sensibles |
 | Carga | `rrhh_carga` + fuente `sirex` | Pantallas de la sección 7 |
 | Confirma pedidos | `rrhh_confirmar_pedidos` + `SIREX_RRHH_PEDIDOS=true` | Pedidos por confirmar (sección 7 bis) |
 
-Alcance de jefe: las oficinas SiRex se traducen a oficinas mitiv por `oficinas.mitiv_oficina_id`; oficinas sin vínculo no aportan empleados (se avisa en Mi equipo).
+La jefatura se guarda sobre el catálogo RRHH (`mitivdb.oficinas`), no sobre las oficinas de SiRex: no depende del vínculo con IPV.
 
 | Nivel de datos | Campos | Ven |
 |---|---|---|
@@ -100,10 +102,11 @@ Alcance de jefe: las oficinas SiRex se traducen a oficinas mitiv por `oficinas.m
 
 ## 6. Dependencia de oficinas
 
-- Migración: `oficinas.oficina_padre_id`.
-- Seeder/comando `rrhh:cargar-organigrama`: precarga desde el organigrama funcional (Res. 0373/2003, versión 06/06/2022) emparejando por nombre normalizado. Imprime emparejadas / no emparejadas; no pisa valores ya cargados. Los nombres de jefes del organigrama **no** se usan.
+- Sobre el catálogo RRHH (`mitivdb.oficinas`, 80 filas). Tabla SiRex `rrhh_oficina_padres` (`mitiv_oficina_id` único, `padre_mitiv_oficina_id` nullable).
+- Comando `rrhh:cargar-organigrama`: precarga desde el organigrama funcional (Res. 0373/2003, versión 06/06/2022) con un mapeo **por id** (`database/data/organigrama_rrhh.php`: id → [nombre esperado, id padre]); solo aplica si el nombre actual en mitivdb coincide (normalizado), no pisa valores ya cargados e imprime aplicadas / salteadas. Los nombres de jefes del organigrama **no** se usan.
+- Oficinas sin equivalente en el organigrama (Inspección Médica, PROCREAR, PROMEBA, UEMS, UECELT, Comisión de Servicios, Adscriptos, Retiro Voluntario, Lic. sin goce, etc.) quedan sin superior hasta que se carguen a mano.
 - Árbol de referencia: Intervención → Subintervención → Áreas (Social, Económico Financiera, Legal, Recupero y Reg. Dominial, Planeamiento, Técnica, Secretaría General) → Subdirección → Dptos → Secciones; con dependencia directa de Intervención: Cómputos, C.O.A., Prensa y Difusión, Relaciones Institucionales, U.G.R.L., Control de Gestión, Secretaría Privada.
-- Edición en **Oficinas** ("Depende de"), validando que no se formen ciclos.
+- Edición en la pantalla **Organigrama** ("Depende de"), validando que no se formen ciclos.
 
 ## 7. Cargas e importador (fase 2, apagado)
 
@@ -132,7 +135,7 @@ No escribe en mitivdb ni choca con el viejo (un pedido no es una licencia hasta 
 ## 8. Errores, rendimiento y pruebas
 
 - mitivdb no disponible: aviso "datos del sistema viejo no disponibles" (patrón `rescue` de Expedientes IPV); la página no se rompe.
-- Consultas a `registros_reloj` e `inasistencias` siempre filtradas por empleado(s) y rango de fechas. Antes de implementar: relevar índices existentes en esas tablas (solo lectura); si faltan, documentar el pedido de índice para el viejo en lugar de crearlo.
+- Consultas a `registros_reloj` e `inasistencias` siempre filtradas por empleado(s) y rango de fechas. Índices relevados: `registros_reloj` tiene `(card_id, fecha_hora)`; **`inasistencias`, `ausencias` y `horarios` solo tienen la PK**. Pedido para el administrador del sistema viejo (SiRex no los crea): `CREATE INDEX ON inasistencias (empleado_id, fecha); CREATE INDEX ON ausencias (empleado_id, desde); CREATE INDEX ON horarios (empleado_id);`. Mientras tanto, tableros del día cacheados 60 s.
 - Pruebas (Pest/PHPUnit, conexión mitiv en SQLite como en los tests actuales):
   - Alcance: empleado, jefe con descendientes, RRHH, sensibles; acceso a ficha ajena → 403.
   - Ninguna respuesta contiene columnas del nivel "Nunca".
