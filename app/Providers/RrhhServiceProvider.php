@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use App\Services\Rrhh\AlcanceFactory;
+use App\Services\Rrhh\CalculoAsistencia;
 use App\Services\Rrhh\Organigrama;
 use Illuminate\Support\ServiceProvider;
 
@@ -15,5 +16,10 @@ class RrhhServiceProvider extends ServiceProvider
     {
         $this->app->scoped(Organigrama::class);
         $this->app->scoped(AlcanceFactory::class);
+        $this->app->singleton(CalculoAsistencia::class, fn () => new CalculoAsistencia(
+            toleranciaDefault: (int) config('sirex.rrhh_tolerancia_minutos'),
+            tipoAusente: (int) config('sirex.rrhh_tipo_ausente_id'),
+            tipoTarde: (int) config('sirex.rrhh_tipo_tarde_id'),
+        ));
     }
 }
