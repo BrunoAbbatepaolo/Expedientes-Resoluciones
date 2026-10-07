@@ -2,6 +2,7 @@
 
 namespace App\Models\Mitiv;
 
+use App\Enums\NivelDatoRrhh;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -42,7 +43,13 @@ class Empleado extends MitivModel
 
     protected function casts(): array
     {
-        return ['habilitado' => 'boolean', 'espasivo' => 'boolean'];
+        return [
+            'habilitado' => 'boolean',
+            'espasivo' => 'boolean',
+            'fecha_ingreso' => 'date',
+            'fecha_nacimiento' => 'date',
+            'es_discapacitado' => 'boolean',
+        ];
     }
 
     /** Activos = habilitados y no pasivos (jubilados, bajas). */
@@ -52,9 +59,35 @@ class Empleado extends MitivModel
             ->where(fn ($q) => $q->where('empleados.espasivo', false)->orWhereNull('empleados.espasivo'));
     }
 
+    /**
+     * Reemplaza las columnas públicas por las de un nivel del legajo. Solo debe usarse
+     * desde los servicios de RRHH, que deciden el nivel según el Alcance del usuario.
+     */
+    public function scopeConNivel(Builder $query, NivelDatoRrhh $nivel): Builder
+    {
+        return $query->withoutGlobalScope('columnas_publicas')
+            ->select(array_map(fn ($c) => 'empleados.'.$c, $nivel->columnas()));
+    }
+
     public function situacionLaboral(): BelongsTo
     {
         return $this->belongsTo(SituacionLaboral::class, 'situacion_laboral_id');
+    }
+
+    /** Oficina del catálogo de RRHH (mitivdb.oficinas). */
+    public function oficinaRrhh(): BelongsTo
+    {
+        return $this->belongsTo(OficinaRrhh::class, 'oficina_id');
+    }
+
+    public function categoriaTitular(): BelongsTo
+    {
+        return $this->belongsTo(Categoria::class, 'categoria_titular_id');
+    }
+
+    public function categoriaInterina(): BelongsTo
+    {
+        return $this->belongsTo(Categoria::class, 'categoria_interina_id');
     }
 
     public function oficinasExpediente(): BelongsToMany

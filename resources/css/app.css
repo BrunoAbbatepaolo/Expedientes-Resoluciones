@@ -2,6 +2,7 @@
 @import 'quill/dist/quill.snow.css';
 
 @source '../views';
+@source '../../app/Enums';
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
 
 @custom-variant dark (&:where(.dark, .dark *));
