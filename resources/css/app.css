@@ -99,9 +99,12 @@
     }
 
     /* Entrada de cada página (se repite en cada wire:navigate porque el <main> es nuevo).
-       Solo opacity/transform: lo compone la GPU, no bloquea el render. */
+       Solo opacity/transform: lo compone la GPU, no bloquea el render.
+       fill-mode "backwards" y NO "both": con "forwards" el <main> conserva un transform para siempre y
+       los modales (position: fixed) se miden contra el <main> y no contra la pantalla: aparecían
+       centrados en la página entera, fuera de lo que se ve. */
     .sirex-pagina {
-        animation: sirex-entrada 220ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+        animation: sirex-entrada 220ms cubic-bezier(0.2, 0.8, 0.2, 1) backwards;
     }
 
     /* Luz que sigue al mouse en las tarjetas: --mx/--my los actualiza app.js con

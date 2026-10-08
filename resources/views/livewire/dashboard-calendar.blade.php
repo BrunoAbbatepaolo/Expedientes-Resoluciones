@@ -342,10 +342,52 @@ new class extends Component
 
     <!-- Task Modal -->
     @if($this->hasPermission && $showModal)
-        <div class="fixed inset-0 z-[100] flex items-center justify-center bg-[#001428]/50 p-4 backdrop-blur-sm" wire:click.self="closeModal">
-            <div class="w-full max-w-sm overflow-hidden rounded-2xl border border-ipv-blue/20 bg-white/90 shadow-2xl backdrop-blur-2xl backdrop-saturate-150 dark:border-white/10 dark:bg-[#141c26]/95">
-                <div class="flex items-center justify-between border-b border-ipv-blue/10 px-4 py-4 dark:border-white/10">
-                    <h3 class="text-[15px] font-semibold text-ipv-ink dark:text-ipv-ink-dark">
+        {{-- Ventana movible: se arrastra desde la barra de título (doble clic = volver al centro). Una vez
+             movida, el fondo se aclara y deja de desenfocar para poder ver el calendario. Solo se cierra al
+             tocar el fondo si el clic EMPEZÓ en el fondo: arrastrar y soltar fuera de la ventana no la cierra. --}}
+        <div
+            x-data="{
+                x: 0, y: 0, arrastrando: false, fuera: false, inicio: null, rect: null,
+                empezar(e) {
+                    if (e.target.closest('button')) return;
+                    this.arrastrando = true;
+                    this.rect = this.$refs.ventana.getBoundingClientRect();
+                    this.inicio = { px: e.clientX, py: e.clientY, x: this.x, y: this.y };
+                    e.currentTarget.setPointerCapture(e.pointerId);
+                },
+                mover(e) {
+                    if (!this.arrastrando) return;
+                    // La ventana queda siempre entera dentro de la pantalla; si es más grande que la pantalla,
+                    // se puede arrastrar lo justo para ver el resto.
+                    const r = this.rect;
+                    const limitar = (v, a, b) => Math.min(Math.max(v, Math.min(a, b)), Math.max(a, b));
+                    const izquierda = limitar(r.left + e.clientX - this.inicio.px, 0, window.innerWidth - r.width);
+                    const arriba = limitar(r.top + e.clientY - this.inicio.py, 0, window.innerHeight - r.height);
+                    this.x = this.inicio.x + (izquierda - r.left);
+                    this.y = this.inicio.y + (arriba - r.top);
+                },
+                soltar() { this.arrastrando = false; },
+            }"
+            class="fixed inset-0 z-[100] flex items-center justify-center p-4 transition-colors"
+            :class="x !== 0 || y !== 0 ? 'bg-[#001428]/20' : 'bg-[#001428]/50 backdrop-blur-sm'"
+            x-on:pointerdown="fuera = ($event.target === $el)"
+            x-on:click.self="if (fuera) $wire.closeModal(); fuera = false"
+        >
+            <div x-ref="ventana" :style="`transform: translate(${x}px, ${y}px)`" class="w-full max-w-sm overflow-hidden rounded-2xl border border-ipv-blue/20 bg-white/90 shadow-2xl backdrop-blur-2xl backdrop-saturate-150 dark:border-white/10 dark:bg-[#141c26]/95">
+                <div
+                    class="flex cursor-grab touch-none select-none items-center justify-between border-b border-ipv-blue/10 px-4 py-4 active:cursor-grabbing dark:border-white/10"
+                    title="Arrastrá para mover la ventana (doble clic: volver al centro)"
+                    x-on:pointerdown="empezar($event)"
+                    x-on:pointermove="mover($event)"
+                    x-on:pointerup="soltar()"
+                    x-on:pointercancel="soltar()"
+                    x-on:dblclick="x = 0; y = 0"
+                >
+                    <h3 class="flex items-center gap-2 text-[15px] font-semibold text-ipv-ink dark:text-ipv-ink-dark">
+                        <svg class="size-4 shrink-0 text-ipv-ink/30 dark:text-ipv-ink-dark/35" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                            <circle cx="9" cy="6" r="1.5" /><circle cx="15" cy="6" r="1.5" /><circle cx="9" cy="12" r="1.5" />
+                            <circle cx="15" cy="12" r="1.5" /><circle cx="9" cy="18" r="1.5" /><circle cx="15" cy="18" r="1.5" />
+                        </svg>
                         @if($taskId)
                             @if($isEditing) Editar Tarea @else Detalles de Tarea @endif
                         @else
