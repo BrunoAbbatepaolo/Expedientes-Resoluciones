@@ -14,26 +14,27 @@ use Illuminate\Support\Facades\Route;
  */
 class MenuRrhh
 {
-    /** @return list<array{ruta: string, etiqueta: string}> */
+    /** @return list<array{ruta: string, etiqueta: string, contador: int}> */
     public static function para(User $user): array
     {
         $esJefe = Cache::remember(self::claveJefe($user->id), now()->addMinutes(10),
             fn () => RrhhJefatura::where('user_id', $user->id)->exists());
         $rrhh = $user->permiso('rrhh_ver');
+        $pedidos = PedidosLicencia::contadores($user);
 
         $items = [
-            ['rrhh.mio', 'Mi RRHH', trim((string) $user->legajo) !== ''],
-            ['rrhh.equipo', 'Mi equipo', $esJefe],
-            ['rrhh.personal', 'Personal', $rrhh],
-            ['rrhh.asistencia', 'Asistencia', $rrhh],
-            ['rrhh.licencias', 'Licencias', $rrhh],
-            ['rrhh.reportes', 'Reportes', $rrhh],
-            ['rrhh.organigrama', 'Organigrama', $rrhh || $user->permiso('lista_usuario_editar')],
-            ['rrhh.calendario', 'Calendario', true],
+            ['rrhh.mio', 'Mi RRHH', trim((string) $user->legajo) !== '', 0],
+            ['rrhh.equipo', 'Mi equipo', $esJefe, $pedidos['aprobar']],
+            ['rrhh.personal', 'Personal', $rrhh, 0],
+            ['rrhh.asistencia', 'Asistencia', $rrhh, 0],
+            ['rrhh.licencias', 'Licencias', $rrhh, $pedidos['confirmar']],
+            ['rrhh.reportes', 'Reportes', $rrhh, 0],
+            ['rrhh.organigrama', 'Organigrama', $rrhh || $user->permiso('lista_usuario_editar'), 0],
+            ['rrhh.calendario', 'Calendario', true, 0],
         ];
 
         return array_values(array_map(
-            fn ($i) => ['ruta' => $i[0], 'etiqueta' => $i[1]],
+            fn ($i) => ['ruta' => $i[0], 'etiqueta' => $i[1], 'contador' => $i[3]],
             array_filter($items, fn ($i) => $i[2] && Route::has($i[0])),
         ));
     }

@@ -174,6 +174,9 @@
                                 ? 'bg-ipv-blue/10 font-semibold text-ipv-blue dark:bg-white/[0.08] dark:text-ipv-ink-dark'
                                 : 'text-ipv-ink/65 hover:bg-black/[0.03] dark:text-ipv-ink-dark/65 dark:hover:bg-white/5' }}">
                             {{ $item['etiqueta'] }}
+                            @if (($item['contador'] ?? 0) > 0)
+                                <span class="ml-1 rounded-full bg-ipv-gold px-1.5 text-[11px] font-semibold text-[#5a3d00]">{{ $item['contador'] }}</span>
+                            @endif
                         </a>
                     @endforeach
                 </div>

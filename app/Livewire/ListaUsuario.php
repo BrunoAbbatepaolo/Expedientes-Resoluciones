@@ -39,12 +39,14 @@ class ListaUsuario extends Component
         'rrhh_ver',
         'rrhh_sensibles',
         'rrhh_horarios',
+        'rrhh_confirmar_pedidos',
     ];
 
     public array $permisos = [
         'rrhh_ver' => false,
         'rrhh_sensibles' => false,
         'rrhh_horarios' => false,
+        'rrhh_confirmar_pedidos' => false,
         'expediente_ver' => false,
         'expediente_editar' => false,
         'resolucion_ver' => false,

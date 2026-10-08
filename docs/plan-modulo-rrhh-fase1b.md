@@ -14,9 +14,9 @@
 - Avisos: contador en el menú (Mi equipo / Licencias), sin consultar mitivdb.
 
 ## Tareas
-- [ ] 1. Migración + modelos (`RrhhPedidoLicencia`, `RrhhTipoPedible`), enum `EstadoPedido`, config.
-- [ ] 2. Servicio `PedidosLicencia` (crear, cancelar, aprobar/rechazar, confirmar/rechazar, listados, contadores) + tests.
-- [ ] 3. Mi RRHH: pedir licencia y mis pedidos + tests.
-- [ ] 4. Mi equipo: pedidos por aprobar + tests.
-- [ ] 5. Licencias (RRHH): pedidos por confirmar + tipos pedibles + tests.
-- [ ] 6. Menú con contadores, permiso en Usuarios, descarga de adjunto, rendimiento, docs.
+- [x] 1. Migración + modelos (`RrhhPedidoLicencia`, `RrhhTipoPedible`), enum `EstadoPedido`, config.
+- [x] 2. Servicio `PedidosLicencia` (crear, cancelar, aprobar/rechazar, confirmar/rechazar, listados, contadores) + tests.
+- [x] 3. Mi RRHH: pedir licencia y mis pedidos + tests.
+- [x] 4. Mi equipo: pedidos por aprobar + tests.
+- [x] 5. Licencias (RRHH): pedidos por confirmar + tipos pedibles + tests.
+- [x] 6. Menú con contadores, permiso en Usuarios, descarga de adjunto, rendimiento, docs.
