@@ -163,6 +163,10 @@ class CalculoAsistencia
             }
         }
 
-        return $tramos !== [] ? implode(' y ', $tramos) : null;
+        if ($tramos === []) {
+            return null;
+        }
+
+        return implode(' y ', $tramos).(! empty($horario->especial) ? ' (horario especial)' : '');
     }
 }

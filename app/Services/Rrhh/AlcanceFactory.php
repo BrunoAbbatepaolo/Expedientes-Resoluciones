@@ -35,6 +35,7 @@ class AlcanceFactory
             sensibles: $user->permiso('rrhh_sensibles'),
             oficinasEquipo: $jefaturas !== [] ? $this->organigrama->descendientes($jefaturas) : [],
             oficinasJefatura: $jefaturas,
+            horarios: $user->permiso('rrhh_horarios'),
         );
     }
 

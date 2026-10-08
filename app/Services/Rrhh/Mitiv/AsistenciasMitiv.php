@@ -8,6 +8,7 @@ use App\Models\Mitiv\Empleado;
 use App\Models\Mitiv\Horario;
 use App\Models\Mitiv\Inasistencia;
 use App\Models\Mitiv\RegistroReloj;
+use App\Models\RrhhHorarioEspecial;
 use App\Services\Rrhh\Alcance;
 use App\Services\Rrhh\CalculoAsistencia;
 use App\Services\Rrhh\Contracts\Asistencias;
@@ -15,6 +16,7 @@ use App\Services\Rrhh\Contracts\Calendario;
 use App\Services\Rrhh\Contracts\Legajos;
 use App\Services\Rrhh\DiaAsistencia;
 use App\Services\Rrhh\Hora;
+use App\Services\Rrhh\HorariosEspeciales;
 use Carbon\CarbonImmutable;
 use Carbon\CarbonPeriod;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
@@ -29,6 +31,7 @@ class AsistenciasMitiv implements Asistencias
         private CalculoAsistencia $calculo,
         private Calendario $calendario,
         private Legajos $legajos,
+        private HorariosEspeciales $especiales,
     ) {}
 
     public function mes(Alcance $alcance, int $empleadoId, int $anio, int $mes): array
@@ -159,6 +162,8 @@ class AsistenciasMitiv implements Asistencias
             ->keyBy(fn (Inasistencia $i) => $i->empleado_id.'|'.$i->fecha->toDateString());
 
         $feriados = $this->calendario->dias($desde, $hasta);
+        // Un horario especial vigente (cargado por la jefatura de RRHH) reemplaza al del sistema viejo.
+        $especiales = $this->especiales->vigentesEntre($ids, $desde, $hasta);
         $ahora = Hora::ahora();
         $sinFichar = (array) config('sirex.rrhh_tipos_sin_fichar');
         $periodo = array_map(fn ($x) => CarbonImmutable::instance($x), CarbonPeriod::create($desde->startOfDay(), $hasta->startOfDay())->toArray());
@@ -174,7 +179,8 @@ class AsistenciasMitiv implements Asistencias
 
                 $resultado[$empleado->id][] = $this->calculo->dia(
                     $fecha,
-                    $horarios[$empleado->id][$fecha->dayOfWeekIso] ?? null,
+                    ($especiales[$empleado->id] ?? collect())->first(fn (RrhhHorarioEspecial $h) => $h->aplicaEn($fecha))?->comoHorario()
+                        ?? $horarios[$empleado->id][$fecha->dayOfWeekIso] ?? null,
                     $tarjeta === null ? [] : ($marcas[$tarjeta.'|'.$ymd] ?? collect())
                         ->map(fn (RegistroReloj $r) => CarbonImmutable::instance($r->fecha_hora))->values()->all(),
                     isset($feriados[$ymd]),

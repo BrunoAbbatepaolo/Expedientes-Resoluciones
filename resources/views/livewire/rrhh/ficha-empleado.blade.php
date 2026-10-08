@@ -144,6 +144,98 @@
                     </ul>
                     @break
 
+                @case('horario')
+                    {{-- Solo php en línea: un bloque php/endphp en este archivo se mezclaría con los de arriba. --}}
+                    @php($nombresDia = [1 => 'Lun', 2 => 'Mar', 3 => 'Mié', 4 => 'Jue', 5 => 'Vie', 6 => 'Sáb', 7 => 'Dom'])
+                    @php($tramo = fn ($d, $h) => $d ? substr($d, 0, 5).'–'.substr((string) $h, 0, 5) : null)
+                    @php($hoyRrhh = \App\Services\Rrhh\Hora::hoy())
+                    <div class="space-y-5">
+                        <div>
+                            <h2 class="mb-2 font-semibold text-ipv-ink dark:text-ipv-ink-dark">Horario del sistema de personal</h2>
+                            <div class="grid grid-cols-2 gap-2 text-sm sm:grid-cols-4 lg:grid-cols-7">
+                                @foreach ($nombresDia as $n => $nombre)
+                                    @php($h = ($semana ?? collect())->get($n))
+                                    <div class="rounded-lg bg-black/[0.03] px-3 py-2 dark:bg-white/5">
+                                        <p class="text-xs font-medium text-ipv-ink/55 dark:text-ipv-ink-dark/55">{{ $nombre }}</p>
+                                        <p class="text-ipv-ink dark:text-ipv-ink-dark">
+                                            {{ $h ? (collect([$tramo($h->desde_maniana, $h->hasta_maniana), $tramo($h->desde_tarde, $h->hasta_tarde)])->filter()->implode(' y ') ?: 'Franco') : 'Franco' }}
+                                        </p>
+                                        @if ($h && $h->tolerancia_maniana)<p class="text-[11px] text-ipv-ink/50 dark:text-ipv-ink-dark/50">tolerancia {{ $h->tolerancia_maniana }} min</p>@endif
+                                    </div>
+                                @endforeach
+                            </div>
+                        </div>
+
+                        <div>
+                            <h2 class="mb-2 font-semibold text-ipv-ink dark:text-ipv-ink-dark">Horarios especiales</h2>
+                            <p class="mb-2 text-xs text-ipv-ink/50 dark:text-ipv-ink-dark/50">Mientras están vigentes reemplazan al horario de arriba en los días indicados. Los carga la jefatura de RRHH.</p>
+                            <ul class="divide-y divide-ipv-blue/10 text-sm dark:divide-white/10">
+                                @forelse ($especiales ?? [] as $esp)
+                                    @php($estadoEsp = $esp->estado($hoyRrhh))
+                                    <li wire:key="esp-{{ $esp->id }}" class="flex flex-wrap items-start justify-between gap-2 py-2.5 {{ $estadoEsp === 'vencido' ? 'opacity-55' : '' }}">
+                                        <div>
+                                            <p class="font-medium text-ipv-ink dark:text-ipv-ink-dark">
+                                                {{ collect($esp->dias)->sort()->map(fn ($d) => $nombresDia[$d])->implode(', ') }} ·
+                                                {{ collect([$tramo($esp->desde_maniana, $esp->hasta_maniana), $tramo($esp->desde_tarde, $esp->hasta_tarde)])->filter()->implode(' y ') }}
+                                                @if ($esp->tolerancia !== null) · tolerancia {{ $esp->tolerancia }} min @endif
+                                            </p>
+                                            <p class="text-xs text-ipv-ink/55 dark:text-ipv-ink-dark/55">
+                                                {{ $esp->vigente_desde->format('d/m/Y') }} – {{ $esp->vigente_hasta?->format('d/m/Y') ?? 'sin fecha de fin' }}
+                                                · {{ $esp->motivo }} · cargó {{ $esp->user?->name }}
+                                            </p>
+                                        </div>
+                                        <span class="flex items-center gap-2">
+                                            <span class="rounded-full px-2 py-0.5 text-xs {{ $estadoEsp === 'vigente' ? 'bg-emerald-500/15 text-emerald-800 dark:text-emerald-300' : 'bg-black/[0.04] text-ipv-ink/60 dark:bg-white/5 dark:text-ipv-ink-dark/60' }}">{{ $estadoEsp }}</span>
+                                            @if (($editaHorarios ?? false) && $estadoEsp !== 'vencido')
+                                                <button type="button" wire:click="finalizarHorario({{ $esp->id }})" wire:confirm="¿Finalizar este horario especial?"
+                                                    class="text-xs text-ipv-magenta hover:underline">Finalizar</button>
+                                            @endif
+                                        </span>
+                                    </li>
+                                @empty
+                                    <li class="py-2 text-ipv-ink/55 dark:text-ipv-ink-dark/55">No tiene horarios especiales.</li>
+                                @endforelse
+                            </ul>
+                        </div>
+
+                        @if ($editaHorarios ?? false)
+                            @php($campo = 'w-full rounded-lg border border-ipv-blue/20 bg-white/80 px-3 py-2 text-sm text-ipv-ink dark:border-white/15 dark:bg-white/[0.06] dark:text-ipv-ink-dark')
+                            <form wire:submit="agregarHorario" class="space-y-3 rounded-[12px] border border-ipv-blue/15 p-4 dark:border-white/10">
+                                <h3 class="font-semibold text-ipv-ink dark:text-ipv-ink-dark">Nuevo horario especial</h3>
+                                <fieldset>
+                                    <legend class="mb-1 text-xs text-ipv-ink/60 dark:text-ipv-ink-dark/60">Días</legend>
+                                    <div class="flex flex-wrap gap-2">
+                                        @foreach ($nombresDia as $n => $nombre)
+                                            <label class="flex items-center gap-1.5 rounded-lg border border-ipv-blue/15 px-2.5 py-1 text-sm dark:border-white/10">
+                                                <input type="checkbox" wire:model="nuevo.dias" value="{{ $n }}" class="rounded"> {{ $nombre }}
+                                            </label>
+                                        @endforeach
+                                    </div>
+                                    @error('nuevo.dias') <p class="mt-1 text-xs text-ipv-magenta">{{ $message }}</p> @enderror
+                                </fieldset>
+                                <div class="grid gap-3 sm:grid-cols-3">
+                                    <label class="text-xs text-ipv-ink/60 dark:text-ipv-ink-dark/60">Entrada<input type="time" wire:model="nuevo.desde_maniana" class="{{ $campo }} mt-1"></label>
+                                    <label class="text-xs text-ipv-ink/60 dark:text-ipv-ink-dark/60">Salida<input type="time" wire:model="nuevo.hasta_maniana" class="{{ $campo }} mt-1"></label>
+                                    <label class="text-xs text-ipv-ink/60 dark:text-ipv-ink-dark/60">Tolerancia (min, vacío = 10)<input type="number" min="0" max="60" wire:model="nuevo.tolerancia" class="{{ $campo }} mt-1"></label>
+                                    <label class="text-xs text-ipv-ink/60 dark:text-ipv-ink-dark/60">Entrada tarde (opcional)<input type="time" wire:model="nuevo.desde_tarde" class="{{ $campo }} mt-1"></label>
+                                    <label class="text-xs text-ipv-ink/60 dark:text-ipv-ink-dark/60">Salida tarde (opcional)<input type="time" wire:model="nuevo.hasta_tarde" class="{{ $campo }} mt-1"></label>
+                                    <span></span>
+                                    <label class="text-xs text-ipv-ink/60 dark:text-ipv-ink-dark/60">Vigente desde (vacío = hoy)<input type="date" wire:model="nuevo.vigente_desde" class="{{ $campo }} mt-1"></label>
+                                    <label class="text-xs text-ipv-ink/60 dark:text-ipv-ink-dark/60">Vigente hasta (opcional)<input type="date" wire:model="nuevo.vigente_hasta" class="{{ $campo }} mt-1"></label>
+                                </div>
+                                @foreach (['desde_maniana', 'hasta_maniana', 'desde_tarde', 'hasta_tarde', 'tolerancia', 'vigente_desde', 'vigente_hasta'] as $c)
+                                    @error('nuevo.'.$c) <p class="text-xs text-ipv-magenta">{{ $message }}</p> @enderror
+                                @endforeach
+                                <label class="block text-xs text-ipv-ink/60 dark:text-ipv-ink-dark/60">Motivo
+                                    <input type="text" wire:model="nuevo.motivo" maxlength="255" placeholder="Ej.: Resolución 123/26, horario reducido por estudio" class="{{ $campo }} mt-1">
+                                </label>
+                                @error('nuevo.motivo') <p class="text-xs text-ipv-magenta">{{ $message }}</p> @enderror
+                                <button type="submit" class="sirex-btn rounded-lg bg-ipv-blue px-4 py-1.5 text-sm font-medium text-white">Guardar horario especial</button>
+                            </form>
+                        @endif
+                    </div>
+                    @break
+
                 @case('archivos')
                     <ul class="divide-y divide-ipv-blue/10 text-sm dark:divide-white/10">
                         @forelse ($ficha['archivos'] as $archivo)

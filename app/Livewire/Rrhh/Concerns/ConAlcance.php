@@ -6,6 +6,7 @@ use App\Services\Rrhh\Alcance;
 use App\Services\Rrhh\AlcanceFactory;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
 
 /**
@@ -37,7 +38,7 @@ trait ConAlcance
             return $consulta();
         } catch (AuthorizationException $e) {
             abort(403, $e->getMessage());
-        } catch (ModelNotFoundException|HttpExceptionInterface $e) {
+        } catch (ModelNotFoundException|HttpExceptionInterface|ValidationException $e) {
             throw $e;
         } catch (\Throwable $e) {
             report($e);

@@ -38,11 +38,13 @@ class ListaUsuario extends Component
         'lista_usuario_editar',
         'rrhh_ver',
         'rrhh_sensibles',
+        'rrhh_horarios',
     ];
 
     public array $permisos = [
         'rrhh_ver' => false,
         'rrhh_sensibles' => false,
+        'rrhh_horarios' => false,
         'expediente_ver' => false,
         'expediente_editar' => false,
         'resolucion_ver' => false,
