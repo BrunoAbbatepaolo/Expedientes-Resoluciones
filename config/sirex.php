@@ -57,6 +57,14 @@ return [
     // año (confirmado por el usuario: en 2026 se gozan las del período 2025).
     'rrhh_vacaciones_desfase' => (int) env('SIREX_RRHH_VACACIONES_DESFASE', 1),
 
+    // Agente de relojes dentro de SiRex (docs/spec-agente-relojes.md). Apagado por defecto: mientras
+    // el lector viejo siga cargando fichadas no se enciende. Segundos de espera por operación.
+    'relojes_activo' => (bool) env('SIREX_RELOJES_ACTIVO', false),
+    'relojes_timeout' => (int) env('SIREX_RELOJES_TIMEOUT', 10),
+
+    // Clave de comunicación de los relojes (0 = sin clave; los relojes igual piden autenticarse).
+    'relojes_clave' => (int) env('SIREX_RELOJES_CLAVE', 0),
+
     // Pedido de licencias desde Mi RRHH (spec 7 bis). Apagado por defecto. Los tipos que
     // permiten pedir con fecha pasada aceptan hasta estos días hacia atrás.
     'rrhh_pedidos' => (bool) env('SIREX_RRHH_PEDIDOS', false),

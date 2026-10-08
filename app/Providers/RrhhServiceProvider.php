@@ -7,6 +7,8 @@ use App\Services\Rrhh\CalculoAsistencia;
 use App\Services\Rrhh\Contracts;
 use App\Services\Rrhh\Mitiv;
 use App\Services\Rrhh\Organigrama;
+use App\Services\Rrhh\Relojes\FabricaClienteReloj;
+use App\Services\Rrhh\Relojes\FabricaClienteTcp;
 use Illuminate\Support\ServiceProvider;
 use LogicException;
 
@@ -34,6 +36,8 @@ class RrhhServiceProvider extends ServiceProvider
             tipoTarde: (int) config('sirex.rrhh_tipo_tarde_id'),
             limiteFalta: (int) config('sirex.rrhh_limite_falta_minutos'),
         ));
+
+        $this->app->bind(FabricaClienteReloj::class, FabricaClienteTcp::class);
 
         foreach (self::MITIV as $contrato => $implementacion) {
             $this->app->scoped($contrato, function ($app) use ($implementacion) {
