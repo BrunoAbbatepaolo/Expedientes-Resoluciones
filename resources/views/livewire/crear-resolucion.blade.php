@@ -1512,27 +1512,28 @@
                  x-transition:leave="transition ease-in duration-150"
                  x-transition:leave-start="opacity-100"
                  x-transition:leave-end="opacity-0"
-                 class="fixed inset-0 z-50 flex items-center justify-center p-4" 
-                 style="display: none;">
-                <!-- Overlay -->
-                <div class="fixed inset-0 bg-black/50" @click="mostrarModalPdf = false"></div>
-                
-                <!-- Modal content -->
-                <div class="relative flex h-[80vh] w-full max-w-4xl flex-col rounded-[14px] bg-white shadow-xl dark:bg-[#141c26]">
-                    <div class="flex items-center justify-between border-b border-ipv-blue/10 p-4 dark:border-white/10">
-                        <h3 class="text-lg font-semibold text-ipv-ink dark:text-ipv-ink-dark">
-                            Documento PDF
-                        </h3>
-                        <button @click="mostrarModalPdf = false" class="text-ipv-ink/60 hover:text-ipv-ink dark:text-ipv-ink-dark/60 dark:hover:text-ipv-ink-dark">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                 class="sirex-modal-fondo"
+                 style="display: none;"
+                 @click.self="mostrarModalPdf = false"
+                 @keydown.escape.window="mostrarModalPdf = false">
+                <div class="sirex-modal sirex-modal-xl" style="height: 80vh;" role="dialog" aria-modal="true" aria-labelledby="titulo-pdf">
+                    <div class="sirex-modal-cabeza" style="padding-bottom: 0.875rem;">
+                        <div class="sirex-modal-icono sirex-modal-icono-peligro">
+                            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                             </svg>
+                        </div>
+                        <div>
+                            <h3 id="titulo-pdf" class="sirex-modal-titulo">Documento PDF</h3>
+                        </div>
+                        <button type="button" @click="mostrarModalPdf = false" class="sirex-modal-cerrar" aria-label="Cerrar">
+                            <svg fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" viewBox="0 0 24 24"><path d="M6 18 18 6M6 6l12 12" /></svg>
                         </button>
                     </div>
-                    <div class="flex-1 overflow-hidden rounded-b-lg bg-black/[0.03] dark:bg-white/[0.03]">
+                    <div class="flex-1 overflow-hidden border-t border-ipv-blue/10 bg-black/[0.03] dark:border-white/10 dark:bg-white/[0.03]">
                         <iframe
                             :src="pdfIndex !== null ? '/resoluciones/descargar-pdf/' + pdfIndex : ''"
-                            class="w-full h-full"
+                            class="h-full w-full"
                             frameborder="0"
                         ></iframe>
                     </div>

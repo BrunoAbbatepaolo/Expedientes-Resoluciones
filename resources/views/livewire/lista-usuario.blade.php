@@ -107,16 +107,28 @@
         {{-- Modal para crear usuario --}}
         @if (auth()->user()->permiso('lista_usuario_editar'))
             <div x-show="showCrearUsuario" x-cloak x-on:keydown.escape.window="showCrearUsuario = false"
-                class="fixed inset-0 z-[100] flex items-center justify-center bg-[#001428]/50 p-4 backdrop-blur-sm"
-                x-on:click.self="showCrearUsuario = false">
-                <div class="w-full max-w-md rounded-2xl border border-ipv-blue/20 bg-white/95 p-4 shadow-2xl backdrop-blur-2xl backdrop-saturate-150 dark:border-white/10 dark:bg-[#141c26]/95">
-                    <div class="space-y-4">
-                        <h3 class="text-lg font-semibold text-ipv-ink dark:text-ipv-ink-dark">Nuevo usuario</h3>
+                class="sirex-modal-fondo" x-on:click.self="showCrearUsuario = false">
+                <div class="sirex-modal" role="dialog" aria-modal="true" aria-labelledby="titulo-nuevo-usuario">
+                    <div class="sirex-modal-cabeza">
+                        <div class="sirex-modal-icono">
+                            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
+                            </svg>
+                        </div>
+                        <div>
+                            <h3 id="titulo-nuevo-usuario" class="sirex-modal-titulo">Nuevo usuario</h3>
+                            <p class="sirex-modal-subtitulo">Se crea a partir de un empleado activo del IPV.</p>
+                        </div>
+                        <button type="button" @click="showCrearUsuario = false" class="sirex-modal-cerrar" aria-label="Cerrar">
+                            <svg fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" viewBox="0 0 24 24"><path d="M6 18 18 6M6 6l12 12" /></svg>
+                        </button>
+                    </div>
 
+                    <div class="sirex-modal-cuerpo">
                         <div class="space-y-4">
                             {{-- Empleado activo del IPV: nombre, apellido y legajo salen de ahí. --}}
                             <div class="relative">
-                                <label for="buscarEmpleado" class="mb-1 block text-sm font-medium text-ipv-ink/80 dark:text-ipv-ink-dark/80">Empleado</label>
+                                <label for="buscarEmpleado" class="sirex-etiqueta">Empleado</label>
                                 @if ($empleadoId)
                                     <div class="flex items-center justify-between rounded-lg border border-ipv-blue/30 bg-ipv-blue/[0.06] px-3 py-2">
                                         <div>
@@ -127,8 +139,7 @@
                                     </div>
                                 @else
                                     <input id="buscarEmpleado" wire:model.live.debounce.300ms="buscarEmpleado" type="search" autocomplete="off"
-                                        placeholder="Apellido o legajo"
-                                        class="w-full rounded-lg border border-ipv-blue/20 bg-white/80 px-3 py-2 text-sm text-ipv-ink focus:outline-none focus:ring-2 focus:ring-ipv-blue/40 dark:border-white/15 dark:bg-white/[0.06] dark:text-ipv-ink-dark">
+                                        placeholder="Apellido o legajo" class="sirex-campo">
                                     <div wire:loading.delay wire:target="buscarEmpleado" class="mt-2 space-y-2">
                                         <div class="sirex-skeleton h-8 rounded"></div>
                                         <div class="sirex-skeleton h-8 rounded"></div>
@@ -150,47 +161,38 @@
                                         <p wire:loading.remove wire:target="buscarEmpleado" class="mt-1 text-xs text-ipv-ink/55 dark:text-ipv-ink-dark/55">No hay empleados activos con ese dato.</p>
                                     @endif
                                 @endif
-                                @error('buscarEmpleado') <span class="mt-1 block text-xs text-ipv-magenta">{{ $message }}</span> @enderror
-                                @error('nuevoLegajo') <span class="mt-1 block text-xs text-ipv-magenta">Ese empleado ya tiene usuario.</span> @enderror
+                                @error('buscarEmpleado') <p class="sirex-error">{{ $message }}</p> @enderror
+                                @error('nuevoLegajo') <p class="sirex-error">Ese empleado ya tiene usuario.</p> @enderror
                             </div>
                             <div>
-                                <label class="mb-1 block text-sm font-medium text-ipv-ink/80 dark:text-ipv-ink-dark/80">Email</label>
-                                <input wire:model="nuevoEmail" type="email"
-                                    class="w-full rounded-lg border border-ipv-blue/20 bg-white/80 px-3 py-2 text-sm text-ipv-ink focus:outline-none focus:ring-2 focus:ring-ipv-blue/40 dark:border-white/15 dark:bg-white/[0.06] dark:text-ipv-ink-dark">
-                                @error('nuevoEmail') <span class="mt-1 block text-xs text-ipv-magenta">{{ $message }}</span> @enderror
+                                <label class="sirex-etiqueta">Email</label>
+                                <input wire:model="nuevoEmail" type="email" class="sirex-campo">
+                                @error('nuevoEmail') <p class="sirex-error">{{ $message }}</p> @enderror
                             </div>
 
                             <div>
-                                <label for="nuevoOficinaId" class="mb-1 block text-sm font-medium text-ipv-ink/80 dark:text-ipv-ink-dark/80">Oficina</label>
-                                <select id="nuevoOficinaId" wire:model="nuevoOficinaId"
-                                    class="w-full rounded-lg border border-ipv-blue/20 bg-white/80 px-3 py-2 text-sm text-ipv-ink focus:outline-none focus:ring-2 focus:ring-ipv-blue/40 dark:border-white/15 dark:bg-white/[0.06] dark:text-ipv-ink-dark">
+                                <label for="nuevoOficinaId" class="sirex-etiqueta">Oficina</label>
+                                <select id="nuevoOficinaId" wire:model="nuevoOficinaId" class="sirex-campo">
                                     <option value="">Seleccione oficina…</option>
                                     @foreach ($oficinas as $ofi)
                                         <option value="{{ $ofi['id'] }}">{{ $ofi['nombre'] }}</option>
                                     @endforeach
                                 </select>
-                                @error('nuevoOficinaId')
-                                    <p class="mt-1 text-sm text-ipv-magenta">{{ $message }}</p>
-                                @enderror
+                                @error('nuevoOficinaId') <p class="sirex-error">{{ $message }}</p> @enderror
                             </div>
 
-                            <p class="text-xs text-ipv-ink/50 dark:text-ipv-ink-dark/50">
+                            <p class="sirex-ayuda">
                                 El usuario se creará con una contraseña provisoria y deberá cambiarla al iniciar sesión por primera vez.
                             </p>
                         </div>
+                    </div>
 
-                        <div class="flex justify-end gap-2 pt-2">
-                            <button type="button" @click="showCrearUsuario = false"
-                                class="rounded-md border border-ipv-blue/20 px-4 py-2 text-sm text-ipv-ink/80 hover:bg-black/[0.03] dark:border-white/15 dark:text-ipv-ink-dark/85 dark:hover:bg-white/5">
-                                Cancelar
-                            </button>
-
-                            <button type="button" wire:click="crearUsuario" wire:loading.attr="disabled"
-                                class="rounded-md bg-ipv-blue px-4 py-2 text-sm text-white hover:bg-ipv-blue-dark disabled:opacity-60">
-                                <span wire:loading.remove>Crear usuario</span>
-                                <span wire:loading>Creando…</span>
-                            </button>
-                        </div>
+                    <div class="sirex-modal-pie">
+                        <button type="button" @click="showCrearUsuario = false" class="sirex-boton sirex-boton-secundario">Cancelar</button>
+                        <button type="button" wire:click="crearUsuario" wire:loading.attr="disabled" class="sirex-boton sirex-boton-primario">
+                            <span wire:loading.remove>Crear usuario</span>
+                            <span wire:loading>Creando…</span>
+                        </button>
                     </div>
                 </div>
             </div>
@@ -198,38 +200,42 @@
 
         {{-- Modal para editar oficina --}}
         <div x-show="showOficina" x-cloak x-on:keydown.escape.window="showOficina = false"
-            class="fixed inset-0 z-[100] flex items-center justify-center bg-[#001428]/50 p-4 backdrop-blur-sm"
-            x-on:click.self="showOficina = false">
-            <div class="w-full max-w-md rounded-2xl border border-ipv-blue/20 bg-white/95 p-4 shadow-2xl backdrop-blur-2xl backdrop-saturate-150 dark:border-white/10 dark:bg-[#141c26]/95">
-                <div class="space-y-4">
-                    <h3 class="text-lg font-semibold text-ipv-ink dark:text-ipv-ink-dark">Asignar Oficina</h3>
-
+            class="sirex-modal-fondo" x-on:click.self="showOficina = false">
+            <div class="sirex-modal sirex-modal-sm" role="dialog" aria-modal="true" aria-labelledby="titulo-asignar-oficina">
+                <div class="sirex-modal-cabeza">
+                    <div class="sirex-modal-icono">
+                        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0H5m14 0h2M5 21H3m6-14h2m-2 4h2m2-4h2m-2 4h2m-4 10v-4h4v4" />
+                        </svg>
+                    </div>
                     <div>
-                        <label for="oficina_id" class="mb-1 block text-sm font-medium text-ipv-ink/80 dark:text-ipv-ink-dark/80">Oficina</label>
-                        <select id="oficina_id" wire:model="oficina_id"
-                            class="w-full rounded-lg border border-ipv-blue/20 bg-white/80 px-3 py-2 text-sm text-ipv-ink focus:outline-none focus:ring-2 focus:ring-ipv-blue/40 dark:border-white/15 dark:bg-white/[0.06] dark:text-ipv-ink-dark">
+                        <h3 id="titulo-asignar-oficina" class="sirex-modal-titulo">Asignar oficina</h3>
+                        <p class="sirex-modal-subtitulo">Elegí la oficina del usuario.</p>
+                    </div>
+                    <button type="button" @click="showOficina = false" class="sirex-modal-cerrar" aria-label="Cerrar">
+                        <svg fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" viewBox="0 0 24 24"><path d="M6 18 18 6M6 6l12 12" /></svg>
+                    </button>
+                </div>
+
+                <div class="sirex-modal-cuerpo">
+                    <div>
+                        <label for="oficina_id" class="sirex-etiqueta">Oficina</label>
+                        <select id="oficina_id" wire:model="oficina_id" class="sirex-campo">
                             <option value="">Seleccione oficina…</option>
                             @foreach ($oficinas as $ofi)
                                 <option value="{{ $ofi['id'] }}">{{ $ofi['nombre'] }}</option>
                             @endforeach
                         </select>
-                        @error('oficina_id')
-                            <p class="mt-1 text-sm text-ipv-magenta">{{ $message }}</p>
-                        @enderror
+                        @error('oficina_id') <p class="sirex-error">{{ $message }}</p> @enderror
                     </div>
+                </div>
 
-                    <div class="flex justify-end gap-2 pt-2">
-                        <button type="button" @click="showOficina = false"
-                            class="rounded-md border border-ipv-blue/20 px-4 py-2 text-sm text-ipv-ink/80 hover:bg-black/[0.03] dark:border-white/15 dark:text-ipv-ink-dark/85 dark:hover:bg-white/5">
-                            Cancelar
-                        </button>
-
-                        <button type="button" wire:click="guardarOficina" wire:loading.attr="disabled"
-                            class="rounded-md bg-ipv-blue px-4 py-2 text-sm text-white hover:bg-ipv-blue-dark disabled:opacity-60">
-                            <span wire:loading.remove>Guardar</span>
-                            <span wire:loading>Guardando…</span>
-                        </button>
-                    </div>
+                <div class="sirex-modal-pie">
+                    <button type="button" @click="showOficina = false" class="sirex-boton sirex-boton-secundario">Cancelar</button>
+                    <button type="button" wire:click="guardarOficina" wire:loading.attr="disabled" class="sirex-boton sirex-boton-primario">
+                        <span wire:loading.remove>Guardar</span>
+                        <span wire:loading>Guardando…</span>
+                    </button>
                 </div>
             </div>
         </div>

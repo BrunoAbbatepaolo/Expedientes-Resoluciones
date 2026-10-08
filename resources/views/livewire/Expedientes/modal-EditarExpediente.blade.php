@@ -1,73 +1,64 @@
 <div x-show="showEditar" x-cloak x-on:keydown.escape.window="showEditar = false"
-    class="fixed inset-0 z-[100] flex items-center justify-center bg-[#001428]/50 p-4 backdrop-blur-sm"
-    x-on:click.self="showEditar = false">
-    <div class="w-full max-w-[30rem] rounded-2xl border border-ipv-blue/20 bg-white/95 shadow-2xl backdrop-blur-2xl backdrop-saturate-150 dark:border-white/10 dark:bg-[#141c26]/95">
-    <div class="space-y-6 rounded-lg p-5">
-        <div>
-            <h3 class="text-center text-2xl font-bold text-ipv-ink dark:text-ipv-ink-dark">Editar Expediente</h3>
-            <p class="mt-2 text-ipv-ink/60 dark:text-ipv-ink-dark/60">Modifique los datos del expediente.</p>
+    class="sirex-modal-fondo" x-on:click.self="showEditar = false">
+    <div class="sirex-modal sirex-modal-md" role="dialog" aria-modal="true" aria-labelledby="titulo-editar-expediente">
+        <div class="sirex-modal-cabeza">
+            <div class="sirex-modal-icono sirex-modal-icono-oro">
+                <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                </svg>
+            </div>
+            <div>
+                <h3 id="titulo-editar-expediente" class="sirex-modal-titulo">Editar expediente</h3>
+                <p class="sirex-modal-subtitulo">Modificá los datos del expediente.</p>
+            </div>
+            <button type="button" wire:click="cancelarModal" @click="showEditar = false" class="sirex-modal-cerrar" aria-label="Cerrar">
+                <svg fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" viewBox="0 0 24 24"><path d="M6 18 18 6M6 6l12 12" /></svg>
+            </button>
         </div>
 
-        <div>
-            <div class="mb-4">
-                <label class="block text-sm font-medium text-ipv-ink/75 dark:text-ipv-ink-dark/80">Numº Expediente</label>
-                <input wire:model="expedienteForm.num_exp" placeholder="Ingrese número de expediente"
-                    class="w-full rounded-lg border border-ipv-blue/20 bg-white/80 px-3 py-2 text-sm text-ipv-ink focus:outline-none focus:ring-2 focus:ring-ipv-blue/40 dark:border-white/15 dark:bg-white/[0.06] dark:text-ipv-ink-dark" />
+        <div class="sirex-modal-cuerpo">
+            <div>
+                <label class="sirex-etiqueta">Nº expediente</label>
+                <input wire:model="expedienteForm.num_exp" placeholder="Ingrese número de expediente" class="sirex-campo" />
                 <x-input-error for="expedienteForm.num_exp" />
             </div>
 
-            <div class="mb-4">
-                <label class="block text-sm font-medium text-ipv-ink/75 dark:text-ipv-ink-dark/80">Folio</label>
-                <input wire:model="expedienteForm.folio" placeholder="Ingrese el folio"
-                    class="w-full rounded-lg border border-ipv-blue/20 bg-white/80 px-3 py-2 text-sm text-ipv-ink focus:outline-none focus:ring-2 focus:ring-ipv-blue/40 dark:border-white/15 dark:bg-white/[0.06] dark:text-ipv-ink-dark" />
+            <div>
+                <label class="sirex-etiqueta">Folio</label>
+                <input wire:model="expedienteForm.folio" placeholder="Ingrese el folio" class="sirex-campo" />
                 <x-input-error for="expedienteForm.folio" />
             </div>
 
-            <div class="mb-4">
-                <label class="block text-sm font-medium text-ipv-ink/75 dark:text-ipv-ink-dark/80">Causante</label>
-                <input wire:model="expedienteForm.causante" placeholder="Ingrese el causante"
-                    class="w-full rounded-lg border border-ipv-blue/20 bg-white/80 px-3 py-2 text-sm text-ipv-ink focus:outline-none focus:ring-2 focus:ring-ipv-blue/40 dark:border-white/15 dark:bg-white/[0.06] dark:text-ipv-ink-dark" />
+            <div>
+                <label class="sirex-etiqueta">Causante</label>
+                <input wire:model="expedienteForm.causante" placeholder="Ingrese el causante" class="sirex-campo" />
                 <x-input-error for="expedienteForm.causante" />
             </div>
 
-            <div class="mb-4">
-                <label class="block text-sm font-medium text-ipv-ink/75 dark:text-ipv-ink-dark/80">Asunto</label>
-                <input wire:model="expedienteForm.asunto" placeholder="Ingrese el asunto"
-                    class="w-full rounded-lg border border-ipv-blue/20 bg-white/80 px-3 py-2 text-sm text-ipv-ink focus:outline-none focus:ring-2 focus:ring-ipv-blue/40 dark:border-white/15 dark:bg-white/[0.06] dark:text-ipv-ink-dark" />
+            <div>
+                <label class="sirex-etiqueta">Asunto</label>
+                <input wire:model="expedienteForm.asunto" placeholder="Ingrese el asunto" class="sirex-campo" />
                 <x-input-error for="expedienteForm.asunto" />
             </div>
 
-            <div class="mb-4 flex gap-4">
-                <div class="flex-1">
-                    <label class="block text-sm font-medium text-ipv-ink/75 dark:text-ipv-ink-dark/80">Fecha de Ingreso</label>
-                    <input wire:model="expedienteForm.fecha_ingreso" type="date"
-                        class="w-full rounded-lg border border-ipv-blue/20 bg-white/80 px-3 py-2 text-sm text-ipv-ink focus:outline-none focus:ring-2 focus:ring-ipv-blue/40 dark:border-white/15 dark:bg-white/[0.06] dark:text-ipv-ink-dark" />
+            <div class="grid grid-cols-2 gap-3">
+                <div>
+                    <label class="sirex-etiqueta">Fecha de ingreso</label>
+                    <input wire:model="expedienteForm.fecha_ingreso" type="date" class="sirex-campo" />
                     <x-input-error for="expedienteForm.fecha_ingreso" />
                 </div>
 
-                <div class="flex-1">
-                    <label class="block text-sm font-medium text-ipv-ink/75 dark:text-ipv-ink-dark/80">Fecha de Salida</label>
-                    <input wire:model="expedienteForm.fecha_salida" type="date"
-                        class="w-full rounded-lg border border-ipv-blue/20 bg-white/80 px-3 py-2 text-sm text-ipv-ink focus:outline-none focus:ring-2 focus:ring-ipv-blue/40 dark:border-white/15 dark:bg-white/[0.06] dark:text-ipv-ink-dark" />
-                    @error('expedienteForm.fecha_salida')
-                        <span class="text-sm text-ipv-magenta">{{ $message }}</span>
-                    @enderror
+                <div>
+                    <label class="sirex-etiqueta">Fecha de salida</label>
+                    <input wire:model="expedienteForm.fecha_salida" type="date" class="sirex-campo" />
                     <x-input-error for="expedienteForm.fecha_salida" />
                 </div>
             </div>
         </div>
 
-        <!-- Botones -->
-        <div class="flex flex-wrap justify-end gap-3 border-t border-ipv-blue/10 pt-4 dark:border-white/10">
-            <button type="button" wire:click="actualizar"
-                class="sirex-btn rounded-lg bg-ipv-blue px-5 py-2 font-medium text-white shadow-md transition-all duration-200 hover:scale-105 hover:bg-ipv-blue-dark focus:outline-none focus:ring-2 focus:ring-ipv-blue/40 focus:ring-offset-2">
-                Guardar
-            </button>
-            <button type="button" wire:click="cancelarModal" @click="showEditar = false"
-                class="rounded-lg border border-ipv-blue/20 px-5 py-2 font-medium text-ipv-ink/80 shadow-md transition-all duration-200 hover:scale-105 hover:bg-black/[0.03] focus:outline-none focus:ring-2 focus:ring-ipv-blue/30 focus:ring-offset-2 dark:border-white/15 dark:text-ipv-ink-dark/85 dark:hover:bg-white/5">
-                Cerrar
-            </button>
+        <div class="sirex-modal-pie">
+            <button type="button" wire:click="cancelarModal" @click="showEditar = false" class="sirex-boton sirex-boton-secundario">Cerrar</button>
+            <button type="button" wire:click="actualizar" class="sirex-boton sirex-boton-primario">Guardar</button>
         </div>
-    </div>
     </div>
 </div>

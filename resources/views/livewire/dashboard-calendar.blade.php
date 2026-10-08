@@ -368,14 +368,14 @@ new class extends Component
                 },
                 soltar() { this.arrastrando = false; },
             }"
-            class="fixed inset-0 z-[100] flex items-center justify-center p-4 transition-colors"
-            :class="x !== 0 || y !== 0 ? 'bg-[#001428]/20' : 'bg-[#001428]/50 backdrop-blur-sm'"
+            class="sirex-modal-fondo"
+            :class="{ 'sirex-modal-fondo-movido': x !== 0 || y !== 0 }"
             x-on:pointerdown="fuera = ($event.target === $el)"
             x-on:click.self="if (fuera) $wire.closeModal(); fuera = false"
         >
-            <div x-ref="ventana" :style="`transform: translate(${x}px, ${y}px)`" class="w-full max-w-sm overflow-hidden rounded-2xl border border-ipv-blue/20 bg-white/90 shadow-2xl backdrop-blur-2xl backdrop-saturate-150 dark:border-white/10 dark:bg-[#141c26]/95">
+            <div x-ref="ventana" :style="`transform: translate(${x}px, ${y}px)`" class="sirex-modal sirex-modal-sm" role="dialog" aria-modal="true">
                 <div
-                    class="flex cursor-grab touch-none select-none items-center justify-between border-b border-ipv-blue/10 px-4 py-4 active:cursor-grabbing dark:border-white/10"
+                    class="flex cursor-grab touch-none select-none items-center justify-between border-b border-ipv-blue/10 px-4 pb-3.5 pt-5 active:cursor-grabbing dark:border-white/10"
                     title="Arrastrá para mover la ventana (doble clic: volver al centro)"
                     x-on:pointerdown="empezar($event)"
                     x-on:pointermove="mover($event)"
@@ -414,7 +414,7 @@ new class extends Component
                     </div>
                 </div>
 
-                <div class="space-y-3.5 p-4">
+                <div class="sirex-modal-cuerpo space-y-3.5 !pt-4">
                     @if(!$isEditing && $taskId)
                         <!-- Vista de Detalles (Solo Lectura) -->
                         <div>
@@ -450,31 +450,27 @@ new class extends Component
                     @else
                         <!-- Formulario de Edición/Creación -->
                         <div>
-                            <label class="mb-1 block text-[11.5px] font-semibold text-ipv-ink/70 dark:text-ipv-ink-dark/75">Título de Tarea</label>
-                            <input type="text" wire:model="taskTitle"
-                                class="w-full rounded-lg border border-ipv-blue/20 bg-white/80 px-2.5 py-2 text-sm text-ipv-ink focus:outline-none focus:ring-2 focus:ring-ipv-blue/40 dark:border-white/15 dark:bg-white/[0.06] dark:text-ipv-ink-dark">
-                            @error('taskTitle') <span class="text-xs text-ipv-magenta">{{ $message }}</span> @enderror
+                            <label class="sirex-etiqueta">Título de tarea</label>
+                            <input type="text" wire:model="taskTitle" class="sirex-campo">
+                            @error('taskTitle') <p class="sirex-error">{{ $message }}</p> @enderror
                         </div>
 
                         <div>
-                            <label class="mb-1 block text-[11.5px] font-semibold text-ipv-ink/70 dark:text-ipv-ink-dark/75">Descripción (Opcional)</label>
-                            <textarea wire:model="taskDescription" rows="3"
-                                class="w-full resize-none rounded-lg border border-ipv-blue/20 bg-white/80 px-2.5 py-2 text-sm text-ipv-ink focus:outline-none focus:ring-2 focus:ring-ipv-blue/40 dark:border-white/15 dark:bg-white/[0.06] dark:text-ipv-ink-dark"></textarea>
-                            @error('taskDescription') <span class="text-xs text-ipv-magenta">{{ $message }}</span> @enderror
+                            <label class="sirex-etiqueta">Descripción (opcional)</label>
+                            <textarea wire:model="taskDescription" rows="3" class="sirex-campo resize-none"></textarea>
+                            @error('taskDescription') <p class="sirex-error">{{ $message }}</p> @enderror
                         </div>
 
                         <div class="grid grid-cols-2 gap-3">
                             <div>
-                                <label class="mb-1 block text-[11.5px] font-semibold text-ipv-ink/70 dark:text-ipv-ink-dark/75">Fecha</label>
-                                <input type="date" wire:model="taskDate"
-                                    class="w-full rounded-lg border border-ipv-blue/20 bg-white/80 px-2 py-1.5 text-sm text-ipv-ink focus:outline-none focus:ring-2 focus:ring-ipv-blue/40 dark:border-white/15 dark:bg-white/[0.06] dark:text-ipv-ink-dark">
-                                @error('taskDate') <span class="text-xs text-ipv-magenta">{{ $message }}</span> @enderror
+                                <label class="sirex-etiqueta">Fecha</label>
+                                <input type="date" wire:model="taskDate" class="sirex-campo">
+                                @error('taskDate') <p class="sirex-error">{{ $message }}</p> @enderror
                             </div>
 
                             <div>
-                                <label class="mb-1 block text-[11.5px] font-semibold text-ipv-ink/70 dark:text-ipv-ink-dark/75">Color</label>
-                                <select wire:model="taskColor"
-                                    class="w-full rounded-lg border border-ipv-blue/20 bg-white/80 px-2 py-1.5 text-sm text-ipv-ink focus:outline-none focus:ring-2 focus:ring-ipv-blue/40 dark:border-white/15 dark:bg-white/[0.06] dark:text-ipv-ink-dark">
+                                <label class="sirex-etiqueta">Color</label>
+                                <select wire:model="taskColor" class="sirex-campo">
                                     <option value="blue">Azul institucional</option>
                                     <option value="yellow">Dorado</option>
                                     <option value="red">Urgente</option>
@@ -485,43 +481,39 @@ new class extends Component
                         </div>
 
                         <div>
-                            <label class="mb-1 block text-[11.5px] font-semibold text-ipv-ink/70 dark:text-ipv-ink-dark/75">Responsable</label>
-                            <select wire:model="taskAssignedTo"
-                                class="w-full rounded-lg border border-ipv-blue/20 bg-white/80 px-2.5 py-2 text-sm text-ipv-ink focus:outline-none focus:ring-2 focus:ring-ipv-blue/40 dark:border-white/15 dark:bg-white/[0.06] dark:text-ipv-ink-dark">
+                            <label class="sirex-etiqueta">Responsable</label>
+                            <select wire:model="taskAssignedTo" class="sirex-campo">
                                 <option value="">Seleccionar responsable...</option>
                                 @foreach($this->availableNames as $name)
                                     <option value="{{ $name }}">{{ $name }}</option>
                                 @endforeach
                             </select>
-                            @error('taskAssignedTo') <span class="text-xs text-ipv-magenta">{{ $message }}</span> @enderror
+                            @error('taskAssignedTo') <p class="sirex-error">{{ $message }}</p> @enderror
                         </div>
                     @endif
                 </div>
 
-                <div class="flex justify-between border-t border-ipv-blue/10 bg-ipv-blue/[0.03] px-4 py-4 dark:border-white/10 dark:bg-white/[0.03]">
+                <div class="sirex-modal-pie !justify-between">
                     <div>
                         @if($taskId)
                             @php $currentTask = App\Models\Task::find($taskId); @endphp
                             <button wire:click="toggleCompletion({{ $taskId }})" type="button"
-                                class="rounded-lg px-3 py-1.5 text-xs font-semibold
-                                    {{ $currentTask && $currentTask->is_completed
-                                        ? 'border border-gray-300 text-ipv-ink/70 dark:border-white/20 dark:text-ipv-ink-dark/70'
-                                        : 'bg-ipv-blue text-white' }}">
+                                class="sirex-boton sirex-boton-chico {{ $currentTask && $currentTask->is_completed ? 'sirex-boton-secundario' : 'sirex-boton-ok' }}">
                                 {{ $currentTask && $currentTask->is_completed ? 'Volver a activar' : 'Completar' }}
                             </button>
                         @endif
                     </div>
 
-                    <div class="flex space-x-2">
+                    <div class="flex gap-2">
                         @if($taskId)
                             <button wire:click="deleteTask({{ $taskId }})" type="button"
                                 onclick="confirm('¿Estás seguro de eliminar esta tarea?') || event.stopImmediatePropagation()"
-                                class="rounded-lg bg-ipv-magenta px-3.5 py-1.5 text-xs font-semibold text-white">
+                                class="sirex-boton sirex-boton-chico sirex-boton-peligro">
                                 Eliminar
                             </button>
                         @endif
                         @if(!$taskId || $isEditing)
-                            <button wire:click="saveTask" type="button" class="rounded-lg bg-ipv-blue px-4 py-1.5 text-xs font-semibold text-white">
+                            <button wire:click="saveTask" type="button" class="sirex-boton sirex-boton-chico sirex-boton-primario">
                                 Guardar
                             </button>
                         @endif

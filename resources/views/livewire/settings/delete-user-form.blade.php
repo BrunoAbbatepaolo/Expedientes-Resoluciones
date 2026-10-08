@@ -39,37 +39,35 @@ new class extends Component
         </button>
 
         <div x-show="show" x-cloak x-on:keydown.escape.window="show = false"
-            class="fixed inset-0 z-[100] flex items-center justify-center bg-[#001428]/50 p-4 backdrop-blur-sm"
-            x-on:click.self="show = false">
-            <div class="w-full max-w-lg rounded-2xl border border-ipv-blue/20 bg-white/95 p-6 shadow-2xl backdrop-blur-2xl backdrop-saturate-150 dark:border-white/10 dark:bg-[#141c26]/95">
-                <form wire:submit="deleteUser" class="space-y-6">
+            class="sirex-modal-fondo" x-on:click.self="show = false">
+            <form wire:submit="deleteUser" class="sirex-modal sirex-modal-peligro" style="max-width: 32rem;" role="alertdialog" aria-modal="true" aria-labelledby="titulo-eliminar-cuenta">
+                <div class="sirex-modal-cabeza">
+                    <div class="sirex-modal-icono sirex-modal-icono-peligro">
+                        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
+                        </svg>
+                    </div>
                     <div>
-                        <h3 class="text-lg font-semibold text-ipv-ink dark:text-ipv-ink-dark">{{ __('¿Estás seguro de que querés eliminar tu cuenta?') }}</h3>
-
-                        <p class="mt-1 text-sm text-ipv-ink/70 dark:text-ipv-ink-dark/75">
+                        <h3 id="titulo-eliminar-cuenta" class="sirex-modal-titulo">{{ __('¿Estás seguro de que querés eliminar tu cuenta?') }}</h3>
+                        <p class="sirex-modal-subtitulo">
                             {{ __('Una vez eliminada tu cuenta, todos sus recursos y datos se borrarán permanentemente. Ingresá tu contraseña para confirmar que querés eliminar tu cuenta de forma definitiva.') }}
                         </p>
                     </div>
+                </div>
 
+                <div class="sirex-modal-cuerpo">
                     <div>
-                        <label class="mb-1 block text-sm font-medium text-ipv-ink/80 dark:text-ipv-ink-dark/80">{{ __('Contraseña') }}</label>
-                        <input wire:model="password" type="password"
-                            class="w-full rounded-lg border border-ipv-blue/20 bg-white/80 px-3 py-2 text-sm text-ipv-ink focus:outline-none focus:ring-2 focus:ring-ipv-blue/40 dark:border-white/15 dark:bg-white/[0.06] dark:text-ipv-ink-dark">
-                        @error('password') <span class="mt-1 block text-xs text-ipv-magenta">{{ $message }}</span> @enderror
+                        <label class="sirex-etiqueta">{{ __('Contraseña') }}</label>
+                        <input wire:model="password" type="password" class="sirex-campo">
+                        @error('password') <p class="sirex-error">{{ $message }}</p> @enderror
                     </div>
+                </div>
 
-                    <div class="flex justify-end space-x-2">
-                        <button type="button" @click="show = false"
-                            class="rounded-lg border border-ipv-blue/20 px-4 py-2 text-sm font-semibold text-ipv-ink/80 hover:bg-black/[0.03] dark:border-white/15 dark:text-ipv-ink-dark/85 dark:hover:bg-white/5">
-                            {{ __('Cancelar') }}
-                        </button>
-
-                        <button type="submit" class="rounded-lg bg-ipv-magenta px-4 py-2 text-sm font-semibold text-white hover:opacity-90">
-                            {{ __('Eliminar cuenta') }}
-                        </button>
-                    </div>
-                </form>
-            </div>
+                <div class="sirex-modal-pie">
+                    <button type="button" @click="show = false" class="sirex-boton sirex-boton-secundario">{{ __('Cancelar') }}</button>
+                    <button type="submit" class="sirex-boton sirex-boton-peligro">{{ __('Eliminar cuenta') }}</button>
+                </div>
+            </form>
         </div>
     </div>
 </section>

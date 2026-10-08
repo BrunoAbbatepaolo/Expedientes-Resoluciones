@@ -138,75 +138,77 @@
 
         <!-- modal para editar resoluciones -->
         <div x-show="showEditar" x-cloak x-on:keydown.escape.window="showEditar = false"
-            class="fixed inset-0 z-[100] flex items-center justify-center bg-[#001428]/50 p-4 backdrop-blur-sm"
-            x-on:click.self="showEditar = false">
-            <div class="w-full max-w-96 rounded-2xl border border-ipv-blue/20 bg-white/95 p-5 shadow-2xl backdrop-blur-2xl backdrop-saturate-150 dark:border-white/10 dark:bg-[#141c26]/95">
-                <div class="space-y-6">
+            class="sirex-modal-fondo" x-on:click.self="showEditar = false">
+            <div class="sirex-modal" role="dialog" aria-modal="true" aria-labelledby="titulo-editar-resolucion">
+                <div class="sirex-modal-cabeza">
+                    <div class="sirex-modal-icono sirex-modal-icono-oro">
+                        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                        </svg>
+                    </div>
                     <div>
-                        <h3 class="text-lg font-semibold text-ipv-ink dark:text-ipv-ink-dark">Modificar Resolución</h3>
-                        <p class="mt-2 text-sm text-ipv-ink/60 dark:text-ipv-ink-dark/60">Modifique los cambios en la resolución</p>
+                        <h3 id="titulo-editar-resolucion" class="sirex-modal-titulo">Modificar resolución</h3>
+                        <p class="sirex-modal-subtitulo">Modificá los datos de la resolución.</p>
+                    </div>
+                    <button type="button" @click="showEditar = false" class="sirex-modal-cerrar" aria-label="Cerrar">
+                        <svg fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" viewBox="0 0 24 24"><path d="M6 18 18 6M6 6l12 12" /></svg>
+                    </button>
+                </div>
+
+                <div class="sirex-modal-cuerpo">
+                    <div>
+                        <label class="sirex-etiqueta">Nº de expediente</label>
+                        <input wire:model="resolucionForm.numero_exp" placeholder="Ingrese el número de expediente" class="sirex-campo">
                     </div>
 
                     <div>
-                        <label class="mb-1 block text-sm font-medium text-ipv-ink/75 dark:text-ipv-ink-dark/80">Nº de Expediente</label>
-                        <input wire:model="resolucionForm.numero_exp" placeholder="Ingrese el numero de Expediente"
-                            class="w-full rounded-lg border border-ipv-blue/20 bg-white/80 px-3 py-2 text-sm text-ipv-ink focus:outline-none focus:ring-2 focus:ring-ipv-blue/40 dark:border-white/15 dark:bg-white/[0.06] dark:text-ipv-ink-dark">
+                        <label class="sirex-etiqueta">Nº de resolución</label>
+                        <input wire:model="resolucionForm.numero_resolucion" placeholder="Ingrese el Nº de resolución" class="sirex-campo">
                     </div>
 
                     <div>
-                        <label class="mb-1 block text-sm font-medium text-ipv-ink/75 dark:text-ipv-ink-dark/80">Nº de Resolución</label>
-                        <input wire:model="resolucionForm.numero_resolucion" placeholder="Ingrese el Nº de Resolución"
-                            class="w-full rounded-lg border border-ipv-blue/20 bg-white/80 px-3 py-2 text-sm text-ipv-ink focus:outline-none focus:ring-2 focus:ring-ipv-blue/40 dark:border-white/15 dark:bg-white/[0.06] dark:text-ipv-ink-dark">
+                        <label class="sirex-etiqueta">Fecha</label>
+                        <input type="date" wire:model="resolucionForm.fecha" class="sirex-campo">
                     </div>
 
-                    <div>
-                        <label class="mb-1 block text-sm font-medium text-ipv-ink/75 dark:text-ipv-ink-dark/80">Fecha</label>
-                        <input type="date" wire:model="resolucionForm.fecha" placeholder="Ingrese la fecha"
-                            class="w-full rounded-lg border border-ipv-blue/20 bg-white/80 px-3 py-2 text-sm text-ipv-ink focus:outline-none focus:ring-2 focus:ring-ipv-blue/40 dark:border-white/15 dark:bg-white/[0.06] dark:text-ipv-ink-dark">
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="sirex-etiqueta">Barrio</label>
+                            <input wire:model="resolucionForm.cod_barrio" placeholder="Barrio" class="sirex-campo">
+                        </div>
+                        <div>
+                            <label class="sirex-etiqueta">Casa</label>
+                            <input wire:model="resolucionForm.cod_casa" placeholder="Nº de casa" class="sirex-campo">
+                        </div>
                     </div>
+                </div>
 
-                    <div>
-                        <label class="mb-1 block text-sm font-medium text-ipv-ink/75 dark:text-ipv-ink-dark/80">Barrio</label>
-                        <input wire:model="resolucionForm.cod_barrio" placeholder="Ingrese el Barrio"
-                            class="w-full rounded-lg border border-ipv-blue/20 bg-white/80 px-3 py-2 text-sm text-ipv-ink focus:outline-none focus:ring-2 focus:ring-ipv-blue/40 dark:border-white/15 dark:bg-white/[0.06] dark:text-ipv-ink-dark">
-                    </div>
-
-                    <div>
-                        <label class="mb-1 block text-sm font-medium text-ipv-ink/75 dark:text-ipv-ink-dark/80">Casa</label>
-                        <input wire:model="resolucionForm.cod_casa" placeholder="Ingrese el Nº de Casa"
-                            class="w-full rounded-lg border border-ipv-blue/20 bg-white/80 px-3 py-2 text-sm text-ipv-ink focus:outline-none focus:ring-2 focus:ring-ipv-blue/40 dark:border-white/15 dark:bg-white/[0.06] dark:text-ipv-ink-dark">
-                    </div>
-
-                    <div class="flex justify-end">
-                        <button type="submit" class="sirex-btn cursor-pointer rounded-lg bg-ipv-blue px-4 py-2 text-sm font-semibold text-white hover:bg-ipv-blue-dark">
-                            Guardar Cambios
-                        </button>
-                    </div>
+                <div class="sirex-modal-pie">
+                    <button type="button" @click="showEditar = false" class="sirex-boton sirex-boton-secundario">Cancelar</button>
+                    <button type="submit" class="sirex-boton sirex-boton-primario">Guardar cambios</button>
                 </div>
             </div>
         </div>
 
         <!-- modal para confirmar borrado -->
         <div x-show="showBorrar" x-cloak x-on:keydown.escape.window="showBorrar = false"
-            class="fixed inset-0 z-[100] flex items-center justify-center bg-[#001428]/50 p-4 backdrop-blur-sm"
-            x-on:click.self="showBorrar = false">
-            <div class="w-full max-w-sm rounded-2xl border border-ipv-blue/20 bg-white/95 p-5 shadow-2xl backdrop-blur-2xl backdrop-saturate-150 dark:border-white/10 dark:bg-[#141c26]/95">
-                <div class="space-y-6">
+            class="sirex-modal-fondo" x-on:click.self="showBorrar = false">
+            <div class="sirex-modal sirex-modal-sm sirex-modal-peligro" role="alertdialog" aria-modal="true" aria-labelledby="titulo-borrar-resolucion">
+                <div class="sirex-modal-cabeza">
+                    <div class="sirex-modal-icono sirex-modal-icono-peligro">
+                        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
+                    </div>
                     <div>
-                        <h3 class="text-lg font-semibold text-ipv-ink dark:text-ipv-ink-dark">¿Borrar resolución?</h3>
-                        <p class="mt-2 text-sm text-ipv-ink/60 dark:text-ipv-ink-dark/60">¿Estás seguro que querés borrarla?</p>
+                        <h3 id="titulo-borrar-resolucion" class="sirex-modal-titulo">¿Borrar resolución?</h3>
+                        <p class="sirex-modal-subtitulo">¿Estás seguro que querés borrarla?</p>
                     </div>
+                </div>
 
-                    <div class="flex justify-end gap-2">
-                        <button type="button" @click="showBorrar = false"
-                            class="cursor-pointer rounded-lg border border-ipv-blue/20 px-4 py-2 text-sm font-medium text-ipv-ink/80 hover:bg-black/[0.03] dark:border-white/15 dark:text-ipv-ink-dark/85 dark:hover:bg-white/5">
-                            Cancelar
-                        </button>
-                        <button type="button" wire:click="borrar"
-                            class="cursor-pointer rounded-lg bg-ipv-magenta px-4 py-2 text-sm font-semibold text-white hover:opacity-90">
-                            Borrar
-                        </button>
-                    </div>
+                <div class="sirex-modal-pie">
+                    <button type="button" @click="showBorrar = false" class="sirex-boton sirex-boton-secundario">Cancelar</button>
+                    <button type="button" wire:click="borrar" class="sirex-boton sirex-boton-peligro">Borrar</button>
                 </div>
             </div>
         </div>

@@ -34,54 +34,39 @@
     x-on:open-modal.window="if ($event.detail[0] === 'modal-permisos') show = true"
     x-on:close-modal.window="if ($event.detail[0] === 'modal-permisos') show = false"
     x-show="show" x-cloak x-on:keydown.escape.window="show = false"
-    class="fixed inset-0 z-[100] flex items-center justify-center bg-[#001428]/60 p-4 backdrop-blur-md"
-    x-on:click.self="show = false">
-    <div class="max-h-[90vh] w-full max-w-3xl overflow-y-auto rounded-2xl border border-ipv-blue/20 bg-white/95 shadow-2xl backdrop-blur-2xl backdrop-saturate-150 dark:border-white/10 dark:bg-[#141c26]/95">
+    class="sirex-modal-fondo" x-on:click.self="show = false">
+    <div class="sirex-modal sirex-modal-lg" role="dialog" aria-modal="true" aria-labelledby="titulo-permisos">
 
-    <!-- Notificación de éxito -->
-    @if (session()->has('message'))
-        <div
-            class="mb-4 p-4 bg-green-100 border border-green-300 text-green-800 rounded-lg dark:bg-green-900/50 dark:border-green-700 dark:text-green-200">
-            <div class="flex items-center gap-2">
-                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+    <div class="sirex-modal-cabeza">
+        <div class="sirex-modal-icono sirex-modal-icono-oro">
+            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round"
+                    d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+            </svg>
+        </div>
+        <div>
+            <h2 id="titulo-permisos" class="sirex-modal-titulo">Gestión de permisos</h2>
+            <p class="sirex-modal-subtitulo">
+                Configurar accesos para: <span class="font-semibold text-ipv-blue dark:text-ipv-blue-light">{{ $usuarioSeleccionado->name ?? 'Usuario' }}</span>
+            </p>
+        </div>
+        <button type="button" @click="show = false" class="sirex-modal-cerrar" aria-label="Cerrar">
+            <svg fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" viewBox="0 0 24 24"><path d="M6 18 18 6M6 6l12 12" /></svg>
+        </button>
+    </div>
+
+    <div class="sirex-modal-cuerpo">
+        <!-- Notificación de éxito -->
+        @if (session()->has('message'))
+            <div class="flex items-center gap-2 rounded-lg border border-emerald-300 bg-emerald-50 p-3 text-sm text-emerald-800 dark:border-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-200">
+                <svg class="h-5 w-5 shrink-0" fill="currentColor" viewBox="0 0 20 20">
                     <path fill-rule="evenodd"
                         d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
                         clip-rule="evenodd"></path>
                 </svg>
                 {{ session('message') }}
             </div>
-        </div>
-    @endif
-
-    <div class="p-6 space-y-6">
-        <!-- Encabezado mejorado -->
-        <div class="flex items-center gap-4 border-b border-ipv-blue/10 pb-6 dark:border-white/10">
-            <div class="rounded-full bg-ipv-gold p-3 shadow-lg">
-                <svg class="h-6 w-6 text-ipv-gold-ink" fill="none" stroke="currentColor" stroke-width="2"
-                    viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round"
-                        d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                </svg>
-            </div>
-            <div>
-                <h2 class="text-xl font-bold text-ipv-ink dark:text-ipv-ink-dark">Gestión de Permisos</h2>
-                <p class="mt-1 text-sm text-ipv-ink/60 dark:text-ipv-ink-dark/60">
-                    Configurar accesos para: <span class="font-medium text-ipv-blue dark:text-ipv-blue-light">
-                        {{ $usuarioSeleccionado->name ?? 'Usuario' }}
-                    </span>
-                </p>
-            </div>
-        </div>
-
-        <!-- Indicador de cambios - VERSION SIMPLIFICADA -->
-        {{-- <div x-show="hasChanges"
-             x-transition
-             class="flex items-center gap-2 p-3 bg-amber-50 border border-amber-200 rounded-lg dark:bg-amber-900/20 dark:border-amber-700">
-            <svg class="w-4 h-4 text-amber-600" fill="currentColor" viewBox="0 0 20 20">
-                <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
-            </svg>
-            <span class="text-sm text-amber-800 dark:text-amber-200">Tienes cambios sin guardar</span>
-        </div> --}}
+        @endif
 
         <!-- Grid de permisos usando el componente -->
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -156,7 +141,7 @@
         </div>
 
         <!-- Acciones rápidas -->
-        <div class="flex flex-wrap gap-2 border-t border-ipv-blue/10 pt-4 dark:border-white/10">
+        <div class="flex flex-wrap gap-2 border-t border-ipv-blue/10 pt-4 dark:border-white/10" style="margin-top: 1.25rem;">
             <button type="button" wire:click="seleccionarTodos"
                 class="rounded-lg bg-ipv-blue/10 px-3 py-2 text-sm font-medium text-ipv-blue transition-colors hover:bg-ipv-blue/20 dark:bg-ipv-blue-light/15 dark:text-ipv-blue-light dark:hover:bg-ipv-blue-light/25">
                 Seleccionar Todo
@@ -172,37 +157,27 @@
         </div>
     </div>
 
-    <!-- Footer del modal - SIMPLIFICADO -->
-    <div class="flex items-center justify-end border-t border-ipv-blue/10 p-6 dark:border-white/10">
-        <div class="flex gap-3">
-            <button type="button" @click="show = false"
-                class="rounded-lg border border-ipv-blue/20 px-4 py-2 text-sm font-medium text-ipv-ink/80 hover:bg-black/[0.03] dark:border-white/15 dark:text-ipv-ink-dark/85 dark:hover:bg-white/5">
-                Cancelar
-            </button>
+    <div class="sirex-modal-pie">
+        <button type="button" @click="show = false" class="sirex-boton sirex-boton-secundario">Cancelar</button>
 
-            <button type="button" class="rounded-lg bg-emerald-500 px-4 py-2 font-bold text-white hover:bg-emerald-600"
-                wire:click="guardarPermisos" wire:loading.attr="disabled" wire:target="guardarPermisos">
+        <button type="button" class="sirex-boton sirex-boton-primario"
+            wire:click="guardarPermisos" wire:loading.attr="disabled" wire:target="guardarPermisos">
+            <span wire:loading.remove wire:target="guardarPermisos" class="flex items-center gap-2">
+                <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                </svg>
+                <span>Guardar permisos</span>
+            </span>
 
-                <span wire:loading.remove wire:target="guardarPermisos" class="flex items-center">
-                    <svg class="mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                    </svg>
-                    <span>Guardar Permisos</span>
-                </span>
-
-                <span wire:loading wire:target="guardarPermisos" class="flex items-center">
-                    <svg class="-ml-1 mr-3 h-4 w-4 animate-spin text-white" fill="none" viewBox="0 0 24 24">
-                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor"
-                            stroke-width="4"></circle>
-                        <path class="opacity-75" fill="currentColor"
-                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
-                        </path>
-                    </svg>
-                    <span>Guardando...</span>
-                </span>
-
-            </button>
-        </div>
+            <span wire:loading wire:target="guardarPermisos" class="flex items-center gap-2">
+                <svg class="h-4 w-4 animate-spin text-white" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                <span>Guardando...</span>
+            </span>
+        </button>
     </div>
     </div>
 </div>
