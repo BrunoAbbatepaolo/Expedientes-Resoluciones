@@ -9,6 +9,7 @@ use App\Services\Rrhh\Mitiv;
 use App\Services\Rrhh\Organigrama;
 use App\Services\Rrhh\Relojes\FabricaClienteReloj;
 use App\Services\Rrhh\Relojes\FabricaClienteTcp;
+use App\Services\Rrhh\Relojes\LectorRelojSirex;
 use Illuminate\Support\ServiceProvider;
 use LogicException;
 
@@ -40,9 +41,14 @@ class RrhhServiceProvider extends ServiceProvider
         $this->app->bind(FabricaClienteReloj::class, FabricaClienteTcp::class);
 
         foreach (self::MITIV as $contrato => $implementacion) {
-            $this->app->scoped($contrato, function ($app) use ($implementacion) {
+            $this->app->scoped($contrato, function ($app) use ($contrato, $implementacion) {
                 if (config('sirex.rrhh_fuente') !== 'mitiv') {
                     throw new LogicException('La fuente de RRHH "'.config('sirex.rrhh_fuente').'" llega en la fase 2; usá SIREX_RRHH_FUENTE=mitiv.');
+                }
+
+                // Con el agente de relojes de SiRex activo, el estado de los relojes sale de lo que él registra.
+                if ($contrato === Contracts\LectorReloj::class && config('sirex.relojes_activo')) {
+                    return $app->make(LectorRelojSirex::class);
                 }
 
                 return $app->make($implementacion);

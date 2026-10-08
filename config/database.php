@@ -86,6 +86,23 @@ return [
             'sslmode' => env('MITIV_PG_SSLMODE', 'prefer'),
         ],
 
+        // Escritura del agente de relojes en el sistema viejo (docs/spec-agente-relojes.md). Es una
+        // conexión APARTE de pgsql_mitiv (que sigue siendo de solo lectura) y con un usuario de base
+        // acotado: SELECT/INSERT en registros_reloj, operaciones_reloj y log_operaciones_reloj.
+        'pgsql_mitiv_escritura' => [
+            'driver' => env('MITIV_DB_DRIVER', 'pgsql'),
+            'host' => env('MITIV_WRITE_PG_HOST', env('MITIV_PG_HOST', '127.0.0.1')),
+            'port' => env('MITIV_WRITE_PG_PORT', env('MITIV_PG_PORT', '5432')),
+            'database' => env('MITIV_WRITE_PG_DATABASE', env('MITIV_PG_DATABASE', 'mitivdb')),
+            'username' => env('MITIV_WRITE_PG_USERNAME', ''),
+            'password' => env('MITIV_WRITE_PG_PASSWORD', ''),
+            'charset' => 'utf8',
+            'prefix' => '',
+            'prefix_indexes' => true,
+            'search_path' => env('MITIV_PG_SEARCH_PATH', 'public'),
+            'sslmode' => env('MITIV_PG_SSLMODE', 'prefer'),
+        ],
+
         // MySQL legui (antes tenía host/usuario/pass hardcodeados)
         // driver configurable por env: en tests apunta a sqlite in-memory
         // (ver phpunit.xml) para no tocar la base real de desarrollo.

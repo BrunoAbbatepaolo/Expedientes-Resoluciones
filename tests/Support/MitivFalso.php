@@ -167,6 +167,7 @@ class MitivFalso
             $t->boolean('procesado')->default(false);
             $t->string('nombre_reloj')->nullable();
             $t->string('origen')->nullable();
+            $t->dateTime('fecha_hora_inmutable')->nullable();
             $t->timestamps();
         });
         $s->create('horarios', function (Blueprint $t) {
@@ -232,6 +233,12 @@ class MitivFalso
             $t->string('estado')->nullable();
             $t->timestamps();
         });
+        $s->create('log_operaciones_reloj', function (Blueprint $t) {
+            $t->integer('operacion_id');
+            $t->text('texto')->nullable();
+            $t->string('tipo')->nullable();
+            $t->timestamps();
+        });
     }
 
     public static function oficinaRrhh(string $nombre): int
@@ -270,7 +277,7 @@ class MitivFalso
     {
         DB::connection('pgsql_mitiv')->table('registros_reloj')->insert([
             'card_id' => $cardId, 'fecha_hora' => $fechaHora, 'nombre_reloj' => $reloj,
-            'origen' => 'SERVICIO_SINCRONIZADOR', 'created_at' => $fechaHora,
+            'fecha_hora_inmutable' => $fechaHora, 'origen' => 'SERVICIO_SINCRONIZADOR', 'created_at' => $fechaHora,
         ]);
     }
 

@@ -37,6 +37,7 @@
         <env name="MITIV_PG_DATABASE" value=":memory:"/>
         <env name="MAIL_MAILER" value="array"/>
         <env name="SIREX_RRHH_ZONA" value="UTC"/>
+        <env name="APP_TIMEZONE" value="UTC"/>
         <env name="PULSE_ENABLED" value="false"/>
         <env name="QUEUE_CONNECTION" value="sync"/>
         <env name="SESSION_DRIVER" value="array"/>

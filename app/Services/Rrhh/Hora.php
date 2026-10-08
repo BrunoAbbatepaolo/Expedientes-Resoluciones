@@ -18,6 +18,14 @@ final class Hora
         return CarbonImmutable::parse($local->format('Y-m-d H:i:s'));
     }
 
+    /** Un instante cualquiera expresado como hora local de pared (comparable con ahora()). */
+    public static function local(\DateTimeInterface $momento): CarbonImmutable
+    {
+        $local = CarbonImmutable::instance($momento)->setTimezone((string) config('sirex.rrhh_zona_horaria'));
+
+        return CarbonImmutable::parse($local->format('Y-m-d H:i:s'));
+    }
+
     public static function hoy(): CarbonImmutable
     {
         return self::ahora()->startOfDay();

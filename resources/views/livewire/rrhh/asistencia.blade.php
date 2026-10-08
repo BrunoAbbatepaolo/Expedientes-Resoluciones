@@ -12,6 +12,31 @@
                 Última fichada: {{ $lector['ultima_fichada']?->format('d/m H:i') ?? '—' }} · Último chequeo: {{ $lector['ultimo_chequeo']?->format('d/m H:i') ?? '—' }}
             </span>
         </div>
+
+        @if (! empty($lector['relojes']))
+            <ul class="grid gap-2 sm:grid-cols-2 xl:grid-cols-3" aria-label="Estado de cada reloj">
+                @foreach ($lector['relojes'] as $r)
+                    <li wire:key="reloj-{{ $r['id'] }}" class="sirex-glass-card rounded-[12px] p-3 text-sm">
+                        <div class="flex items-center justify-between gap-2">
+                            <span class="truncate font-medium text-ipv-ink dark:text-ipv-ink-dark">{{ $r['nombre'] }}</span>
+                            <span class="shrink-0 rounded-full px-2 py-0.5 text-xs font-medium {{ $r['estado'] === 'ok' ? 'bg-emerald-500/15 text-emerald-800 dark:text-emerald-300' : 'bg-ipv-magenta/15 text-ipv-magenta dark:text-ipv-magenta-light' }}">
+                                {{ ['ok' => 'Funciona', 'sin_contacto' => 'Sin contacto', 'hora_desviada' => 'Hora desviada'][$r['estado']] ?? $r['estado'] }}
+                            </span>
+                        </div>
+                        <p class="text-xs text-ipv-ink/55 dark:text-ipv-ink-dark/55">{{ $r['ip'] }} · {{ $r['tipo'] }}@if ($r['modelo']) · {{ $r['modelo'] }}@endif</p>
+                        <dl class="mt-2 grid grid-cols-2 gap-x-3 gap-y-1 text-xs text-ipv-ink/70 dark:text-ipv-ink-dark/70">
+                            <div><dt class="opacity-60">Último contacto</dt><dd>{{ $r['ultimo_contacto']?->format('d/m H:i') ?? 'Nunca' }}</dd></div>
+                            <div><dt class="opacity-60">Última fichada</dt><dd>{{ $r['ultima_fichada']?->format('d/m H:i') ?? '—' }}</dd></div>
+                            <div><dt class="opacity-60">Fichadas en el reloj</dt><dd>{{ $r['registros'] !== null ? number_format($r['registros'], 0, ',', '.') : '—' }}</dd></div>
+                            <div><dt class="opacity-60">Hora del reloj</dt><dd>{{ $r['desvio_segundos'] === null ? '—' : (abs($r['desvio_segundos']) < 60 ? 'Correcta' : round(abs($r['desvio_segundos']) / 60).' min '.($r['desvio_segundos'] > 0 ? 'adelantada' : 'atrasada')) }}</dd></div>
+                        </dl>
+                        @if ($r['fallas_seguidas'] > 0 && $r['ultimo_error'])
+                            <p class="mt-2 text-xs text-ipv-magenta">{{ $r['fallas_seguidas'] }} {{ $r['fallas_seguidas'] === 1 ? 'falla' : 'fallas' }} seguidas: {{ $r['ultimo_error'] }}</p>
+                        @endif
+                    </li>
+                @endforeach
+            </ul>
+        @endif
     @endif
 
     <nav class="flex flex-wrap gap-1" aria-label="Vistas">

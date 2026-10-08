@@ -8,7 +8,9 @@ use Carbon\CarbonImmutable;
 interface LectorReloj
 {
     /**
-     * @return array{ultima_fichada: ?CarbonImmutable, ultimo_chequeo: ?CarbonImmutable, alerta: bool, mensaje: string}
+     * Con el agente de SiRex activo se suma `relojes`: el estado de cada reloj.
+     *
+     * @return array{ultima_fichada: ?CarbonImmutable, ultimo_chequeo: ?CarbonImmutable, alerta: bool, mensaje: string, relojes?: list<array<string, mixed>>}
      */
     public function estado(CarbonImmutable $ahora): array;
 }
