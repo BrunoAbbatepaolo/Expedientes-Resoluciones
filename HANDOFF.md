@@ -30,3 +30,15 @@ PHP solo en WSL. Copia rápida en `~/sirex-bench`: rsync del repo (excluir .env,
 - "Ausencias" de regímenes sin fichar → Justificado, no Licencia.
 - Vacaciones: saldo calculado por SiRex, solo período vigente (año anterior). Horarios especiales en SiRex reemplazan al del viejo.
 - Hora local: `App\Services\Rrhh\Hora` (zona `SIREX_RRHH_ZONA`, default Tucumán; tests en UTC).
+
+## Agente de relojes (en curso, 2026-10-08)
+Spec: `docs/spec-agente-relojes.md`. Análisis: `docs/analisis-lector-relojes.md`. Decidido: vive dentro de SiRex, doble escritura al sistema viejo, interruptores apagados por defecto.
+
+**Hecho (con commit, tests verdes):** cliente PHP de solo lectura del protocolo ZKTeco (`app/Services/Rrhh/Relojes/ClienteZk.php`), validado contra los relojes reales `.198` y `.199` (idéntico a pyzk, registro por registro) y con 28 tests contra vectores de pyzk; comando `php artisan relojes:probar {ip}`; migración `rrhh_relojes` + `rrhh_fichadas`, modelo `RrhhReloj` y configuración `SIREX_RELOJES_*` en `config/sirex.php`.
+
+**Falta (en orden):**
+1. `EscritorMitiv` (doble escritura: `registros_reloj` con `origen='SIREX'`, dedupe por tarjeta + `fecha_hora_inmutable`, latido `CHEQUEO_ESTADO_SERVICIO` cada ≤20 min, y `CHEQUEO_RELOJES` + log `ERROR_CHECKEO` cuando un reloj falla; horas en hora LOCAL con `Hora::ahora()`). Conexión nueva `pgsql_mitiv_escritura` en `config/database.php` con variables `MITIV_WRITE_PG_*` (agregar a `.env.example`); en `MitivFalso` faltan `fecha_hora_inmutable` en `registros_reloj` y la tabla `log_operaciones_reloj`.
+2. `SincronizadorRelojes` + comando `relojes:sincronizar` (candado por reloj, omitir lectura si no cambió la cantidad de registros, `insertOrIgnore` en lotes, un reloj caído no frena a los otros, desvío de hora) + `relojes:agregar` + planificador cada 5 min (solo con `SIREX_RELOJES_ACTIVO=true`).
+3. `LectorRelojSirex` y tarjeta por reloj en Asistencia; tests de todo lo anterior.
+4. Antes de encender la doble escritura: apagar el lector viejo, crear el usuario de PostgreSQL acotado (SELECT/INSERT en `registros_reloj`, `operaciones_reloj`, `log_operaciones_reloj` y uso de sus secuencias) y rotar las claves que aparecieron en texto plano en el programa viejo.
+5. Reloj facial `.197`: caído; agregar cuando se repare.

@@ -65,6 +65,21 @@ return [
     // Clave de comunicación de los relojes (0 = sin clave; los relojes igual piden autenticarse).
     'relojes_clave' => (int) env('SIREX_RELOJES_CLAVE', 0),
 
+    // Días hacia atrás (desde la última fichada guardada) que se revisan al leer un reloj.
+    'relojes_ventana_dias' => (int) env('SIREX_RELOJES_VENTANA_DIAS', 7),
+
+    // Doble escritura en el sistema viejo (registros_reloj + latido). Apagada por defecto: antes de
+    // encenderla hay que apagar el lector viejo. Usa una conexión aparte con un usuario acotado.
+    'relojes_escribir_mitiv' => (bool) env('SIREX_RELOJES_ESCRIBIR_MITIV', false),
+    'relojes_conexion_mitiv_escritura' => env('SIREX_RELOJES_CONEXION_MITIV', 'pgsql_mitiv_escritura'),
+    'relojes_ventana_mitiv_dias' => (int) env('SIREX_RELOJES_VENTANA_MITIV_DIAS', 3),
+
+    // El sistema viejo exige un latido de su lector cada 30 minutos como máximo: se renueva si pasaron más de estos.
+    'relojes_latido_minutos' => (int) env('SIREX_RELOJES_LATIDO_MINUTOS', 20),
+
+    // Diferencia máxima tolerada entre la hora del reloj y la real antes de alertar.
+    'relojes_desvio_max_segundos' => (int) env('SIREX_RELOJES_DESVIO_MAX', 300),
+
     // Pedido de licencias desde Mi RRHH (spec 7 bis). Apagado por defecto. Los tipos que
     // permiten pedir con fecha pasada aceptan hasta estos días hacia atrás.
     'rrhh_pedidos' => (bool) env('SIREX_RRHH_PEDIDOS', false),
