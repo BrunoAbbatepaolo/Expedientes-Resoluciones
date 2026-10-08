@@ -133,8 +133,7 @@ class LicenciasMitiv implements Licencias
             ->get(['empleados.id', ...array_map(fn ($c) => 'empleados.'.$c, $antiguedad)])
             ->keyBy('id');
 
-        $tiposVacaciones = Cache::remember('rrhh.tipos_vacaciones', now()->addHour(), fn () => TipoAusencia::where('afecta_vacaciones', true)
-            ->pluck('id')->map(fn ($id) => (int) $id)->merge(config('sirex.rrhh_tipos_vacaciones'))->unique()->values()->all());
+        $tiposVacaciones = $this->tiposVacaciones();
         $tiposAnticipo = (array) config('sirex.rrhh_tipos_anticipo_vacaciones');
 
         $ausencias = Ausencia::with('tipo:id,descripcion')
@@ -220,6 +219,29 @@ class LicenciasMitiv implements Licencias
             })
             ->sortByDesc('dias')
             ->values();
+    }
+
+    public function esTipoVacaciones(int $tipoAusenciaId): bool
+    {
+        return in_array($tipoAusenciaId, $this->tiposVacaciones(), true);
+    }
+
+    public function tieneLicenciaEntre(int $empleadoId, CarbonImmutable $desde, CarbonImmutable $hasta): bool
+    {
+        // Los regímenes (CONT, planta justificada, etc.) duran meses: no impiden pedir licencia.
+        $regimenes = [...(array) config('sirex.rrhh_tipos_sin_fichar'), ...(array) config('sirex.rrhh_tipos_ignorados')];
+
+        return Ausencia::where('empleado_id', $empleadoId)
+            ->entre($desde->toDateString(), $hasta->toDateString())
+            ->whereNotIn('tipo_ausencias_id', $regimenes ?: [0])
+            ->exists();
+    }
+
+    /** @return list<int> tipos que descuentan vacaciones (configurados + afecta_vacaciones) */
+    private function tiposVacaciones(): array
+    {
+        return Cache::remember('rrhh.tipos_vacaciones', now()->addHour(), fn () => TipoAusencia::where('afecta_vacaciones', true)
+            ->pluck('id')->map(fn ($id) => (int) $id)->merge(config('sirex.rrhh_tipos_vacaciones'))->unique()->values()->all());
     }
 
     public function tipos(): Collection

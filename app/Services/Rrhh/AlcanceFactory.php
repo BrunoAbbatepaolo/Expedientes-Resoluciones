@@ -36,6 +36,7 @@ class AlcanceFactory
             oficinasEquipo: $jefaturas !== [] ? $this->organigrama->descendientes($jefaturas) : [],
             oficinasJefatura: $jefaturas,
             horarios: $user->permiso('rrhh_horarios'),
+            confirmaPedidos: $user->permiso('rrhh_confirmar_pedidos'),
         );
     }
 

@@ -51,4 +51,10 @@ interface Licencias
 
     /** @return Collection<int, string> id => descripción */
     public function tipos(): Collection;
+
+    /** El tipo de ausencia descuenta vacaciones. */
+    public function esTipoVacaciones(int $tipoAusenciaId): bool;
+
+    /** El empleado tiene licencias cargadas (que no sean regímenes sin fichar) entre esas fechas. */
+    public function tieneLicenciaEntre(int $empleadoId, CarbonImmutable $desde, CarbonImmutable $hasta): bool;
 }

@@ -22,6 +22,7 @@ final readonly class Alcance
         public array $oficinasEquipo = [],
         public array $oficinasJefatura = [],
         public bool $horarios = false,
+        public bool $confirmaPedidos = false,
     ) {}
 
     public function esJefe(): bool

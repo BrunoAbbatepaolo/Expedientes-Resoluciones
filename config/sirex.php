@@ -56,6 +56,11 @@ return [
     // año (confirmado por el usuario: en 2026 se gozan las del período 2025).
     'rrhh_vacaciones_desfase' => (int) env('SIREX_RRHH_VACACIONES_DESFASE', 1),
 
+    // Pedido de licencias desde Mi RRHH (spec 7 bis). Apagado por defecto. Los tipos que
+    // permiten pedir con fecha pasada aceptan hasta estos días hacia atrás.
+    'rrhh_pedidos' => (bool) env('SIREX_RRHH_PEDIDOS', false),
+    'rrhh_pedido_dias_retro' => (int) env('SIREX_RRHH_PEDIDO_DIAS_RETRO', 30),
+
     // Tipos de inasistencia del sistema viejo que genera su proceso de reloj.
     'rrhh_tipo_ausente_id' => (int) env('SIREX_RRHH_TIPO_AUSENTE', 82),
     'rrhh_tipo_tarde_id' => (int) env('SIREX_RRHH_TIPO_TARDE', 7),
