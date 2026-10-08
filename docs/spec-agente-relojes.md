@@ -31,3 +31,18 @@ Con la librería de referencia `pyzk` se leyeron los dos relojes de huella (`.19
 ## 4. Pruebas
 
 Simulador de reloj en memoria (conexión, tamaños, datos directos y por bloques fragmentados); vectores de checksum y de hora generados con `pyzk`; carga incremental sin duplicados; omisión de lectura si no cambió la cantidad; un reloj caído no frena al resto; desvío de hora; doble escritura sin duplicar y con latido; interruptores apagados. Verificación real final: lectura con el cliente PHP de `.198` comparada con la de `pyzk`.
+
+## 5. Estado y puesta en marcha (2026-10-08)
+
+**Implementado y probado** (272 tests; prueba real contra `.198` y `.199` en el entorno demo, con la doble escritura apagada): cliente del protocolo, `relojes:probar`, `relojes:agregar`, `relojes:sincronizar`, planificador cada 5 min, tablas `rrhh_relojes` y `rrhh_fichadas`, doble escritura (probada solo contra una base simulada), estado por reloj en Asistencia y alerta. En la prueba real la primera vuelta cargó 21.201 y 20.365 fichadas en SiRex y la segunda no leyó nada (cantidad sin cambios).
+
+**Cómo encenderlo, en este orden** (hasta el paso 4 no se toca el sistema viejo):
+1. Dar de alta los relojes: `php artisan relojes:agregar 192.168.7.198 --nombre="…"` (y `.199`; el facial `.197` cuando se repare).
+2. Probar a mano: `php artisan relojes:sincronizar --forzar`. Con la doble escritura apagada solo llena las tablas de SiRex.
+3. Encender el agente: `SIREX_RELOJES_ACTIVO=true` y dejar corriendo el planificador de Laravel (`php artisan schedule:work` como servicio, o una tarea programada cada minuto con `schedule:run`). Con eso las pantallas de Asistencia muestran el estado de cada reloj.
+4. **Doble escritura** (solo cuando se vaya a apagar el lector viejo): crear en PostgreSQL un usuario acotado (`GRANT SELECT, INSERT ON registros_reloj, operaciones_reloj, log_operaciones_reloj` más `USAGE, SELECT` sobre las secuencias de `registros_reloj` y `operaciones_reloj`), cargar `MITIV_WRITE_PG_USERNAME` y `MITIV_WRITE_PG_PASSWORD` en el `.env`, **apagar el lector viejo** y recién ahí poner `SIREX_RELOJES_ESCRIBIR_MITIV=true`. Para recuperar fichadas de un hueco: `php artisan relojes:sincronizar --mitiv-desde=AAAA-MM-DD`.
+5. Rotar las claves que estaban en texto plano en el programa viejo.
+
+**Qué hace el agente con el sistema viejo:** inserta en `registros_reloj` (`origen='SIREX'`, `procesado=false`, horas locales) solo lo que no está; renueva el latido `CHEQUEO_ESTADO_SERVICIO` cada ≤20 min mientras algún reloj responda (sin él el proceso de faltas del sistema viejo no corre); y registra `CHEQUEO_RELOJES` + `ERROR_CHECKEO` por cada reloj caído, para que su tablero de errores siga mostrándolos.
+
+**Limitaciones conocidas:** el reloj facial `.197` no se pudo validar (está caído); no se borra la memoria de los relojes (`BORRAR_REGISTROS`); no hay pantalla para administrar relojes (se hace por comando).

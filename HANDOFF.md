@@ -31,14 +31,14 @@ PHP solo en WSL. Copia rápida en `~/sirex-bench`: rsync del repo (excluir .env,
 - Vacaciones: saldo calculado por SiRex, solo período vigente (año anterior). Horarios especiales en SiRex reemplazan al del viejo.
 - Hora local: `App\Services\Rrhh\Hora` (zona `SIREX_RRHH_ZONA`, default Tucumán; tests en UTC).
 
-## Agente de relojes (en curso, 2026-10-08)
-Spec: `docs/spec-agente-relojes.md`. Análisis: `docs/analisis-lector-relojes.md`. Decidido: vive dentro de SiRex, doble escritura al sistema viejo, interruptores apagados por defecto.
+## Agente de relojes (implementado, apagado por defecto — 2026-10-08)
+Spec: `docs/spec-agente-relojes.md` (sección 5 = puesta en marcha paso a paso). Análisis: `docs/analisis-lector-relojes.md`.
 
-**Hecho (con commit, tests verdes):** cliente PHP de solo lectura del protocolo ZKTeco (`app/Services/Rrhh/Relojes/ClienteZk.php`), validado contra los relojes reales `.198` y `.199` (idéntico a pyzk, registro por registro) y con 28 tests contra vectores de pyzk; comando `php artisan relojes:probar {ip}`; migración `rrhh_relojes` + `rrhh_fichadas`, modelo `RrhhReloj` y configuración `SIREX_RELOJES_*` en `config/sirex.php`.
+**Hecho (tests verdes, 272):** cliente PHP de solo lectura del protocolo ZKTeco validado contra los relojes reales `.198` y `.199`; comandos `relojes:probar`, `relojes:agregar`, `relojes:sincronizar`; planificador cada 5 min (solo con `SIREX_RELOJES_ACTIVO=true`); tablas `rrhh_relojes` y `rrhh_fichadas`; doble escritura al sistema viejo con conexión aparte `pgsql_mitiv_escritura` (apagada: `SIREX_RELOJES_ESCRIBIR_MITIV`); estado por reloj y alerta en Asistencia. Probado de punta a punta con los relojes reales en el entorno demo (la doble escritura solo contra una base simulada: nunca se escribió en la base real).
 
-**Falta (en orden):**
-1. `EscritorMitiv` (doble escritura: `registros_reloj` con `origen='SIREX'`, dedupe por tarjeta + `fecha_hora_inmutable`, latido `CHEQUEO_ESTADO_SERVICIO` cada ≤20 min, y `CHEQUEO_RELOJES` + log `ERROR_CHECKEO` cuando un reloj falla; horas en hora LOCAL con `Hora::ahora()`). Conexión nueva `pgsql_mitiv_escritura` en `config/database.php` con variables `MITIV_WRITE_PG_*` (agregar a `.env.example`); en `MitivFalso` faltan `fecha_hora_inmutable` en `registros_reloj` y la tabla `log_operaciones_reloj`.
-2. `SincronizadorRelojes` + comando `relojes:sincronizar` (candado por reloj, omitir lectura si no cambió la cantidad de registros, `insertOrIgnore` en lotes, un reloj caído no frena a los otros, desvío de hora) + `relojes:agregar` + planificador cada 5 min (solo con `SIREX_RELOJES_ACTIVO=true`).
-3. `LectorRelojSirex` y tarjeta por reloj en Asistencia; tests de todo lo anterior.
-4. Antes de encender la doble escritura: apagar el lector viejo, crear el usuario de PostgreSQL acotado (SELECT/INSERT en `registros_reloj`, `operaciones_reloj`, `log_operaciones_reloj` y uso de sus secuencias) y rotar las claves que aparecieron en texto plano en el programa viejo.
-5. Reloj facial `.197`: caído; agregar cuando se repare.
+**Pendiente / decisiones del usuario:**
+1. Dar de alta los relojes y encender el agente en el servidor de SiRex (necesita el planificador de Laravel corriendo).
+2. Para la doble escritura: crear el usuario de PostgreSQL acotado, apagar el lector viejo y recién entonces encenderla (ver spec, sección 5).
+3. Rotar las claves que estaban en texto plano en el programa viejo.
+4. Reloj facial `.197`: caído; validar el protocolo con él cuando se repare. `.223` está dado de baja en los hechos.
+5. Fase 2: que las pantallas lean `rrhh_fichadas` (`fuente=sirex`) y borrado de memoria de los relojes (`BORRAR_REGISTROS`), hoy fuera de alcance.

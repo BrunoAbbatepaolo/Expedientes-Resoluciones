@@ -31,7 +31,7 @@
                             <div><dt class="opacity-60">Hora del reloj</dt><dd>{{ $r['desvio_segundos'] === null ? '—' : (abs($r['desvio_segundos']) < 60 ? 'Correcta' : round(abs($r['desvio_segundos']) / 60).' min '.($r['desvio_segundos'] > 0 ? 'adelantada' : 'atrasada')) }}</dd></div>
                         </dl>
                         @if ($r['fallas_seguidas'] > 0 && $r['ultimo_error'])
-                            <p class="mt-2 text-xs text-ipv-magenta">{{ $r['fallas_seguidas'] }} {{ $r['fallas_seguidas'] === 1 ? 'falla' : 'fallas' }} seguidas: {{ $r['ultimo_error'] }}</p>
+                            <p class="mt-2 text-xs text-ipv-magenta">{{ $r['fallas_seguidas'] }} {{ $r['fallas_seguidas'] === 1 ? 'falla seguida' : 'fallas seguidas' }}: {{ $r['ultimo_error'] }}</p>
                         @endif
                     </li>
                 @endforeach
