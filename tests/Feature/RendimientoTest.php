@@ -1,9 +1,12 @@
 <?php
 
+use App\Enums\EstadoPedido;
 use App\Models\Expediente;
 use App\Models\Oficina;
 use App\Models\Permiso;
 use App\Models\RrhhJefatura;
+use App\Models\RrhhPedidoLicencia;
+use App\Models\RrhhTipoPedible;
 use App\Models\User;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\DB;
@@ -73,3 +76,29 @@ test('pantallas de RRHH dentro del presupuesto de consultas', function (string $
     ['/rrhh/licencias', 30],
     ['/rrhh/organigrama', 30],
 ]);
+
+test('pantallas de pedidos de licencia dentro del presupuesto de consultas', function (string $ruta) {
+    $this->travelTo(CarbonImmutable::parse('2026-10-20 10:00'));
+    config(['sirex.rrhh_pedidos' => true]);
+    $oficina = MitivFalso::oficinaRrhh('DPTO. COMPUTOS');
+    $empleado = MitivFalso::empleadoRrhh(['oficina_id' => $oficina, 'fecha_ingreso' => '2015-01-01']);
+    $this->user->forceFill(['legajo' => (string) DB::connection('pgsql_mitiv')->table('empleados')->where('id', $empleado)->value('legajo')])->save();
+    foreach (['rrhh_ver', 'rrhh_confirmar_pedidos'] as $p) {
+        Permiso::create(['user_id' => $this->user->id, 'nombre' => $p]);
+    }
+    RrhhJefatura::create(['user_id' => $this->user->id, 'mitiv_oficina_id' => $oficina]);
+    RrhhTipoPedible::create(['tipo_ausencia_id' => 96, 'nombre' => 'VAC ANUALES']);
+    foreach (range(1, 10) as $i) {
+        $otro = User::factory()->create();
+        RrhhPedidoLicencia::create([
+            'empleado_id' => $empleado, 'oficina_id' => $oficina, 'user_id' => $otro->id, 'tipo_ausencia_id' => 96,
+            'tipo_nombre' => 'VAC ANUALES', 'es_vacaciones' => true, 'desde' => '2026-11-02', 'hasta' => '2026-11-03',
+            'dias_habiles' => 2, 'estado' => $i % 2 ? EstadoPedido::PendienteJefe : EstadoPedido::AprobadoJefe,
+        ]);
+    }
+    $this->actingAs($this->user);
+
+    $consultas = contarConsultas(fn () => $this->get($ruta)->assertOk());
+
+    expect($consultas)->toBeLessThanOrEqual(40);
+})->with(['/rrhh', '/rrhh/equipo?vista=pedidos', '/rrhh/licencias?vista=pedidos', '/rrhh/licencias?vista=tipos']);

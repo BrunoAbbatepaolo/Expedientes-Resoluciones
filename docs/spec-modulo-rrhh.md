@@ -15,7 +15,7 @@ Llevar a SiRex el RRHH del sistema viejo (MITIV, Laravel 5.2 + AngularJS en `srv
 | Fase | Contenido | Estado al terminar |
 |---|---|---|
 | 1. Consulta | Secciones 2–6 y 8 | Activa en producción |
-| 1b. Pedido de licencias | Sección 7 bis | Construida; se enciende con `SIREX_RRHH_PEDIDOS=true` |
+| 1b. Pedido de licencias | Sección 7 bis | Implementada; se enciende con `SIREX_RRHH_PEDIDOS=true` |
 | 2. Cargas + importador | Sección 7 | Construida, apagada (`SIREX_RRHH_FUENTE=mitiv`) |
 | 3. Lector de relojes | Automatizar el programa que llena `registros_reloj` | Fuera de esta spec |
 
@@ -136,8 +136,10 @@ No escribe en mitivdb ni choca con el viejo (un pedido no es una licencia hasta 
 - **Confirmación (permiso nuevo `rrhh_confirmar_pedidos`):**
   - Fuente `mitiv`: RRHH carga la licencia en el sistema viejo y marca el pedido "Confirmado — cargado en sistema viejo".
   - Fuente `sirex`: confirmar crea la `rrhh_ausencias` automáticamente.
-- **Validaciones al pedir:** desde ≤ hasta; no superpone licencias existentes ni pedidos activos; días hábiles = excluye fines de semana y feriados; si el tipo `afecta_vacaciones`, no supera el saldo; fecha de inicio no anterior a `rrhh_pedido_dias_atras` (config, default 0; retroactivo solo para tipos marcados).
-- **Tipos pedibles:** tabla SiRex `rrhh_tipos_pedibles` (id de tipo + permite retroactivo + requiere adjunto), administrada por RRHH. Los tipos del viejo no se tocan.
+- **Validaciones al pedir (implementado):** hasta ≥ desde; al menos 1 día hábil (sin fines de semana ni feriados; mismo cálculo que las vacaciones); no superpone licencias cargadas en el sistema viejo ni pedidos en trámite — **los regímenes que duran meses o años (`rrhh_tipos_sin_fichar` y `rrhh_tipos_ignorados`, ej. CONT) no cuentan como superposición**, si no los contratados nunca podrían pedir; sin fecha pasada salvo en los tipos marcados "permite fecha pasada" (hasta `SIREX_RRHH_PEDIDO_DIAS_RETRO`, 30 días); si es de vacaciones, no supera los días pendientes del período vigente **descontando los pedidos de vacaciones en trámite**; si el tipo exige certificado, adjunto obligatorio (PDF/JPG/PNG, 5 MB, validado por contenido).
+- **Tipos pedibles:** tabla SiRex `rrhh_tipos_pedibles` (id de tipo + permite fecha pasada + exige certificado), administrada desde Licencias → "Tipos que se pueden pedir" por quien tiene `rrhh_confirmar_pedidos`. Sin tipos habilitados, nadie puede pedir. Los tipos del viejo no se tocan.
+- **Permisos:** confirmar requiere `rrhh_confirmar_pedidos` **y** `rrhh_ver` (la pantalla Licencias es de RRHH). El adjunto lo ven el empleado, sus jefes y RRHH.
+- **Concurrencia:** cada cambio de estado exige que el pedido siga en el estado esperado (dos personas no pueden procesarlo a la vez).
 - **Pantallas:** Mi RRHH → "Pedir licencia" (muestra días hábiles y saldo resultante antes de enviar) y "Mis pedidos". Mi equipo → "Pedidos por aprobar". Licencias (RRHH) → "Pedidos por confirmar".
 - **Avisos:** contador en el sidebar (como pases pendientes) para jefe y RRHH; el empleado ve el estado en Mis pedidos. Email queda para después.
 - **Pruebas:** circuito completo de estados; jefe fuera de alcance → 403; auto-aprobación imposible; validaciones de superposición, saldo y feriados; con interruptor apagado → 404.

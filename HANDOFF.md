@@ -4,10 +4,10 @@
 Rama `feature/modulo-rrhh` (sale de `feature/expedientes-ipv`, **sin push**). Spec: `docs/spec-modulo-rrhh.md`. Plan: `docs/plan-modulo-rrhh-fase1.md` (las 12 tareas hechas).
 
 **Fase 1 (consulta) terminada:** Mi RRHH, Mi equipo, Personal + ficha (pestañas por nivel, registro de accesos, archivos), Asistencia (hoy, grilla, fichadas crudas, estado del lector), Licencias (+ adeudadas), Calendario, Organigrama (+ comando `rrhh:cargar-organigrama`), Reportes (imprimible + CSV), búsqueda Ctrl+K de empleados.
-Verificado: 194 tests verdes, PHPStan limpio, prueba de humo con datos reales de mitivdb (todas las pantallas 200, ninguna supera ~1 s).
+Verificado: 219 tests verdes, PHPStan limpio, prueba de humo con datos reales de mitivdb (todas las pantallas 200, ninguna supera ~1 s).
 
 ## Antes de usar en producción
-1. `php artisan migrate` (tablas `rrhh_oficina_padres`, `rrhh_jefaturas`, `rrhh_accesos`, `rrhh_horarios_especiales`).
+1. `php artisan migrate` (tablas `rrhh_oficina_padres`, `rrhh_jefaturas`, `rrhh_accesos`, `rrhh_horarios_especiales`, `rrhh_tipos_pedibles`, `rrhh_pedidos_licencia`).
 2. `npm run build` (Tailwind ahora escanea `app/Enums`).
 3. `php artisan rrhh:cargar-organigrama --simular` y luego sin `--simular`; completar a mano en Organigrama lo que quede sin superior y asignar jefes.
 4. Dar `rrhh_ver` a RRHH y `rrhh_sensibles` + `rrhh_horarios` solo a la jefa de RRHH (Usuarios → permisos).
@@ -16,7 +16,7 @@ Verificado: 194 tests verdes, PHPStan limpio, prueba de humo con datos reales de
 7. Pedir al admin del sistema viejo los índices de la spec (sección 8).
 
 ## Próximos pasos
-- Fase 1b: pedido de licencias desde Mi RRHH (spec 7 bis) — plan aparte.
+- Fase 1b (hecha, apagada por defecto): pedido de licencias. Para usarla: `SIREX_RRHH_PEDIDOS=true`, dar `rrhh_confirmar_pedidos` (+ `rrhh_ver`) a quien confirma, y habilitar tipos en Licencias → "Tipos que se pueden pedir". Sin tipos, nadie puede pedir. Al confirmar, RRHH carga la licencia a mano en el sistema viejo.
 - Fase 2: cargas + importador (spec 7) — plan aparte.
 - Fase 3: automatizar el programa lector de relojes (el usuario lo va a pasar).
 - Abrir PR draft cuando el usuario lo pida.
