@@ -29,16 +29,18 @@ test('con un legajo que no existe en el sistema de personal avisa sin romper', f
 });
 
 test('muestra saldo, faltas del mes, licencias y sus datos', function () {
-    $id = MitivFalso::empleadoRrhh(['legajo' => 777, 'card_id' => 777, 'oficina_id' => $this->oficina, 'apellido' => 'GOMEZ', 'enfermedad' => 'asma']);
+    $id = MitivFalso::empleadoRrhh(['legajo' => 777, 'card_id' => 777, 'oficina_id' => $this->oficina, 'apellido' => 'GOMEZ', 'enfermedad' => 'asma', 'fecha_ingreso' => '2020-01-01']);
     MitivFalso::horarioSemana($id);
     MitivFalso::inasistencia($id, '2026-10-06', 82);
-    MitivFalso::ausencia($id, '2026-10-14', '2026-10-15', 'LIC. ANUAL', 'viaje');
-    DB::connection('pgsql_mitiv')->table('vista_saldo_vacaciones')->insert(['id' => $id, 'anio' => 2025, 'saldo' => 12]);
+    MitivFalso::ausencia($id, '2026-10-14', '2026-10-15', 'LIC. ANUAL', 'viaje'); // período 2026: todavía no vigente
+    MitivFalso::vacaciones($id, '2026-02-02', '2026-02-06', 2025); // 5 hábiles del período vigente (2025)
+    MitivFalso::vacaciones($id, '2025-02-03', '2025-02-07', 2024); // período vencido: no cuenta
 
     Livewire::actingAs(User::factory()->create(['legajo' => '777']))
         ->test(MiRrhh::class)
-        ->assertSee('Vacaciones pendientes')
-        ->assertSee('12')
+        ->assertSee('Vacaciones pendientes (período 2025)')
+        ->assertSee('20') // 6 años de antigüedad al cierre de 2025 = 25 días, menos 5
+        ->assertSee('de 25')
         ->assertSee('LIC. ANUAL')
         ->assertSee('viaje')
         ->assertSee('AUSENTE')

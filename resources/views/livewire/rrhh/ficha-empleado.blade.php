@@ -98,16 +98,14 @@
                     @break
 
                 @case('licencias')
-                    <div class="mb-3 flex flex-wrap items-center justify-between gap-2">
+                    @isset($vacaciones)
+                        <h2 class="mb-2 font-semibold text-ipv-ink dark:text-ipv-ink-dark">Vacaciones</h2>
+                        <x-rrhh.vacaciones :v="$vacaciones" detalle class="mb-5" />
+                    @endisset
+                    <div class="mb-2 flex flex-wrap items-center justify-between gap-2">
                         <h2 class="font-semibold text-ipv-ink dark:text-ipv-ink-dark">Licencias {{ $mesActual->year }}</h2>
-                        <p class="text-sm text-ipv-ink/65 dark:text-ipv-ink-dark/65">
-                            Vacaciones pendientes: <strong>{{ ($saldo ?? collect())->sum('saldo') }}</strong> días
-                            @if (($saldo ?? collect())->where('saldo', '>', 0)->isNotEmpty())
-                                ({{ $saldo->where('saldo', '>', 0)->map(fn ($s) => $s->anio.': '.$s->saldo)->implode(' · ') }})
-                            @endif
-                        </p>
+                        <x-rrhh.selector-anio :mes="$mesActual" />
                     </div>
-                    <x-rrhh.selector-anio :mes="$mesActual" />
                     <ul class="mt-2 divide-y divide-ipv-blue/10 text-sm dark:divide-white/10">
                         @forelse ($licencias ?? [] as $lic)
                             <li wire:key="lic-{{ $lic->id }}" class="flex flex-wrap items-baseline justify-between gap-2 py-2">

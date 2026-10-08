@@ -64,6 +64,15 @@ use Illuminate\Support\Carbon;
  * @property string|null $enfermedad
  * @property string|null $tratamiento
  * @property string|null $nro_cuenta_bancaria
+ * @property int|null $anio_reconocimiento_nacional
+ * @property int|null $mes_reconocimiento_nacional
+ * @property int|null $dia_reconocimiento_nacional
+ * @property int|null $anio_reconocimiento_provincial
+ * @property int|null $mes_reconocimiento_provincial
+ * @property int|null $dia_reconocimiento_provincial
+ * @property int|null $anio_reconocimiento_municipal
+ * @property int|null $mes_reconocimiento_municipal
+ * @property int|null $dia_reconocimiento_municipal
  * @property-read OficinaRrhh|null $oficinaRrhh
  * @property-read SituacionLaboral|null $situacionLaboral
  * @property-read Categoria|null $categoriaTitular

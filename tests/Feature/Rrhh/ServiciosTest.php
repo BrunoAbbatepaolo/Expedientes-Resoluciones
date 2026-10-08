@@ -117,18 +117,22 @@ test('las fichadas crudas son solo para RRHH y el rango se recorta a 31 días', 
         ->and(fn () => $asistencias->fichadas(alcance($this->jefe), []))->toThrow(AuthorizationException::class);
 });
 
-test('vacaciones adeudadas suma el saldo por año', function () {
-    DB::connection('pgsql_mitiv')->table('vista_saldo_vacaciones')->insert([
-        ['id' => $this->ana, 'anio' => 2024, 'saldo' => 5],
-        ['id' => $this->ana, 'anio' => 2025, 'saldo' => 20],
-        ['id' => $this->luis, 'anio' => 2025, 'saldo' => 0],
-    ]);
+test('las vacaciones cuentan solo el período vigente (el del año anterior), en días hábiles', function () {
+    DB::connection('pgsql_mitiv')->table('empleados')->where('id', $this->ana)->update(['fecha_ingreso' => '2015-01-01']);
+    MitivFalso::feriado('2026-03-04');
+    MitivFalso::vacaciones($this->ana, '2026-03-02', '2026-03-08', 2025); // 5 hábiles - 1 feriado = 4
+    MitivFalso::vacaciones($this->ana, '2025-12-01', '2025-12-12', 2024); // período vencido
+    MitivFalso::vacaciones($this->ana, '2026-09-01', '2026-09-03', 2026); // período siguiente, todavía no
+    MitivFalso::inasistencia($this->ana, '2026-05-04', 5); // anticipo de licencia tomado este año
 
-    $filas = app(Licencias::class)->adeudadas(alcance($this->rrhh));
+    $v = app(Licencias::class)->vacaciones(alcance($this->rrhh), $this->ana);
+    $adeudadas = app(Licencias::class)->adeudadas(alcance($this->rrhh));
 
-    expect($filas)->toHaveCount(1)
-        ->and($filas[0]['total'])->toBe(25)
-        ->and($filas[0]['anios'])->toBe([2024 => 5, 2025 => 20]);
+    expect($v)->periodo->toBe(2025)->antiguedad->toBe(11)->corresponden->toBe(30)
+        ->tomadas->toBe(4)->anticipadas->toBe(1)->pendientes->toBe(25)
+        ->and($v->detalle)->toHaveCount(1)
+        ->and($adeudadas)->toHaveCount(1) // Luis no tiene fecha de ingreso: no le corresponden días
+        ->and($adeudadas[0]['vacaciones']->pendientes)->toBe(25);
 });
 
 test('el lector de relojes avisa si se cortó el latido', function () {

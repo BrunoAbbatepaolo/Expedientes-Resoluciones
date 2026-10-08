@@ -75,6 +75,11 @@ class MitivFalso
             $t->string('clave_fiscal')->nullable();
             $t->string('clave_seguridad_social')->nullable();
             $t->text('roles')->nullable();
+            foreach (['nacional', 'provincial', 'municipal'] as $ambito) {
+                foreach (['anio', 'mes', 'dia'] as $parte) {
+                    $t->integer("{$parte}_reconocimiento_{$ambito}")->nullable();
+                }
+            }
         });
         self::crearRrhh();
         $s->create('empleado_expediente_oficinas', function (Blueprint $t) {
@@ -184,11 +189,6 @@ class MitivFalso
             $t->string('tipo')->nullable();
             $t->integer('tipo_feriado_id')->nullable();
         });
-        $s->create('vista_saldo_vacaciones', function (Blueprint $t) {
-            $t->integer('id');
-            $t->integer('anio');
-            $t->integer('saldo');
-        });
         $s->create('grupo_familiares', function (Blueprint $t) {
             $t->id();
             foreach (NivelDatoRrhh::Sensible->columnasFamiliar() as $col) {
@@ -288,6 +288,18 @@ class MitivFalso
             'empleado_id' => $empleadoId, 'desde' => $desde, 'hasta' => $hasta,
             'tipo_ausencias_id' => self::tipoAusencia($tipo, $tipo === 'LIC. ANUAL'),
             'anio' => (int) substr($desde, 0, 4), 'observacion' => $observacion,
+        ]);
+    }
+
+    /** Vacaciones "VAC ANUALES" (id 96, como en el sistema viejo) imputadas a un período. */
+    public static function vacaciones(int $empleadoId, string $desde, string $hasta, int $periodo): void
+    {
+        $db = DB::connection('pgsql_mitiv');
+        if (! $db->table('tipo_ausencias')->where('id', 96)->exists()) {
+            $db->table('tipo_ausencias')->insert(['id' => 96, 'descripcion' => 'VAC ANUALES']);
+        }
+        $db->table('ausencias')->insert([
+            'empleado_id' => $empleadoId, 'desde' => $desde, 'hasta' => $hasta, 'tipo_ausencias_id' => 96, 'anio' => $periodo,
         ]);
     }
 

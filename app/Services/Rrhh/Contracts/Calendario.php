@@ -15,5 +15,8 @@ interface Calendario
     /** Días no laborables del rango. @return array<string, string> Y-m-d => tipo */
     public function dias(CarbonImmutable $desde, CarbonImmutable $hasta): array;
 
+    /** Días que no se cuentan como hábiles al descontar vacaciones. @return array<string, string> */
+    public function diasNoHabiles(CarbonImmutable $desde, CarbonImmutable $hasta): array;
+
     public function proximo(CarbonImmutable $desde): ?Feriado;
 }

@@ -36,7 +36,7 @@ class MiRrhh extends Component
             $datos = array_merge($datos, $this->consultar(fn () => [
                 'empleado' => $legajos->propio($alcance),
                 'dias' => $asistencias->mes($alcance, $id, $mes->year, $mes->month),
-                'saldo' => $licencias->saldo($alcance, $id),
+                'vacaciones' => $licencias->vacaciones($alcance, $id),
                 'licencias' => $licencias->deEmpleado($alcance, $id, $mes->year),
                 'inasistencias' => $licencias->inasistenciasDe($alcance, $id, $mes->year),
                 'proxima' => $licencias->proxima($alcance, $id, $hoy),

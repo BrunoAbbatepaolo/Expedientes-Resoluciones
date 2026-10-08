@@ -14,7 +14,7 @@ beforeEach(function () {
     MitivFalso::horarioSemana($this->ana);
     MitivFalso::inasistencia($this->ana, '2026-09-08', 82);
     MitivFalso::ausencia($this->ana, '2026-03-02', '2026-03-06', 'LIC. ANUAL');
-    DB::connection('pgsql_mitiv')->table('vista_saldo_vacaciones')->insert(['id' => $this->ana, 'anio' => 2025, 'saldo' => 7]);
+    DB::connection('pgsql_mitiv')->table('empleados')->where('id', $this->ana)->update(['fecha_ingreso' => '2015-01-01']); // 30 días del período vigente 2025
 
     $this->rrhh = User::factory()->create();
     Permiso::create(['user_id' => $this->rrhh->id, 'nombre' => 'rrhh_ver']);
@@ -51,7 +51,7 @@ test('vacaciones adeudadas y licencias por tipo salen en CSV para Excel', functi
         ->assertOk()
         ->streamedContent();
 
-    expect($csv)->toStartWith("\xEF\xBB\xBF")->toContain('"GOMEZ, ANA";')->toContain(';7');
+    expect($csv)->toStartWith("\xEF\xBB\xBF")->toContain('"GOMEZ, ANA";')->toContain(';30'); // la LIC. ANUAL cargada es del período 2026, todavía no vigente
 
     $this->actingAs($this->rrhh)
         ->get(route('rrhh.reportes.ver', ['reporte' => 'licencias', 'desde' => '2026-01-01', 'hasta' => '2026-12-31']))

@@ -35,8 +35,8 @@
                                 <span class="text-xs font-normal text-ipv-ink/50 dark:text-ipv-ink-dark/50">· {{ $fila['empleado']->oficinaRrhh?->nombre }}</span>
                             </a>
                             <span class="text-ipv-ink/65 dark:text-ipv-ink-dark/65">
-                                <strong class="text-ipv-ink dark:text-ipv-ink-dark">{{ $fila['total'] }} días</strong>
-                                ({{ collect($fila['anios'])->filter()->map(fn ($s, $a) => $a.': '.$s)->implode(' · ') }})
+                                <strong class="text-ipv-ink dark:text-ipv-ink-dark">{{ $fila['vacaciones']->pendientes }} días</strong>
+                                de {{ $fila['vacaciones']->corresponden }} ({{ $fila['vacaciones']->tomadas + $fila['vacaciones']->anticipadas }} tomados)
                             </span>
                         </li>
                     @empty

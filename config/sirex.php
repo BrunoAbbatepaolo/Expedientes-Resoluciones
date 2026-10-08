@@ -44,6 +44,18 @@ return [
         'SIREX_RRHH_TIPOS_IGNORADOS', '131'
     )))),
 
+    // Vacaciones (licencia anual ordinaria). El saldo lo calcula SiRex: la vista del sistema
+    // viejo dejó de calcular en 2022. Cuentan como tomadas las ausencias de estos tipos (más
+    // las de tipos con afecta_vacaciones) imputadas al período (ausencias.anio); los anticipos
+    // son la ausencia "ANT DE VACACIONES" y la inasistencia "ANTICIPO DE LICENCIA".
+    'rrhh_tipos_vacaciones' => array_map('intval', array_filter(explode(',', (string) env('SIREX_RRHH_TIPOS_VACACIONES', '96')))),
+    'rrhh_tipos_anticipo_vacaciones' => array_map('intval', array_filter(explode(',', (string) env('SIREX_RRHH_TIPOS_ANTICIPO', '54')))),
+    'rrhh_inasistencia_anticipo_id' => (int) env('SIREX_RRHH_INASISTENCIA_ANTICIPO', 5),
+
+    // Las vacaciones del período X se toman durante el año X + desfase y vencen al terminar ese
+    // año (confirmado por el usuario: en 2026 se gozan las del período 2025).
+    'rrhh_vacaciones_desfase' => (int) env('SIREX_RRHH_VACACIONES_DESFASE', 1),
+
     // Tipos de inasistencia del sistema viejo que genera su proceso de reloj.
     'rrhh_tipo_ausente_id' => (int) env('SIREX_RRHH_TIPO_AUSENTE', 82),
     'rrhh_tipo_tarde_id' => (int) env('SIREX_RRHH_TIPO_TARDE', 7),

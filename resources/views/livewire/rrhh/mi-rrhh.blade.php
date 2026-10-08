@@ -15,13 +15,11 @@
         {{-- Resumen --}}
         <div class="grid grid-cols-2 gap-3 lg:grid-cols-4">
             <div class="sirex-glass-card rounded-[14px] p-4">
-                <p class="text-xs text-ipv-ink/55 dark:text-ipv-ink-dark/55">Vacaciones pendientes</p>
-                <p class="mt-1 text-2xl font-semibold text-ipv-ink dark:text-ipv-ink-dark">{{ $saldo->sum('saldo') }} <span class="text-sm font-normal">días</span></p>
-                @if ($saldo->where('saldo', '>', 0)->isNotEmpty())
-                    <p class="mt-1 text-xs text-ipv-ink/55 dark:text-ipv-ink-dark/55">
-                        {{ $saldo->where('saldo', '>', 0)->map(fn ($s) => $s->anio.': '.$s->saldo)->implode(' · ') }}
-                    </p>
-                @endif
+                <p class="text-xs text-ipv-ink/55 dark:text-ipv-ink-dark/55">Vacaciones pendientes (período {{ $vacaciones->periodo }})</p>
+                <p class="mt-1 text-2xl font-semibold {{ $vacaciones->pendientes < 0 ? 'text-ipv-magenta' : 'text-ipv-ink dark:text-ipv-ink-dark' }}">{{ $vacaciones->pendientes }} <span class="text-sm font-normal">días hábiles</span></p>
+                <p class="mt-1 text-xs text-ipv-ink/55 dark:text-ipv-ink-dark/55">
+                    de {{ $vacaciones->corresponden }} · tomaste {{ $vacaciones->tomadas + $vacaciones->anticipadas }}
+                </p>
             </div>
             <div class="sirex-glass-card rounded-[14px] p-4">
                 <p class="text-xs text-ipv-ink/55 dark:text-ipv-ink-dark/55">Faltas en {{ $mesActual->translatedFormat('F') }}</p>

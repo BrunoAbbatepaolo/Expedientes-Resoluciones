@@ -41,13 +41,14 @@
         </table>
     @endif
 
-    <h2>Vacaciones pendientes</h2>
-    <p>
-        {{ $saldo->sum('saldo') }} días
-        @if ($saldo->where('saldo', '>', 0)->isNotEmpty())
-            ({{ $saldo->where('saldo', '>', 0)->map(fn ($s) => $s->anio.': '.$s->saldo)->implode(' · ') }})
-        @endif
-    </p>
+    <h2>Vacaciones {{ $vacaciones->periodo }}</h2>
+    <dl>
+        <dt>Antigüedad</dt><dd>{{ $vacaciones->antiguedad }} años</dd>
+        <dt>Corresponden</dt><dd>{{ $vacaciones->corresponden }} días hábiles</dd>
+        <dt>Tomadas</dt><dd>{{ $vacaciones->tomadas }}</dd>
+        <dt>Anticipadas</dt><dd>{{ $vacaciones->anticipadas }}</dd>
+        <dt>Pendientes</dt><dd>{{ $vacaciones->pendientes }}</dd>
+    </dl>
 
     <h2>Licencias del año</h2>
     <table>

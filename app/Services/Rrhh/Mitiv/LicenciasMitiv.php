@@ -6,9 +6,10 @@ use App\Enums\NivelDatoRrhh;
 use App\Models\Mitiv\Ausencia;
 use App\Models\Mitiv\Empleado;
 use App\Models\Mitiv\Inasistencia;
-use App\Models\Mitiv\SaldoVacaciones;
 use App\Models\Mitiv\TipoAusencia;
 use App\Services\Rrhh\Alcance;
+use App\Services\Rrhh\CalculoVacaciones;
+use App\Services\Rrhh\Contracts\Calendario;
 use App\Services\Rrhh\Contracts\Licencias;
 use App\Services\Rrhh\Hora;
 use Carbon\CarbonImmutable;
@@ -19,6 +20,8 @@ use Illuminate\Support\Facades\Cache;
 class LicenciasMitiv implements Licencias
 {
     use ConsultaMitiv;
+
+    public function __construct(private Calendario $calendario) {}
 
     public function deEmpleado(Alcance $alcance, int $empleadoId, ?int $anio = null): Collection
     {
@@ -49,12 +52,11 @@ class LicenciasMitiv implements Licencias
             ->get(['id', 'empleado_id', 'tipo_inasistencia_id', 'fecha']);
     }
 
-    public function saldo(Alcance $alcance, int $empleadoId): Collection
+    public function vacaciones(Alcance $alcance, int $empleadoId, ?int $periodo = null): \stdClass
     {
         $this->nivelDe($alcance, $empleadoId);
 
-        return SaldoVacaciones::where('id', $empleadoId)->orderByDesc('anio')->get(['anio', 'saldo'])
-            ->map(fn ($s) => (object) ['anio' => (int) $s->anio, 'saldo' => (int) $s->saldo]);
+        return $this->calcularVacaciones([$empleadoId], $periodo ?? CalculoVacaciones::periodoVigente(), conDetalle: true)[$empleadoId];
     }
 
     public function proxima(Alcance $alcance, int $empleadoId, CarbonImmutable $desde): ?Ausencia
@@ -97,24 +99,97 @@ class LicenciasMitiv implements Licencias
     {
         $this->soloRrhh($alcance);
 
-        $saldos = SaldoVacaciones::where('saldo', '>', 0)->get(['id', 'anio', 'saldo'])->groupBy('id');
-        if ($saldos->isEmpty()) {
-            return collect();
-        }
-
-        return Empleado::conNivel(NivelDatoRrhh::Basico)
+        $empleados = Empleado::conNivel(NivelDatoRrhh::Basico)
             ->activos()
             ->with('oficinaRrhh:id,nombre')
-            ->whereIn('empleados.id', $saldos->keys()->all())
             ->when($oficinaId, fn ($q) => $q->where('empleados.oficina_id', $oficinaId))
-            ->get()
-            ->map(function (Empleado $e) use ($saldos) {
-                $anios = $saldos[$e->id]->sortBy('anio')->mapWithKeys(fn ($s) => [(int) $s->anio => (int) $s->saldo])->all();
+            ->get();
+        $vacaciones = $this->calcularVacaciones($empleados->pluck('id')->all(), CalculoVacaciones::periodoVigente());
 
-                return ['empleado' => $e, 'total' => array_sum($anios), 'anios' => $anios];
-            })
-            ->sortByDesc('total')
+        return $empleados
+            ->map(fn (Empleado $e) => ['empleado' => $e, 'vacaciones' => $vacaciones[$e->id]])
+            ->filter(fn ($fila) => $fila['vacaciones']->pendientes > 0)
+            ->sortByDesc(fn ($fila) => $fila['vacaciones']->pendientes)
             ->values();
+    }
+
+    /**
+     * Vacaciones de un período para varios empleados con 4 consultas en total.
+     *
+     * @param  list<int>  $ids
+     * @return array<int, \stdClass>
+     */
+    private function calcularVacaciones(array $ids, int $periodo, bool $conDetalle = false): array
+    {
+        if ($ids === []) {
+            return [];
+        }
+
+        $antiguedad = ['fecha_ingreso', 'anio_reconocimiento_nacional', 'mes_reconocimiento_nacional', 'dia_reconocimiento_nacional',
+            'anio_reconocimiento_provincial', 'mes_reconocimiento_provincial', 'dia_reconocimiento_provincial',
+            'anio_reconocimiento_municipal', 'mes_reconocimiento_municipal', 'dia_reconocimiento_municipal'];
+        $empleados = Empleado::withoutGlobalScope('columnas_publicas')
+            ->whereIn('empleados.id', $ids)
+            ->get(['empleados.id', ...array_map(fn ($c) => 'empleados.'.$c, $antiguedad)])
+            ->keyBy('id');
+
+        $tiposVacaciones = Cache::remember('rrhh.tipos_vacaciones', now()->addHour(), fn () => TipoAusencia::where('afecta_vacaciones', true)
+            ->pluck('id')->map(fn ($id) => (int) $id)->merge(config('sirex.rrhh_tipos_vacaciones'))->unique()->values()->all());
+        $tiposAnticipo = (array) config('sirex.rrhh_tipos_anticipo_vacaciones');
+
+        $ausencias = Ausencia::with('tipo:id,descripcion')
+            ->whereIn('empleado_id', $ids)
+            ->where('anio', $periodo)
+            ->whereIn('tipo_ausencias_id', [...$tiposVacaciones, ...$tiposAnticipo] ?: [0])
+            ->orderBy('desde')
+            ->get(['id', 'empleado_id', 'desde', 'hasta', 'tipo_ausencias_id'])
+            ->groupBy('empleado_id');
+
+        // La inasistencia "anticipo de licencia" no tiene período: se imputa al que se está
+        // tomando el año en que ocurrió.
+        $desfase = (int) config('sirex.rrhh_vacaciones_desfase');
+        $anticiposInasistencia = Inasistencia::vigentes()
+            ->whereIn('empleado_id', $ids)
+            ->where('tipo_inasistencia_id', (int) config('sirex.rrhh_inasistencia_anticipo_id'))
+            ->whereBetween('fecha', [($periodo + $desfase).'-01-01', ($periodo + $desfase).'-12-31'])
+            ->get(['empleado_id'])
+            ->countBy('empleado_id');
+
+        $todas = $ausencias->flatten();
+        $noHabiles = $todas->isEmpty() ? [] : $this->calendario->diasNoHabiles(
+            CarbonImmutable::instance($todas->min('desde')), CarbonImmutable::instance($todas->max('hasta')),
+        );
+
+        $resultado = [];
+        foreach ($ids as $id) {
+            $e = $empleados[$id] ?? null;
+            $corresponden = CalculoVacaciones::corresponden(
+                $e?->fecha_ingreso,
+                $periodo,
+                ['anios' => $e?->anio_reconocimiento_nacional, 'meses' => $e?->mes_reconocimiento_nacional, 'dias' => $e?->dia_reconocimiento_nacional],
+                ['anios' => $e?->anio_reconocimiento_provincial, 'meses' => $e?->mes_reconocimiento_provincial, 'dias' => $e?->dia_reconocimiento_provincial],
+                ['anios' => $e?->anio_reconocimiento_municipal, 'meses' => $e?->mes_reconocimiento_municipal, 'dias' => $e?->dia_reconocimiento_municipal],
+            );
+
+            $detalle = ($ausencias[$id] ?? collect())->each(fn (Ausencia $a) => $a->setAttribute(
+                'dias_habiles', CalculoVacaciones::diasHabiles($a->desde, $a->hasta, $noHabiles),
+            ));
+            $esAnticipo = fn (Ausencia $a) => in_array((int) $a->tipo_ausencias_id, $tiposAnticipo, true);
+            $tomadas = (int) $detalle->reject($esAnticipo)->sum('dias_habiles');
+            $anticipadas = (int) $detalle->filter($esAnticipo)->sum('dias_habiles') + (int) ($anticiposInasistencia[$id] ?? 0);
+
+            $v = new \stdClass;
+            $v->periodo = $periodo;
+            $v->antiguedad = $corresponden['antiguedad'];
+            $v->corresponden = $corresponden['dias'];
+            $v->tomadas = $tomadas;
+            $v->anticipadas = $anticipadas;
+            $v->pendientes = $corresponden['dias'] - $tomadas - $anticipadas;
+            $v->detalle = $conDetalle ? $detalle->values() : collect();
+            $resultado[$id] = $v;
+        }
+
+        return $resultado;
     }
 
     public function porTipo(Alcance $alcance, CarbonImmutable $desde, CarbonImmutable $hasta, ?int $oficinaId = null): Collection

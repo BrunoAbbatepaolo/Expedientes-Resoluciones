@@ -6,6 +6,7 @@ use App\Enums\EstadoDia;
 use App\Http\Controllers\Controller;
 use App\Services\Rrhh\Alcance;
 use App\Services\Rrhh\AlcanceFactory;
+use App\Services\Rrhh\CalculoVacaciones;
 use App\Services\Rrhh\Contracts\Asistencias;
 use App\Services\Rrhh\Contracts\Legajos;
 use App\Services\Rrhh\Contracts\Licencias;
@@ -77,7 +78,7 @@ class ReporteController extends Controller
         $ficha = $this->legajos->ficha($alcance, $empleado->id);
 
         return $ficha + [
-            'saldo' => $this->licencias->saldo($alcance, $empleado->id),
+            'vacaciones' => $this->licencias->vacaciones($alcance, $empleado->id),
             'licencias' => $this->licencias->deEmpleado($alcance, $empleado->id, Hora::hoy()->year),
         ];
     }
@@ -115,12 +116,17 @@ class ReporteController extends Controller
         $filas = $this->licencias->adeudadas($alcance, $oficinaId)->map(fn ($f) => [
             $f['empleado']->legajo,
             $f['empleado']->apellido.', '.$f['empleado']->nombre,
-            $f['empleado']->oficinaRrhh?->nombre,
-            collect($f['anios'])->filter()->map(fn ($s, $a) => "$a: $s")->implode(' · '),
-            $f['total'],
+            $f['empleado']->oficinaRrhh->nombre ?? '',
+            $f['vacaciones']->corresponden,
+            $f['vacaciones']->tomadas + $f['vacaciones']->anticipadas,
+            $f['vacaciones']->pendientes,
         ])->all();
 
-        return [$oficina ?? 'Todas las oficinas', ['Legajo', 'Apellido y nombre', 'Oficina', 'Por año', 'Total días'], $filas];
+        return [
+            ($oficina ?? 'Todas las oficinas').' · período '.CalculoVacaciones::periodoVigente(),
+            ['Legajo', 'Apellido y nombre', 'Oficina', 'Corresponden', 'Tomadas', 'Pendientes'],
+            $filas,
+        ];
     }
 
     private function porTipo(Request $request, Alcance $alcance, ?int $oficinaId, ?string $oficina): array

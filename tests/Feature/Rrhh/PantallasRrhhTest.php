@@ -77,7 +77,8 @@ test('la grilla del mes muestra la oficina elegida', function () {
 
 test('licencias del período y vacaciones adeudadas', function () {
     MitivFalso::ausencia($this->luis, '2026-10-05', '2026-10-09', 'LIC. ANUAL');
-    DB::connection('pgsql_mitiv')->table('vista_saldo_vacaciones')->insert(['id' => $this->ana, 'anio' => 2025, 'saldo' => 15]);
+    DB::connection('pgsql_mitiv')->table('empleados')->where('id', $this->ana)->update(['fecha_ingreso' => '2023-01-01']); // 4 años: 20 días
+    MitivFalso::vacaciones($this->ana, '2026-02-02', '2026-02-06', 2025); // 5 hábiles del período vigente
 
     Livewire::actingAs($this->rrhh)
         ->test(Licencias::class)

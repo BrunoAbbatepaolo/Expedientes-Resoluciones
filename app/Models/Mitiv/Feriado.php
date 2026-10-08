@@ -12,6 +12,7 @@ use Illuminate\Support\Carbon;
  * @property Carbon $hasta
  * @property int|null $anio
  * @property string|null $tipo
+ * @property int|null $tipo_feriado_id
  */
 class Feriado extends MitivModel
 {

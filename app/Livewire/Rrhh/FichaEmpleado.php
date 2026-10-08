@@ -63,7 +63,7 @@ class FichaEmpleado extends Component
                 'asistencia' => ['dias' => $asistencias->mes($alcance, $this->empleado, $mes->year, $mes->month)],
                 'licencias' => [
                     'licencias' => $licencias->deEmpleado($alcance, $this->empleado, $mes->year),
-                    'saldo' => $licencias->saldo($alcance, $this->empleado),
+                    'vacaciones' => $licencias->vacaciones($alcance, $this->empleado),
                 ],
                 'inasistencias' => ['inasistencias' => $licencias->inasistenciasDe($alcance, $this->empleado, $mes->year)],
                 default => [],

@@ -18,8 +18,12 @@ interface Licencias
     /** Inasistencias registradas de un empleado en un año. */
     public function inasistenciasDe(Alcance $alcance, int $empleadoId, int $anio): Collection;
 
-    /** Saldo de vacaciones por año (más reciente primero). @return Collection<int, object{anio: int, saldo: int}> */
-    public function saldo(Alcance $alcance, int $empleadoId): Collection;
+    /**
+     * Vacaciones de un período (por defecto el año en curso: los períodos vencen cada año).
+     * Devuelve periodo, antiguedad, corresponden, tomadas, anticipadas, pendientes (puede ser
+     * negativo si se excedió) y detalle (las ausencias imputadas al período).
+     */
+    public function vacaciones(Alcance $alcance, int $empleadoId, ?int $periodo = null): \stdClass;
 
     /** Próxima licencia (o la que está en curso). */
     public function proxima(Alcance $alcance, int $empleadoId, CarbonImmutable $desde): ?Ausencia;
@@ -32,9 +36,9 @@ interface Licencias
     public function buscar(Alcance $alcance, array $filtros, int $porPagina = 25): LengthAwarePaginator;
 
     /**
-     * Empleados activos con vacaciones adeudadas (solo RRHH), mayor saldo primero.
+     * Empleados activos con días pendientes del período en curso (solo RRHH), más días primero.
      *
-     * @return Collection<int, array{empleado: Empleado, total: int, anios: array<int, int>}>
+     * @return Collection<int, array{empleado: Empleado, vacaciones: \stdClass}>
      */
     public function adeudadas(Alcance $alcance, ?int $oficinaId = null): Collection;
 
