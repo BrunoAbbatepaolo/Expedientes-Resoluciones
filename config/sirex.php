@@ -23,8 +23,9 @@ return [
     'rrhh_tolerancia_minutos' => (int) env('SIREX_RRHH_TOLERANCIA', 10),
     'rrhh_limite_falta_minutos' => (int) env('SIREX_RRHH_LIMITE_FALTA', 30),
 
-    // Minutos sin fichadas (en horario laboral) para avisar que el lector de relojes no carga.
-    'rrhh_reloj_alerta_minutos' => (int) env('SIREX_RRHH_RELOJ_ALERTA', 30),
+    // Minutos sin latido ni fichadas (solo en horario laboral) para avisar que el lector de relojes
+    // no carga. Debe superar el período del latido (30 min) más los cortes normales (hasta 60 min).
+    'rrhh_reloj_alerta_minutos' => (int) env('SIREX_RRHH_RELOJ_ALERTA', 75),
 
     // Zona horaria de las fechas sin zona del sistema viejo (fichadas, horarios).
     'rrhh_zona_horaria' => env('SIREX_RRHH_ZONA', 'America/Argentina/Tucuman'),

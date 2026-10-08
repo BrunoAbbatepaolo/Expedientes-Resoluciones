@@ -9,9 +9,10 @@ use App\Services\Rrhh\Contracts\LectorReloj;
 use Carbon\CarbonImmutable;
 
 /**
- * El lector de relojes deja un latido (CHEQUEO_ESTADO_SERVICIO) en operaciones_reloj y las
- * fichadas en registros_reloj. Se avisa si el latido se cortó o si en horario laboral
- * no entran fichadas.
+ * El lector de relojes deja un latido (CHEQUEO_ESTADO_SERVICIO) cada 30 minutos en
+ * operaciones_reloj y las fichadas en registros_reloj. Solo se avisa en horario laboral
+ * (fuera de horario el programa puede estar apagado a propósito) y con un margen mayor que
+ * el período del latido: en 90 días de datos reales hubo cortes normales de hasta 60 min.
  */
 class LectorRelojMitiv implements LectorReloj
 {
@@ -27,12 +28,17 @@ class LectorRelojMitiv implements LectorReloj
         $fichada = $fichada ? CarbonImmutable::parse($fichada) : null;
         $chequeo = $chequeo ? CarbonImmutable::parse($chequeo) : null;
 
-        $laboral = $ahora->isWeekday() && $ahora->hour >= 7 && $ahora->hour < 15
+        $inicio = $ahora->startOfDay()->setTime(7, 0);
+        $laboral = $ahora->isWeekday() && $ahora->gte($inicio) && $ahora->hour < 15
             && ! isset($this->calendario->dias($ahora, $ahora)[$ahora->toDateString()]);
 
+        // Al empezar la jornada el último dato es de ayer: se mide desde las 7 para dar margen a abrir el programa.
+        $sinLatido = $laboral && ($chequeo === null || max($chequeo, $inicio)->diffInMinutes($ahora) > $limite);
+        $sinFichadas = $laboral && ($fichada === null || max($fichada, $inicio)->diffInMinutes($ahora) > $limite);
+
         $mensaje = match (true) {
-            $chequeo === null || $chequeo->diffInMinutes($ahora) > $limite => 'El lector de relojes no responde desde '.($chequeo?->format('d/m H:i') ?? 'hace mucho').'. Las fichadas no se están cargando: hay que abrir el programa de los relojes.',
-            $laboral && ($fichada === null || $fichada->diffInMinutes($ahora) > $limite) => 'No entran fichadas desde '.($fichada?->format('d/m H:i') ?? 'hace mucho').' en horario laboral.',
+            $sinLatido => 'El lector de relojes no responde desde '.($chequeo?->format('d/m H:i') ?? 'hace mucho').'. Las fichadas no se están cargando: hay que abrir el programa de los relojes.',
+            $sinFichadas => 'No entran fichadas desde '.($fichada?->format('d/m H:i') ?? 'hace mucho').' en horario laboral.',
             default => '',
         };
 

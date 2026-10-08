@@ -135,14 +135,38 @@ test('las vacaciones cuentan solo el período vigente (el del año anterior), en
         ->and($adeudadas[0]['vacaciones']->pendientes)->toBe(25);
 });
 
-test('el lector de relojes avisa si se cortó el latido', function () {
+test('el lector de relojes avisa si se cortó el latido en horario laboral', function () {
     $lector = app(LectorReloj::class);
-    expect($lector->estado(CarbonImmutable::now())['alerta'])->toBeTrue();
+    expect($lector->estado(CarbonImmutable::now())['alerta'])->toBeTrue(); // martes 10:00, sin ningún latido
 
     DB::connection('pgsql_mitiv')->table('operaciones_reloj')->insert(['operacion' => 'CHEQUEO_ESTADO_SERVICIO', 'created_at' => now()->subMinutes(5)]);
     MitivFalso::fichada(5001, now()->subMinutes(3)->format('Y-m-d H:i:s'));
 
     expect($lector->estado(CarbonImmutable::now())['alerta'])->toBeFalse();
+});
+
+test('el latido de hace 55 minutos es normal y el de hace 80 es una alerta', function () {
+    $lector = app(LectorReloj::class);
+    MitivFalso::fichada(5001, now()->subMinutes(2)->format('Y-m-d H:i:s'));
+    $db = DB::connection('pgsql_mitiv')->table('operaciones_reloj');
+
+    $db->insert(['operacion' => 'CHEQUEO_ESTADO_SERVICIO', 'created_at' => now()->subMinutes(55)]);
+    expect($lector->estado(CarbonImmutable::now())['alerta'])->toBeFalse();
+
+    $db->delete();
+    $db->insert(['operacion' => 'CHEQUEO_ESTADO_SERVICIO', 'created_at' => now()->subMinutes(80)]);
+    expect($lector->estado(CarbonImmutable::now())['alerta'])->toBeTrue();
+});
+
+test('fuera de horario laboral no avisa y al abrir la jornada da margen desde las 7', function () {
+    $lector = app(LectorReloj::class);
+    DB::connection('pgsql_mitiv')->table('operaciones_reloj')->insert(['operacion' => 'CHEQUEO_ESTADO_SERVICIO', 'created_at' => '2026-10-19 11:30:00']);
+    MitivFalso::fichada(5001, '2026-10-19 11:25:00');
+
+    expect($lector->estado(CarbonImmutable::parse('2026-10-19 20:00'))['alerta'])->toBeFalse() // de noche
+        ->and($lector->estado(CarbonImmutable::parse('2026-10-24 10:00'))['alerta'])->toBeFalse() // sábado
+        ->and($lector->estado(CarbonImmutable::parse('2026-10-20 07:30'))['alerta'])->toBeFalse() // recién abren
+        ->and($lector->estado(CarbonImmutable::parse('2026-10-20 08:30'))['alerta'])->toBeTrue(); // 90 min sin abrir el programa
 });
 
 test('los contratados (CONT) fichan igual: el período de contrato no justifica la falta', function () {
