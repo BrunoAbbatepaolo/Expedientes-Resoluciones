@@ -7,7 +7,9 @@ use App\Models\Expediente;
 use App\Models\Oficina;
 use App\Models\Permiso;
 use App\Models\User;
+use Livewire\Features\SupportLockedProperties\CannotUpdateLockedPropertyException;
 use Livewire\Livewire;
+use Tests\Support\MitivFalso;
 
 function usuarioConPermisos(Oficina $oficina, array $permisos): User
 {
@@ -63,7 +65,7 @@ test('los ids de borrado y pase no se pueden setear desde el cliente', function 
     Livewire::actingAs($user)
         ->test(Expedientes::class)
         ->set('expedienteId', 123);
-})->throws(\Livewire\Features\SupportLockedProperties\CannotUpdateLockedPropertyException::class);
+})->throws(CannotUpdateLockedPropertyException::class);
 
 test('guardar un expediente requiere permiso de edición', function () {
     $oficina = Oficina::factory()->create();
@@ -82,7 +84,7 @@ test('el dashboard no permite cambiar la oficina consultada', function () {
     Livewire::actingAs($user)
         ->test(DashboardPanel::class)
         ->set('oficinaId', $oficina->id + 1);
-})->throws(\Livewire\Features\SupportLockedProperties\CannotUpdateLockedPropertyException::class);
+})->throws(CannotUpdateLockedPropertyException::class);
 
 test('guardar permisos ignora claves fuera de la lista blanca', function () {
     $oficina = Oficina::factory()->create();
@@ -107,8 +109,8 @@ test('crear usuario genera una clave provisoria aleatoria', function () {
     $oficina = Oficina::factory()->create();
     $admin = usuarioConPermisos($oficina, ['lista_usuario_ver', 'lista_usuario_editar']);
 
-    \Tests\Support\MitivFalso::crear();
-    $empleadoId = \Tests\Support\MitivFalso::empleado(['legajo' => 4321, 'apellido' => 'PEREZ', 'nombre' => 'ANA', 'email' => 'ana@example.com']);
+    MitivFalso::crear();
+    $empleadoId = MitivFalso::empleado(['legajo' => 4321, 'apellido' => 'PEREZ', 'nombre' => 'ANA', 'email' => 'ana@example.com']);
 
     $componente = Livewire::actingAs($admin)
         ->test(ListaUsuario::class)
@@ -125,10 +127,10 @@ test('crear usuario genera una clave provisoria aleatoria', function () {
 });
 
 test('no se puede crear un usuario sin elegir un empleado activo', function () {
-    \Tests\Support\MitivFalso::crear();
+    MitivFalso::crear();
     $oficina = Oficina::factory()->create();
     $admin = usuarioConPermisos($oficina, ['lista_usuario_ver', 'lista_usuario_editar']);
-    $pasivo = \Tests\Support\MitivFalso::empleado(['espasivo' => true]);
+    $pasivo = MitivFalso::empleado(['espasivo' => true]);
 
     Livewire::actingAs($admin)
         ->test(ListaUsuario::class)
@@ -144,8 +146,8 @@ test('no se puede crear un usuario sin elegir un empleado activo', function () {
 });
 
 test('marca a los usuarios que ya no son empleados activos', function () {
-    \Tests\Support\MitivFalso::crear();
-    \Tests\Support\MitivFalso::empleado(['legajo' => 111]);
+    MitivFalso::crear();
+    MitivFalso::empleado(['legajo' => 111]);
     $oficina = Oficina::factory()->create();
     $admin = usuarioConPermisos($oficina, ['lista_usuario_ver', 'lista_usuario_editar']);
     $admin->forceFill(['legajo' => '111', 'apellido' => 'ACTIVO'])->save();
@@ -154,4 +156,17 @@ test('marca a los usuarios que ya no son empleados activos', function () {
     Livewire::actingAs($admin)
         ->test(ListaUsuario::class)
         ->assertSeeInOrder(['DADODEBAJA', 'No activo en IPV']);
+});
+
+test('la lista de usuarios ofrece solo acciones que funcionan: sin botón Editar ni columna Acciones', function () {
+    $oficina = Oficina::factory()->create();
+    $admin = usuarioConPermisos($oficina, ['lista_usuario_ver', 'lista_usuario_editar']);
+    usuarioConPermisos($oficina, []);
+
+    Livewire::actingAs($admin)
+        ->test(ListaUsuario::class)
+        ->assertSee('Asignar Permisos')
+        ->assertSee('Editar oficina')
+        ->assertDontSeeHtml('>Acciones</th>')
+        ->assertDontSeeHtml('>Editar</button>');
 });

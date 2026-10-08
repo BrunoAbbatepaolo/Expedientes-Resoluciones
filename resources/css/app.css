@@ -45,6 +45,21 @@
     --color-background: #ffffff;
 }
 
+/* Controles nativos del navegador (la lista desplegable de los selectores, el calendario de las fechas,
+   las barras de scroll) siguen el modo oscuro. Sin esto se dibujaban en claro: en los selectores con fondo
+   translúcido quedaba texto casi blanco sobre blanco. */
+:root {
+    color-scheme: light;
+}
+.dark {
+    color-scheme: dark;
+}
+.dark select option,
+.dark select optgroup {
+    background-color: #141c26;
+    color: #e5e9ee;
+}
+
 @keyframes sirex-entrada {
     from { opacity: 0; transform: translateY(6px); }
     to { opacity: 1; transform: none; }

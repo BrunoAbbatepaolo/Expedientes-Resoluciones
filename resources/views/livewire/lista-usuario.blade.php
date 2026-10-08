@@ -48,7 +48,6 @@
                         <th class="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-ipv-ink/50 dark:text-ipv-ink-dark/50">Oficina</th>
                         @if (auth()->user()->permiso('lista_usuario_editar'))
                             <th class="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-ipv-ink/50 dark:text-ipv-ink-dark/50">Permisos</th>
-                            <th class="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-ipv-ink/50 dark:text-ipv-ink-dark/50">Acciones</th>
                         @endif
                     </tr>
                 </thead>
@@ -92,19 +91,11 @@
                                         Asignar Permisos
                                     </button>
                                 </td>
-
-                                {{-- Columna Acciones --}}
-                                <td class="px-4 py-2.5">
-                                    <button type="button" wire:click="seleccionarUsuario({{ $usuario->id }})"
-                                        class="rounded bg-gray-500 px-3 py-1 text-xs text-white hover:bg-gray-600">
-                                        Editar
-                                    </button>
-                                </td>
                             @endif
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="6" class="py-4 text-center text-sm text-ipv-ink/40 dark:text-ipv-ink-dark/40">
+                            <td colspan="{{ auth()->user()->permiso('lista_usuario_editar') ? 5 : 4 }}" class="py-4 text-center text-sm text-ipv-ink/40 dark:text-ipv-ink-dark/40">
                                 No se encontraron usuarios.
                             </td>
                         </tr>

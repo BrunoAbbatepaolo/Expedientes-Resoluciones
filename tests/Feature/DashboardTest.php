@@ -40,3 +40,11 @@ test('la animación de entrada de la página no deja un transform que descentra 
     expect($css)->toMatch('/\.sirex-pagina\s*\{\s*animation:[^;]*\bbackwards;/')
         ->and($css)->not->toMatch('/\.sirex-pagina\s*\{\s*animation:[^;]*\b(both|forwards)\b/');
 });
+
+test('los controles nativos siguen el modo oscuro (lista de los selectores, calendario de fechas)', function () {
+    $css = file_get_contents(resource_path('css/app.css'));
+
+    // Sin color-scheme los selectores con fondo translúcido mostraban texto casi blanco sobre blanco.
+    expect($css)->toMatch('/\.dark\s*\{\s*color-scheme:\s*dark;/')
+        ->and($css)->toMatch('/\.dark select option[^{]*\{[^}]*background-color:[^;]+;[^}]*color:/');
+});
