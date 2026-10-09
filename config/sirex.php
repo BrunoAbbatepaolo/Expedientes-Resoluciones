@@ -89,4 +89,8 @@ return [
     'rrhh_tipo_ausente_id' => (int) env('SIREX_RRHH_TIPO_AUSENTE', 82),
     'rrhh_tipo_tarde_id' => (int) env('SIREX_RRHH_TIPO_TARDE', 7),
 
+    // Seguridad: pedidos por minuto por usuario con sesión (sin sesión, la tercera parte por IP).
+    // Cada tecla de una búsqueda en vivo cuenta como un pedido: no bajarlo de ~120.
+    'limite_peticiones' => (int) env('SIREX_LIMITE_PETICIONES', 300),
+
 ];

@@ -42,3 +42,11 @@ Spec: `docs/spec-agente-relojes.md` (sección 5 = puesta en marcha paso a paso).
 3. Rotar las claves que estaban en texto plano en el programa viejo.
 4. Reloj facial `.197`: caído; validar el protocolo con él cuando se repare. `.223` está dado de baja en los hechos.
 5. Fase 2: que las pantallas lean `rrhh_fichadas` (`fuente=sirex`) y borrado de memoria de los relojes (`BORRAR_REGISTROS`), hoy fuera de alcance.
+
+## Seguridad (2026-10-09)
+- Cabeceras en todas las respuestas web: `App\Http\Middleware\CabecerasDeSeguridad` (X-Frame-Options, nosniff, Referrer-Policy, Permissions-Policy, COOP, CSP solo con frame-ancestors/base-uri/form-action/object-src; HSTS solo con HTTPS). Sin `script-src` a propósito: Livewire/Alpine usan inline.
+- Tope general de pedidos: RateLimiter `global` (AppServiceProvider), `SIREX_LIMITE_PETICIONES` (300/min por usuario; 1/3 por IP sin sesión). Recuperar clave: 5 por hora por correo+IP.
+- Contraseñas: `Password::defaults()` = 10 caracteres, mayúsculas, minúsculas y números (símbolo recomendado, no exigido).
+- Auditoría en `audits` (`Audit::registrar`): `permisos` (agregados/quitados), `usuario_creado`, `oficina`, `clave_cambiada`, `clave_inicial_cambiada`. Todavía no hay pantalla para verla.
+- `concurrently` pasó a devDependencies; `npm audit fix` aplicado (queda 1 aviso bajo de Quill que no aplica: no se usa su exportación HTML).
+- Pendiente en producción: `APP_DEBUG=false`, HTTPS + `SESSION_SECURE_COOKIE=true`, `SESSION_ENCRYPT=true`, rotar claves expuestas, usuario PostgreSQL acotado, `storage:link` no debe exponer PDFs viejos. Sin 2FA.

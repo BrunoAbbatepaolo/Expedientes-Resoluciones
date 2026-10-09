@@ -2,10 +2,11 @@
 
 use App\Models\User;
 use Illuminate\Auth\Notifications\ResetPassword;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Notification;
 use Livewire\Volt\Volt;
 
-uses(\Illuminate\Foundation\Testing\RefreshDatabase::class);
+uses(RefreshDatabase::class);
 
 test('reset password link screen can be rendered', function () {
     $response = $this->get('/forgot-password');
@@ -55,8 +56,8 @@ test('password can be reset with valid token', function () {
     Notification::assertSentTo($user, ResetPassword::class, function ($notification) use ($user) {
         $response = Volt::test('auth.reset-password', ['token' => $notification->token])
             ->set('email', $user->email)
-            ->set('password', 'password')
-            ->set('password_confirmation', 'password')
+            ->set('password', 'Clave-nueva-2026')
+            ->set('password_confirmation', 'Clave-nueva-2026')
             ->call('resetPassword');
 
         $response

@@ -4,10 +4,12 @@ declare(strict_types=1);
 
 namespace App\Livewire;
 
+use App\Models\Audit;
 use App\Models\Mitiv\Empleado;
 use App\Models\Oficina;
 use App\Models\Permiso;
 use App\Models\User;
+use App\Support\CatalogoPermisos;
 use App\Traits\AuthorizesOficina;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
@@ -17,7 +19,6 @@ use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Locked;
-use App\Support\CatalogoPermisos;
 use Livewire\Component;
 use Livewire\WithPagination;
 
@@ -193,7 +194,13 @@ class ListaUsuario extends Component
         try {
             $this->validate();
 
+            $oficinaAnterior = Permiso::oficinaAsignada($this->editingUserId)?->oficina_id;
+
             Permiso::setOficinaAsignada($this->editingUserId, (int) $this->oficina_id);
+
+            if ($usuarioEditado = User::on('mysql_admin')->find($this->editingUserId)) {
+                Audit::registrar($usuarioEditado, 'oficina', ['oficina_id' => $oficinaAnterior], ['oficina_id' => (int) $this->oficina_id]);
+            }
 
             $this->dispatch('toast', type: 'success', message: 'Oficina actualizada.');
             $this->reset(['editingUserId', 'oficina_id']);
@@ -297,6 +304,13 @@ class ListaUsuario extends Component
             ]);
 
             Permiso::setOficinaAsignada($usuario->id, (int) $this->nuevoOficinaId);
+            Audit::registrar($usuario, 'usuario_creado', [], [
+                'nombre' => $usuario->nombre,
+                'apellido' => $usuario->apellido,
+                'legajo' => $usuario->legajo,
+                'email' => $usuario->email,
+                'oficina_id' => (int) $this->nuevoOficinaId,
+            ]);
             $this->claveGenerada = $usuario->email.': '.$clave;
 
             $this->dispatch('toast', type: 'success', message: 'Usuario creado. Deberá cambiar su contraseña al iniciar sesión.');
@@ -338,7 +352,15 @@ class ListaUsuario extends Component
             $permisosUI = CatalogoPermisos::claves();
             $activos = CatalogoPermisos::normalizar(array_keys(array_filter($this->permisos)));
 
-            DB::connection((new Permiso)->getConnectionName())->transaction(function () use ($userId, $permisosUI, $activos) {
+            $antes = [];
+
+            DB::connection((new Permiso)->getConnectionName())->transaction(function () use ($userId, $permisosUI, $activos, &$antes) {
+                $antes = Permiso::query()
+                    ->where('user_id', $userId)
+                    ->whereIn('nombre', $permisosUI)
+                    ->pluck('nombre')
+                    ->all();
+
                 Permiso::query()
                     ->where('user_id', $userId)
                     ->whereIn('nombre', $permisosUI)
@@ -352,6 +374,17 @@ class ListaUsuario extends Component
                     ]);
                 }
             });
+
+            // Rastro de quién cambió qué permisos (solo si hubo cambios).
+            $agregados = array_values(array_diff($activos, $antes));
+            $quitados = array_values(array_diff($antes, $activos));
+            if ($agregados !== [] || $quitados !== []) {
+                Audit::registrar($this->usuarioSeleccionado, 'permisos', ['permisos' => array_values($antes)], [
+                    'permisos' => $activos,
+                    'agregados' => $agregados,
+                    'quitados' => $quitados,
+                ]);
+            }
 
             $this->permisos = array_fill_keys(array_keys($this->permisos), false);
             foreach ($activos as $nombre) {

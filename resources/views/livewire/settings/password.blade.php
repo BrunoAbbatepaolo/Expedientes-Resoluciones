@@ -34,6 +34,8 @@ new class extends Component
             'password' => Hash::make($validated['password']),
         ]);
 
+        \App\Models\Audit::registrar(Auth::user(), 'clave_cambiada');
+
         $this->reset('current_password', 'password', 'password_confirmation');
 
         $this->dispatch('password-updated');
@@ -51,15 +53,15 @@ new class extends Component
                 nueva: '', conf: '',
                 reglas() {
                     return [
-                        { texto: '8 caracteres o más', ok: this.nueva.length >= 8 },
+                        { texto: '10 caracteres o más', ok: this.nueva.length >= 10 },
                         { texto: 'Mayúsculas y minúsculas', ok: /[a-z]/.test(this.nueva) && /[A-Z]/.test(this.nueva) },
                         { texto: 'Al menos un número', ok: /\d/.test(this.nueva) },
-                        { texto: 'Un símbolo (ej. ! ? # $)', ok: /[^A-Za-z0-9]/.test(this.nueva) },
+                        { texto: 'Un símbolo (recomendado)', ok: /[^A-Za-z0-9]/.test(this.nueva) },
                     ];
                 },
                 get puntaje() {
                     if (! this.nueva) return 0;
-                    if (this.nueva.length < 8) return 1;
+                    if (this.nueva.length < 10) return 1;
                     return Math.max(1, this.reglas().filter(r => r.ok).length);
                 },
                 get nivel() { return ['', 'Débil', 'Regular', 'Buena', 'Fuerte'][this.puntaje]; },

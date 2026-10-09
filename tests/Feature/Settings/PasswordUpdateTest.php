@@ -1,10 +1,11 @@
 <?php
 
 use App\Models\User;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
 use Livewire\Volt\Volt;
 
-uses(\Illuminate\Foundation\Testing\RefreshDatabase::class);
+uses(RefreshDatabase::class);
 
 test('password can be updated', function () {
     $user = User::factory()->create([
@@ -15,13 +16,13 @@ test('password can be updated', function () {
 
     $response = Volt::test('settings.password')
         ->set('current_password', 'password')
-        ->set('password', 'new-password')
-        ->set('password_confirmation', 'new-password')
+        ->set('password', 'Clave-nueva-2026')
+        ->set('password_confirmation', 'Clave-nueva-2026')
         ->call('updatePassword');
 
     $response->assertHasNoErrors();
 
-    expect(Hash::check('new-password', $user->refresh()->password))->toBeTrue();
+    expect(Hash::check('Clave-nueva-2026', $user->refresh()->password))->toBeTrue();
 });
 
 test('correct password must be provided to update password', function () {
@@ -33,8 +34,8 @@ test('correct password must be provided to update password', function () {
 
     $response = Volt::test('settings.password')
         ->set('current_password', 'wrong-password')
-        ->set('password', 'new-password')
-        ->set('password_confirmation', 'new-password')
+        ->set('password', 'Clave-nueva-2026')
+        ->set('password_confirmation', 'Clave-nueva-2026')
         ->call('updatePassword');
 
     $response->assertHasErrors(['current_password']);

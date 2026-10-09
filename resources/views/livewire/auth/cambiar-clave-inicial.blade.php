@@ -31,6 +31,8 @@ new #[Layout('components.layouts.auth')] class extends Component
         $user->require_password_change = false;
         $user->save();
 
+        \App\Models\Audit::registrar($user, 'clave_inicial_cambiada');
+
         $this->redirect(route('dashboard', absolute: false), navigate: true);
     }
 }; ?>

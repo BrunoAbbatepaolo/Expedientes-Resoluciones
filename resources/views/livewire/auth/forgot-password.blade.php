@@ -1,6 +1,9 @@
 <?php
 
 use Illuminate\Support\Facades\Password;
+use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 use Livewire\Attributes\Layout;
 use Livewire\Volt\Component;
 
@@ -16,6 +19,17 @@ new #[Layout('components.layouts.auth')] class extends Component
         $this->validate([
             'email' => ['required', 'string', 'email'],
         ]);
+
+        // Tope contra el envío masivo de correos: 5 pedidos por hora por correo e IP.
+        $clave = 'recuperar-clave|'.Str::lower($this->email).'|'.request()->ip();
+
+        if (RateLimiter::tooManyAttempts($clave, 5)) {
+            throw ValidationException::withMessages([
+                'email' => __('Demasiados pedidos. Probá de nuevo en :minutos minutos.', ['minutos' => max(1, (int) ceil(RateLimiter::availableIn($clave) / 60))]),
+            ]);
+        }
+
+        RateLimiter::hit($clave, 3600);
 
         Password::sendResetLink($this->only('email'));
 
