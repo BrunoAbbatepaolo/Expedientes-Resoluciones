@@ -17,6 +17,7 @@ use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Locked;
+use App\Support\CatalogoPermisos;
 use Livewire\Component;
 use Livewire\WithPagination;
 
@@ -29,19 +30,7 @@ class ListaUsuario extends Component
 
     public ?User $usuarioSeleccionado = null;
 
-    private const PERMISOS_UI = [
-        'expediente_ver',
-        'expediente_editar',
-        'resolucion_ver',
-        'resolucion_editar',
-        'lista_usuario_ver',
-        'lista_usuario_editar',
-        'rrhh_ver',
-        'rrhh_sensibles',
-        'rrhh_horarios',
-        'rrhh_confirmar_pedidos',
-    ];
-
+    // Claves de CatalogoPermisos::claves() (un test comprueba que coinciden).
     public array $permisos = [
         'rrhh_ver' => false,
         'rrhh_sensibles' => false,
@@ -54,6 +43,10 @@ class ListaUsuario extends Component
         'lista_usuario_ver' => false,
         'lista_usuario_editar' => false,
     ];
+
+    // Permisos que tenía el usuario al abrir la ventana: sirve para mostrar qué se va a cambiar.
+    #[Locked]
+    public array $permisosOriginales = [];
 
     #[Locked]
     public ?int $editingUserId = null;
@@ -164,6 +157,8 @@ class ListaUsuario extends Component
                 ->where('nombre', $permiso)
                 ->exists();
         }
+
+        $this->permisosOriginales = $this->permisos;
     }
 
     public function editarOficina(int $userId): void
@@ -339,24 +334,30 @@ class ListaUsuario extends Component
             $userId = $this->usuarioSeleccionado->id;
             // Lista blanca: el array $permisos viene del cliente y podría traer claves
             // nuevas (ej. 'oficina_asignada'); solo se tocan los permisos de esta UI.
-            $permisosUI = self::PERMISOS_UI;
+            // Se cierran las dependencias: "editar" lleva consigo "ver" aunque el cliente no lo mande.
+            $permisosUI = CatalogoPermisos::claves();
+            $activos = CatalogoPermisos::normalizar(array_keys(array_filter($this->permisos)));
 
-            DB::connection((new Permiso)->getConnectionName())->transaction(function () use ($userId, $permisosUI) {
+            DB::connection((new Permiso)->getConnectionName())->transaction(function () use ($userId, $permisosUI, $activos) {
                 Permiso::query()
                     ->where('user_id', $userId)
                     ->whereIn('nombre', $permisosUI)
                     ->delete();
 
-                foreach ($permisosUI as $nombre) {
-                    if (! empty($this->permisos[$nombre])) {
-                        Permiso::query()->create([
-                            'user_id' => $userId,
-                            'nombre' => $nombre,
-                            'oficina_id' => null,
-                        ]);
-                    }
+                foreach ($activos as $nombre) {
+                    Permiso::query()->create([
+                        'user_id' => $userId,
+                        'nombre' => $nombre,
+                        'oficina_id' => null,
+                    ]);
                 }
             });
+
+            $this->permisos = array_fill_keys(array_keys($this->permisos), false);
+            foreach ($activos as $nombre) {
+                $this->permisos[$nombre] = true;
+            }
+            $this->permisosOriginales = $this->permisos;
 
             $this->dispatch('toast', type: 'success', message: 'Permisos guardados correctamente.');
             $this->dispatch('close-modal', 'modal-permisos');
@@ -374,24 +375,6 @@ class ListaUsuario extends Component
     public function ocultarClave(): void
     {
         $this->claveGenerada = null;
-    }
-
-    public function seleccionarTodos(): void
-    {
-        $this->permisos = array_fill_keys(array_keys($this->permisos), true);
-    }
-
-    public function limpiarSeleccion(): void
-    {
-        $this->permisos = array_fill_keys(array_keys($this->permisos), false);
-    }
-
-    public function aplicarPermisosSoloLectura(): void
-    {
-        // RRHH da acceso a datos personales de todo el personal: nunca por preset.
-        foreach ($this->permisos as $key => $value) {
-            $this->permisos[$key] = str_contains($key, '_ver') && ! str_starts_with($key, 'rrhh_');
-        }
     }
 
     public function cancelar(): void

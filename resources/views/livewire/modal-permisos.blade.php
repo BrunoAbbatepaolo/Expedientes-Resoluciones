@@ -1,183 +1,143 @@
-<div x-data="{
-        show: false,
-        saving: false,
-        hasChanges: false,
-        originalPermisos: {},
-        init() {
-            // Crear una copia limpia de los permisos originales
-            this.originalPermisos = {};
-            Object.keys($wire.permisos || {}).forEach(key => {
-                this.originalPermisos[key] = Boolean($wire.permisos[key]);
-            });
+{{-- Ventana de permisos: módulos plegables con interruptores, buscador, plantillas de rol, dependencias entre
+     permisos y un resumen de lo que se va a cambiar. Toda la lógica del navegador está en resources/js/modal-permisos.js
+     y el catálogo en App\Support\CatalogoPermisos. Nada se guarda hasta apretar Guardar. --}}
+@php($catalogo = \App\Support\CatalogoPermisos::paraPantalla())
 
-            this.$watch('$wire.permisos', () => {
-                this.checkForChanges();
-            });
-        },
-        checkForChanges() {
-            let currentPermisos = {};
-            Object.keys($wire.permisos || {}).forEach(key => {
-                currentPermisos[key] = Boolean($wire.permisos[key]);
-            });
-
-            // Comparar boolean a boolean
-            let changed = false;
-            Object.keys(this.originalPermisos).forEach(key => {
-                if (Boolean(this.originalPermisos[key]) !== Boolean(currentPermisos[key])) {
-                    changed = true;
-                }
-            });
-
-            this.hasChanges = changed;
-        }
-    }"
+<div x-data="modalPermisos(@js($catalogo))"
     x-on:open-modal.window="if ($event.detail[0] === 'modal-permisos') show = true"
     x-on:close-modal.window="if ($event.detail[0] === 'modal-permisos') show = false"
     x-show="show" x-cloak x-on:keydown.escape.window="show = false"
     class="sirex-modal-fondo" x-on:click.self="show = false">
-    <div class="sirex-modal sirex-modal-lg" role="dialog" aria-modal="true" aria-labelledby="titulo-permisos">
+    <div class="sirex-modal" style="max-width: 44rem;" role="dialog" aria-modal="true" aria-labelledby="titulo-permisos">
 
-    <div class="sirex-modal-cabeza">
-        <div class="sirex-modal-icono sirex-modal-icono-oro">
-            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
-                <path stroke-linecap="round" stroke-linejoin="round"
-                    d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-            </svg>
-        </div>
-        <div>
-            <h2 id="titulo-permisos" class="sirex-modal-titulo">Gestión de permisos</h2>
-            <p class="sirex-modal-subtitulo">
-                Configurar accesos para: <span class="font-semibold text-ipv-blue dark:text-ipv-blue-light">{{ $usuarioSeleccionado->name ?? 'Usuario' }}</span>
-            </p>
-        </div>
-        <button type="button" @click="show = false" class="sirex-modal-cerrar" aria-label="Cerrar">
-            <svg fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" viewBox="0 0 24 24"><path d="M6 18 18 6M6 6l12 12" /></svg>
-        </button>
-    </div>
-
-    <div class="sirex-modal-cuerpo">
-        <!-- Notificación de éxito -->
-        @if (session()->has('message'))
-            <div class="flex items-center gap-2 rounded-lg border border-emerald-300 bg-emerald-50 p-3 text-sm text-emerald-800 dark:border-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-200">
-                <svg class="h-5 w-5 shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                    <path fill-rule="evenodd"
-                        d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                        clip-rule="evenodd"></path>
+        <div class="sirex-modal-cabeza">
+            <div class="sirex-modal-icono sirex-modal-icono-oro">
+                <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round"
+                        d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                 </svg>
-                {{ session('message') }}
             </div>
-        @endif
+            <div class="min-w-0">
+                <h2 id="titulo-permisos" class="sirex-modal-titulo">Gestión de permisos</h2>
+                <p class="sirex-modal-subtitulo">
+                    Accesos de <span class="font-semibold text-ipv-blue dark:text-ipv-blue-light">{{ $usuarioSeleccionado->name ?? 'Usuario' }}</span>
+                    · <span x-text="totalActivos"></span> activos
+                </p>
+            </div>
+            <button type="button" @click="show = false" class="sirex-modal-cerrar" aria-label="Cerrar">
+                <svg fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" viewBox="0 0 24 24"><path d="M6 18 18 6M6 6l12 12" /></svg>
+            </button>
+        </div>
 
-        <!-- Grid de permisos usando el componente -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            @php
-                $permisos = [
-                    'expediente_ver' => [
-                        'title' => 'Ver Expedientes',
-                        'description' => 'Acceso de lectura a expedientes.',
-                        'icon' =>
-                            '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />',
-                    ],
-                    'expediente_editar' => [
-                        'title' => 'Editar Expedientes',
-                        'description' => 'Crear, modificar y eliminar expedientes.',
-                        'icon' =>
-                            '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />',
-                    ],
-                    'resolucion_ver' => [
-                        'title' => 'Ver Resoluciones',
-                        'description' => 'Acceso de lectura a resoluciones.',
-                        'icon' =>
-                            '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />',
-                    ],
-                    'resolucion_editar' => [
-                        'title' => 'Editar Resoluciones',
-                        'description' => 'Crear, modificar y eliminar resoluciones.',
-                        'icon' =>
-                            '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />',
-                    ],
-                    'lista_usuario_ver' => [
-                        'title' => 'Ver Lista de Usuarios',
-                        'description' => 'Acceso de lectura a usuarios.',
-                        'icon' =>
-                            '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />',
-                    ],
-                    'lista_usuario_editar' => [
-                        'title' => 'Editar Lista de Usuarios',
-                        'description' => 'Crear, modificar y eliminar usuarios.',
-                        'icon' =>
-                            '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.5v15M19.5 12h-15" />',
-                    ],
-                    'rrhh_ver' => [
-                        'title' => 'RRHH: ver personal',
-                        'description' => 'Legajos (datos personales), asistencia, licencias y reportes de todo el personal.',
-                        'icon' =>
-                            '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />',
-                    ],
-                    'rrhh_sensibles' => [
-                        'title' => 'RRHH: datos sensibles',
-                        'description' => 'Salud, discapacidad, datos judiciales y cuenta bancaria. Solo jefatura de RRHH.',
-                        'icon' =>
-                            '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />',
-                    ],
-                    'rrhh_confirmar_pedidos' => [
-                        'title' => 'RRHH: confirmar pedidos de licencia',
-                        'description' => 'Confirmar o rechazar los pedidos que aprobó el jefe, y elegir qué licencias se pueden pedir. Requiere también "RRHH: ver personal".',
-                        'icon' =>
-                            '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />',
-                    ],
-                    'rrhh_horarios' => [
-                        'title' => 'RRHH: horarios especiales',
-                        'description' => 'Cargar y finalizar horarios especiales (ej. 8 a 13). Solo jefatura de RRHH.',
-                        'icon' =>
-                            '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />',
-                    ],
-                ];
-            @endphp
+        {{-- Buscador, filtro y plantillas --}}
+        <div class="space-y-3 px-6 pb-3">
+            <div class="flex flex-wrap items-center gap-2">
+                <div class="relative min-w-[12rem] flex-1">
+                    <svg class="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-ipv-ink/40 dark:text-ipv-ink-dark/45" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M21 21l-4.3-4.3m2-5.2a7.2 7.2 0 1 1-14.4 0 7.2 7.2 0 0 1 14.4 0Z" /></svg>
+                    <input type="search" x-model="busqueda" placeholder="Buscar permiso…" aria-label="Buscar permiso" autocomplete="off"
+                        x-on:keydown.escape.stop="if (busqueda) busqueda = ''; else show = false" class="sirex-campo pl-9">
+                </div>
+                <button type="button" role="switch" :aria-checked="soloActivos.toString()" @click="soloActivos = ! soloActivos"
+                    class="sirex-boton sirex-boton-chico sirex-boton-secundario" :class="soloActivos ? '!border-ipv-blue !bg-ipv-blue/10 !text-ipv-blue dark:!text-ipv-blue-light' : ''">
+                    Solo activos
+                </button>
+                <button type="button" @click="quitarTodo()" x-show="totalActivos > 0" x-cloak
+                    class="sirex-boton sirex-boton-chico text-ipv-magenta hover:bg-ipv-magenta/10 dark:text-ipv-magenta-light">
+                    Quitar todo
+                </button>
+            </div>
 
-            @foreach ($permisos as $key => $config)
-                <x-permiso-card :permiso="$key" :title="$config['title']" :description="$config['description']" :icon="$config['icon']" />
+            <div>
+                <p class="mb-1.5 text-[11px] font-bold uppercase tracking-wider text-ipv-ink/45 dark:text-ipv-ink-dark/45">Plantillas de rol</p>
+                <div class="-mx-6 flex gap-1.5 overflow-x-auto px-6 pb-1 [scrollbar-width:none] sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0">
+                    <template x-for="(rol, clave) in catalogo.roles" :key="clave">
+                        <button type="button" @click="aplicarRol(rol)" :title="descripcionRol(rol)"
+                            class="sirex-rol" :class="{ 'is-on': rolAplicado(rol) }" :aria-pressed="rolAplicado(rol).toString()">
+                            <svg x-show="rolAplicado(rol)" x-cloak class="size-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 13l4 4L19 7" /></svg>
+                            <span x-text="rol.nombre"></span>
+                        </button>
+                    </template>
+                </div>
+            </div>
+        </div>
+
+        {{-- Módulos --}}
+        <div class="sirex-modal-cuerpo !pt-1" style="min-height: 8rem;">
+            @foreach ($catalogo['modulos'] as $i => $modulo)
+                <section x-data="{ m: catalogo.modulos[{{ $i }}] }" x-show="moduloVisible(m)" class="sirex-permisos-modulo">
+                    <div class="sirex-permisos-modulo-cabeza">
+                        <button type="button" @click="alternarAbierto(m)" :aria-expanded="estaAbierto(m).toString()" class="sirex-permisos-modulo-titulo">
+                            <span class="sirex-modal-icono !size-8 !rounded-[0.625rem]">
+                                <svg class="!size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="{{ $modulo['icono'] }}" /></svg>
+                            </span>
+                            <span class="font-semibold text-ipv-ink dark:text-ipv-ink-dark">{{ $modulo['titulo'] }}</span>
+                            <span class="sirex-contador-modulo" :class="cuantosActivos(m) > 0 ? 'is-on' : ''" x-text="cuantosActivos(m) + '/' + m.permisos.length"></span>
+                            <svg class="ml-auto size-4 shrink-0 opacity-50 transition-transform duration-200" :class="estaAbierto(m) ? 'rotate-180' : ''" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                                <path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 0 1 1.06.02L10 10.94l3.71-3.71a.75.75 0 1 1 1.06 1.06l-4.24 4.25a.75.75 0 0 1-1.06 0L5.25 8.27a.75.75 0 0 1-.02-1.06Z" clip-rule="evenodd" />
+                            </svg>
+                        </button>
+                        <button type="button" @click="alternarModulo(m)" class="sirex-boton sirex-boton-chico sirex-boton-secundario shrink-0"
+                            x-text="moduloCompleto(m) ? 'Quitar todo' : 'Activar todo'"></button>
+                    </div>
+
+                    <div x-show="estaAbierto(m)" x-collapse.duration.200ms>
+                        @foreach ($modulo['permisos'] as $j => $permiso)
+                            <button type="button" role="switch" x-data="{ p: m.permisos[{{ $j }}] }" x-show="visible(p)"
+                                :aria-checked="activo(p.clave).toString()" @click="alternar(p.clave)"
+                                class="sirex-permiso-fila" :class="{ 'is-on': activo(p.clave), 'sirex-resalte': resaltadas.includes(p.clave) }">
+                                <span class="min-w-0 flex-1 text-left">
+                                    <span class="block text-sm font-medium text-ipv-ink dark:text-ipv-ink-dark">{{ $permiso['titulo'] }}</span>
+                                    <span class="block text-xs leading-snug text-ipv-ink/55 dark:text-ipv-ink-dark/55">{{ $permiso['descripcion'] }}</span>
+                                    @if ($permiso['requiere'])
+                                        <span class="mt-1 inline-flex items-center gap-1 text-[11px] text-ipv-ink/45 dark:text-ipv-ink-dark/45">
+                                            <svg class="size-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.1 0l3-3a5 5 0 0 0-7.1-7.1l-1 1M14 11a5 5 0 0 0-7.1 0l-3 3A5 5 0 0 0 11 21l1-1" /></svg>
+                                            Requiere «{{ collect($catalogo['modulos'])->flatMap(fn ($mod) => $mod['permisos'])->firstWhere('clave', $permiso['requiere'])['titulo'] }}»
+                                        </span>
+                                    @endif
+                                </span>
+                                <span class="sirex-switch" aria-hidden="true"><span class="sirex-switch-perilla"></span></span>
+                            </button>
+                        @endforeach
+                    </div>
+                </section>
             @endforeach
+
+            <div x-show="! hayResultados" x-cloak>
+                <x-vacio icono="buscar">Ningún permiso coincide con lo que buscaste.</x-vacio>
+            </div>
         </div>
 
-        <!-- Acciones rápidas -->
-        <div class="flex flex-wrap gap-2 border-t border-ipv-blue/10 pt-4 dark:border-white/10" style="margin-top: 1.25rem;">
-            <button type="button" wire:click="seleccionarTodos"
-                class="rounded-lg bg-ipv-blue/10 px-3 py-2 text-sm font-medium text-ipv-blue transition-colors hover:bg-ipv-blue/20 dark:bg-ipv-blue-light/15 dark:text-ipv-blue-light dark:hover:bg-ipv-blue-light/25">
-                Seleccionar Todo
-            </button>
-            <button type="button" wire:click="limpiarSeleccion"
-                class="rounded-lg bg-black/[0.03] px-3 py-2 text-sm font-medium text-ipv-ink/70 transition-colors hover:bg-black/[0.06] dark:bg-white/[0.05] dark:text-ipv-ink-dark/75 dark:hover:bg-white/[0.1]">
-                Limpiar Todo
-            </button>
-            <button type="button" wire:click="aplicarPermisosSoloLectura"
-                class="rounded-lg bg-ipv-gold/15 px-3 py-2 text-sm font-medium text-[#7a5200] transition-colors hover:bg-ipv-gold/25 dark:text-ipv-gold-light">
-                Solo Lectura
+        {{-- Resumen de lo que se va a cambiar --}}
+        <div class="sirex-permisos-resumen" aria-live="polite">
+            <template x-if="! hayCambios">
+                <span class="text-ipv-ink/55 dark:text-ipv-ink-dark/55">Sin cambios por guardar.</span>
+            </template>
+            <template x-if="hayCambios">
+                <div class="flex flex-wrap items-center gap-1.5">
+                    <span class="font-semibold text-ipv-ink dark:text-ipv-ink-dark">Vas a cambiar:</span>
+                    <template x-for="c in agregados" :key="'a' + c">
+                        <span class="sirex-cambio sirex-cambio-mas">+ <span x-text="titulo(c)"></span></span>
+                    </template>
+                    <template x-for="c in quitados" :key="'q' + c">
+                        <span class="sirex-cambio sirex-cambio-menos">− <span x-text="titulo(c)"></span></span>
+                    </template>
+                </div>
+            </template>
+        </div>
+
+        <div class="sirex-modal-pie">
+            <button type="button" @click="show = false" class="sirex-boton sirex-boton-secundario">Cancelar</button>
+
+            <button type="button" class="sirex-boton sirex-boton-primario" :disabled="! hayCambios"
+                wire:click="guardarPermisos" wire:loading.attr="disabled" wire:target="guardarPermisos">
+                <span wire:loading.remove wire:target="guardarPermisos" class="flex items-center gap-2">
+                    <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                    </svg>
+                    <span>Guardar permisos</span>
+                </span>
+                <span wire:loading wire:target="guardarPermisos">Guardando...</span>
             </button>
         </div>
-    </div>
-
-    <div class="sirex-modal-pie">
-        <button type="button" @click="show = false" class="sirex-boton sirex-boton-secundario">Cancelar</button>
-
-        <button type="button" class="sirex-boton sirex-boton-primario"
-            wire:click="guardarPermisos" wire:loading.attr="disabled" wire:target="guardarPermisos">
-            <span wire:loading.remove wire:target="guardarPermisos" class="flex items-center gap-2">
-                <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                </svg>
-                <span>Guardar permisos</span>
-            </span>
-
-            <span wire:loading wire:target="guardarPermisos" class="flex items-center gap-2">
-                <svg class="h-4 w-4 animate-spin text-white" fill="none" viewBox="0 0 24 24">
-                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                    <path class="opacity-75" fill="currentColor"
-                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
-                <span>Guardando...</span>
-            </span>
-        </button>
-    </div>
     </div>
 </div>

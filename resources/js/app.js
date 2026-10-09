@@ -1,5 +1,6 @@
 import Swal from 'sweetalert2'
 import './quill-editor'
+import './modal-permisos'
 
 window.Swal = Swal
 
