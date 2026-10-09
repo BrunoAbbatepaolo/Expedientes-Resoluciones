@@ -218,11 +218,11 @@
         <!-- Switch modo oscuro -->
         <div class="flex items-center justify-between border-t border-ipv-blue/10 px-2.5 py-2.5 dark:border-white/10">
             <span class="flex items-center gap-1.5 text-[13px] font-medium text-ipv-ink/75 dark:text-ipv-ink-dark/82">
-                <svg x-show="darkMode" x-cloak class="size-[15px]" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                <svg x-show="darkMode" x-cloak class="sirex-tema-icono size-[15px]" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                     stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79Z" />
                 </svg>
-                <svg x-show="!darkMode" x-cloak class="size-[15px]" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                <svg x-show="!darkMode" x-cloak class="sirex-tema-icono size-[15px]" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                     stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <circle cx="12" cy="12" r="4" />
                     <path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4" />

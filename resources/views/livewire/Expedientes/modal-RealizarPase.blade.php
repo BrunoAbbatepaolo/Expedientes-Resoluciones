@@ -55,7 +55,8 @@
 
         <div class="sirex-modal-pie rounded-b-[1.125rem]">
             <button type="button" wire:click="cancelarPase" @click="showPase = false" class="sirex-boton sirex-boton-secundario">Cerrar</button>
-            <button type="button" wire:click="confirmarPase" class="sirex-boton sirex-boton-primario">Confirmar pase</button>
+            <x-boton-animado variante="pase" accion="$wire.confirmarPase()" etiqueta="Confirmar pase" listo="Enviado"
+                si="$wire.expedienteForm.ofi_salida" />
         </div>
     </div>
 </div>

@@ -418,7 +418,7 @@ new class extends Component
                     @if(!$isEditing && $taskId)
                         <!-- Vista de Detalles (Solo Lectura) -->
                         <div>
-                            <h4 class="text-lg font-bold text-ipv-ink dark:text-ipv-ink-dark">{{ $taskTitle }}</h4>
+                            <h4 class="text-lg font-bold text-ipv-ink transition-colors dark:text-ipv-ink-dark">{{ $taskTitle }}</h4>
                             @if($taskDescription)
                                 <p class="mt-2 whitespace-pre-wrap rounded-lg border border-ipv-blue/10 bg-ipv-blue/5 p-2.5 text-sm text-ipv-ink/80 dark:border-white/10 dark:bg-white/5 dark:text-ipv-ink-dark/80">{{ $taskDescription }}</p>
                             @endif
@@ -442,7 +442,12 @@ new class extends Component
                                 @php
                                     $task = App\Models\Task::find($taskId);
                                 @endphp
-                                <span class="text-sm font-bold {{ $task && $task->is_completed ? 'text-ipv-blue dark:text-ipv-blue-light' : 'text-[#7a5200] dark:text-ipv-gold-light' }}">
+                                <span class="inline-flex items-center gap-1.5 text-sm font-bold {{ $task && $task->is_completed ? 'text-emerald-600 dark:text-emerald-300' : 'text-[#7a5200] dark:text-ipv-gold-light' }}">
+                                    @if ($task && $task->is_completed)
+                                        <svg class="sirex-chip-icono sirex-chip-logrado size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l4 4L19 7" /></svg>
+                                    @else
+                                        <svg class="sirex-chip-icono sirex-chip-espera size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                                    @endif
                                     {{ $task && $task->is_completed ? 'Completado' : 'Pendiente' }}
                                 </span>
                             </div>
@@ -506,11 +511,8 @@ new class extends Component
 
                     <div class="flex gap-2">
                         @if($taskId)
-                            <button wire:click="deleteTask({{ $taskId }})" type="button"
-                                onclick="confirm('¿Estás seguro de eliminar esta tarea?') || event.stopImmediatePropagation()"
-                                class="sirex-boton sirex-boton-chico sirex-boton-peligro">
-                                Eliminar
-                            </button>
+                            <x-boton-animado class="sirex-boton-chico" accion="$wire.deleteTask({{ $taskId }})"
+                                confirmar="¿Estás seguro de eliminar esta tarea?" />
                         @endif
                         @if(!$taskId || $isEditing)
                             <button wire:click="saveTask" type="button" class="sirex-boton sirex-boton-chico sirex-boton-primario">

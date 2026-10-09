@@ -70,7 +70,7 @@
                                     <span class="text-ipv-ink dark:text-ipv-ink-dark">{{ $p->user?->name }} · {{ $p->tipo_nombre }}
                                         <span class="text-ipv-ink/55 dark:text-ipv-ink-dark/55">{{ $p->desde->format('d/m') }} – {{ $p->hasta->format('d/m/Y') }}</span>
                                     </span>
-                                    <span class="rounded-full px-2 py-0.5 text-xs font-medium {{ $p->estado->clases() }}">{{ $p->estado->etiqueta() }}</span>
+                                    <x-rrhh.estado :estado="$p->estado" />
                                 </li>
                             @empty
                                 <li class="py-2 text-ipv-ink/55 dark:text-ipv-ink-dark/55">Todavía no hay pedidos resueltos.</li>

@@ -20,7 +20,7 @@
             <div>{{ $d }}</div>
         @endforeach
     </div>
-    <div class="grid grid-cols-7 gap-1">
+    <div class="sirex-cascada grid grid-cols-7 gap-1">
         @for ($i = 1; $i < $primero->dayOfWeekIso; $i++)
             <div></div>
         @endfor
@@ -28,7 +28,7 @@
             <button type="button" @click="sel = sel === {{ $dia->fecha->day }} ? null : {{ $dia->fecha->day }}"
                 :class="sel === {{ $dia->fecha->day }} ? 'ring-2 ring-ipv-blue' : ''"
                 title="{{ $dia->estado->etiqueta() }}"
-                class="flex aspect-square flex-col items-center justify-center rounded-lg text-sm transition hover:scale-105 sm:aspect-auto sm:h-16 {{ $dia->estado->clases() }} {{ $dia->fecha->isToday() ? 'font-bold underline' : '' }}">
+                class="flex aspect-square flex-col items-center justify-center rounded-lg text-sm transition hover:scale-105 sm:aspect-auto sm:h-16 {{ $dia->estado === \App\Enums\EstadoDia::Falta ? 'sirex-falta-dia' : '' }} {{ $dia->estado->clases() }} {{ $dia->fecha->isToday() ? 'font-bold underline' : '' }}">
                 <span>{{ $dia->fecha->day }}</span>
                 <span class="hidden text-[10px] leading-tight sm:block">{{ $dia->estado->etiqueta() }}</span>
                 @if ($dia->marcas)

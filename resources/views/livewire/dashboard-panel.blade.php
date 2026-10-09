@@ -21,12 +21,12 @@
             ['label' => 'Egresados este mes', 'valor' => $egresados, 'icon' => 'M12 20V8m0 0 4 4m-4-4-4 4M4 6h16'],
             ['label' => 'Resoluciones emitidas', 'valor' => $resoluciones, 'icon' => 'M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z'],
         ] as $m)
-            <div class="sirex-glass-card rounded-[14px] p-5">
+            <div class="group sirex-glass-card rounded-[14px] p-5">
                 <div class="mb-3.5 flex items-center justify-between">
                     <span class="text-xs font-semibold uppercase tracking-wide text-ipv-ink/55 dark:text-ipv-ink-dark/55">
                         {{ $m['label'] }}
                     </span>
-                    <div class="flex size-[30px] items-center justify-center rounded-lg bg-ipv-blue/12 dark:bg-ipv-blue-light/20">
+                    <div class="sirex-icono-vivo flex size-[30px] items-center justify-center rounded-lg bg-ipv-blue/12 dark:bg-ipv-blue-light/20">
                         <svg class="size-4 text-ipv-blue dark:text-ipv-blue-light" viewBox="0 0 24 24" fill="none"
                             stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
                             <path d="{{ $m['icon'] }}" />
@@ -109,8 +109,8 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="6" class="py-8 text-center text-sm text-ipv-ink/40 dark:text-ipv-ink-dark/40">
-                                    No hay expedientes registrados para esta oficina.
+                                <td colspan="6">
+                                    <x-vacio icono="caja">No hay expedientes registrados para esta oficina.</x-vacio>
                                 </td>
                             </tr>
                         @endforelse
@@ -149,7 +149,7 @@
                 @if ($item['route'])
                     <a href="{{ route($item['route']) }}" wire:navigate
                        class="group flex flex-col items-center gap-2 rounded-xl border border-ipv-blue/12 bg-white/40 p-3 transition-all duration-200 hover:scale-105 hover:bg-white/60 hover:shadow-sm dark:border-white/10 dark:bg-white/[0.04] dark:hover:bg-white/[0.08]">
-                        <div class="flex size-9 items-center justify-center rounded-full bg-ipv-blue/12 transition-colors group-hover:bg-ipv-blue/20 dark:bg-ipv-blue-light/20 dark:group-hover:bg-ipv-blue-light/30">
+                        <div class="sirex-icono-vivo flex size-9 items-center justify-center rounded-full bg-ipv-blue/12 transition-colors group-hover:bg-ipv-blue/20 dark:bg-ipv-blue-light/20 dark:group-hover:bg-ipv-blue-light/30">
                             <svg class="size-5 text-ipv-blue dark:text-ipv-blue-light" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
                                 <path d="{{ $item['icon'] }}" />
                             </svg>

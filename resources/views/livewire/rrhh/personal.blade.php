@@ -48,7 +48,7 @@
                             <td class="px-4 py-2 text-ipv-ink/70 dark:text-ipv-ink-dark/70">{{ $e->categoriaTitular?->nombre }}</td>
                         </tr>
                     @empty
-                        <tr><td colspan="5" class="px-4 py-6 text-center text-ipv-ink/55 dark:text-ipv-ink-dark/55">No hay empleados con esos filtros.</td></tr>
+                        <tr><td colspan="5"><x-vacio icono="persona">No hay empleados con esos filtros.</x-vacio></td></tr>
                     @endforelse
                 </tbody>
             </table>

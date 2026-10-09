@@ -105,8 +105,8 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="5" class="px-6 py-4 text-center text-sm text-ipv-ink/40 dark:text-ipv-ink-dark/40">
-                                    No hay expedientes entrantes.
+                                <td colspan="5">
+                                    <x-vacio icono="caja">No hay expedientes entrantes.</x-vacio>
                                 </td>
                             </tr>
                         @endforelse
@@ -212,8 +212,8 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="8" class="px-6 py-4 text-center text-sm text-ipv-ink/40 dark:text-ipv-ink-dark/40">
-                                    No se encontraron expedientes.
+                                <td colspan="8">
+                                    <x-vacio icono="buscar">No se encontraron expedientes.</x-vacio>
                                 </td>
                             </tr>
                         @endforelse

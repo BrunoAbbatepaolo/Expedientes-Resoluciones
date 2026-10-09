@@ -14,7 +14,7 @@
         </div>
         <div class="sirex-modal-pie">
             <button type="button" @click="showBorrar = false" class="sirex-boton sirex-boton-secundario">Cancelar</button>
-            <button type="button" wire:click="eliminarExpediente" class="sirex-boton sirex-boton-peligro">Eliminar</button>
+            <x-boton-animado accion="$wire.eliminarExpediente()" />
         </div>
     </div>
 </div>

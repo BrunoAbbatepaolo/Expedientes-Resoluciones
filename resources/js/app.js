@@ -5,18 +5,54 @@ window.Swal = Swal
 
 // Toasts: los componentes Livewire hacen $this->dispatch('toast', type: ..., message: ...)
 // (ver App\Traits\NotificaUi). Reemplaza a Flux::toast y livewire-alert.
+const ICONOS_TOAST = {
+    success: 'M5 13l4 4L19 7',
+    error: 'M6 18L18 6M6 6l12 12',
+    warning: 'M12 8v5m0 3.5h.01',
+    info: 'M12 11v6m0-9.5h.01',
+}
+
+// Toast propio: entra deslizando, ícono animado según el tipo y barra de tiempo; se pausa con el mouse.
+function mostrarToast({ type = 'success', message = '', timer = 2500 }) {
+    let pila = document.getElementById('sirex-toasts')
+    if (!pila) {
+        pila = document.createElement('div')
+        pila.id = 'sirex-toasts'
+        pila.className = 'sirex-toasts'
+        pila.setAttribute('role', 'status')
+        pila.setAttribute('aria-live', 'polite')
+        document.body.appendChild(pila)
+    }
+
+    const tipo = ICONOS_TOAST[type] ? type : 'info'
+    const toast = document.createElement('div')
+    toast.className = 'sirex-toast'
+    toast.dataset.tipo = tipo
+    toast.style.setProperty('--dur', `${timer}ms`)
+    toast.innerHTML = `
+        <span class="sirex-toast-icono"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path class="sirex-trazo" d="${ICONOS_TOAST[tipo]}"/></svg></span>
+        <span class="sirex-toast-texto"></span>
+        <span class="sirex-toast-barra"></span>`
+    toast.querySelector('.sirex-toast-texto').textContent = message
+    pila.appendChild(toast)
+
+    let cierre = null
+    const cerrar = () => {
+        toast.dataset.saliendo = ''
+        toast.addEventListener('animationend', () => toast.remove(), { once: true })
+        setTimeout(() => toast.remove(), 400)
+    }
+    const programar = () => { cierre = setTimeout(cerrar, timer) }
+    programar()
+    toast.addEventListener('mouseenter', () => { clearTimeout(cierre); toast.querySelector('.sirex-toast-barra').style.animationPlayState = 'paused' })
+    toast.addEventListener('mouseleave', () => { toast.querySelector('.sirex-toast-barra').style.animationPlayState = 'running'; programar() })
+    toast.addEventListener('click', cerrar)
+}
+
+window.mostrarToast = mostrarToast
+
 document.addEventListener('livewire:init', () => {
-    Livewire.on('toast', ({ type = 'success', message = '', timer = 2500 }) => {
-        Swal.fire({
-            toast: true,
-            position: 'top-end',
-            icon: type,
-            title: message,
-            timer,
-            timerProgressBar: true,
-            showConfirmButton: false,
-        })
-    })
+    Livewire.on('toast', (datos) => mostrarToast(datos))
 })
 
 // Luz que sigue al mouse sobre las tarjetas (.sirex-glass-card). Un solo listener

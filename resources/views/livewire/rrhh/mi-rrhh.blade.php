@@ -156,12 +156,13 @@
                                     <span class="font-normal text-ipv-ink/60 dark:text-ipv-ink-dark/60">· {{ $p->desde->format('d/m/Y') }} – {{ $p->hasta->format('d/m/Y') }} · {{ $p->dias_habiles }} hábiles</span>
                                 </span>
                                 <span class="flex items-center gap-2">
-                                    <span class="rounded-full px-2 py-0.5 text-xs font-medium {{ $p->estado->clases() }}">{{ $p->estado->etiqueta() }}</span>
+                                    <x-rrhh.estado :estado="$p->estado" />
                                     @if ($p->estado === \App\Enums\EstadoPedido::PendienteJefe)
                                         <button type="button" wire:click="cancelarPedido({{ $p->id }})" wire:confirm="¿Cancelar este pedido?" class="text-xs text-ipv-magenta hover:underline">Cancelar</button>
                                     @endif
                                 </span>
                             </div>
+                            <x-rrhh.linea-pedido :estado="$p->estado" />
                             @if ($p->jefe_motivo && $p->estado === \App\Enums\EstadoPedido::RechazadoJefe)
                                 <p class="text-xs text-ipv-magenta">Motivo del jefe: {{ $p->jefe_motivo }}</p>
                             @endif

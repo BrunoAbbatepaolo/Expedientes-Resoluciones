@@ -102,9 +102,11 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="5" class="px-4 py-12 text-center">
-                                <p class="text-sm font-medium text-ipv-ink/70 dark:text-ipv-ink-dark/70">No hay expedientes con esos filtros.</p>
-                                <p class="mt-1 text-xs text-ipv-ink/50 dark:text-ipv-ink-dark/50">Probá con el número completo o parte del nombre del causante.</p>
+                            <td colspan="5">
+                                <x-vacio icono="buscar">
+                                    <p class="font-medium text-ipv-ink/70 dark:text-ipv-ink-dark/70">No hay expedientes con esos filtros.</p>
+                                    <p class="mt-1 text-xs">Probá con el número completo o parte del nombre del causante.</p>
+                                </x-vacio>
                             </td>
                         </tr>
                     @endforelse

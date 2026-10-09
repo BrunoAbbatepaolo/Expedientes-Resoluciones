@@ -18,7 +18,10 @@
                 @foreach ($lector['relojes'] as $r)
                     <li wire:key="reloj-{{ $r['id'] }}" class="sirex-glass-card rounded-[12px] p-3 text-sm">
                         <div class="flex items-center justify-between gap-2">
-                            <span class="truncate font-medium text-ipv-ink dark:text-ipv-ink-dark">{{ $r['nombre'] }}</span>
+                            <span class="flex min-w-0 items-center gap-2 font-medium text-ipv-ink dark:text-ipv-ink-dark">
+                                <span class="sirex-pulso {{ $r['estado'] === 'ok' ? '' : 'sirex-pulso-falla' }}" aria-hidden="true"></span>
+                                <span class="truncate">{{ $r['nombre'] }}</span>
+                            </span>
                             <span class="shrink-0 rounded-full px-2 py-0.5 text-xs font-medium {{ $r['estado'] === 'ok' ? 'bg-emerald-500/15 text-emerald-800 dark:text-emerald-300' : 'bg-ipv-magenta/15 text-ipv-magenta dark:text-ipv-magenta-light' }}">
                                 {{ ['ok' => 'Funciona', 'sin_contacto' => 'Sin contacto', 'hora_desviada' => 'Hora desviada'][$r['estado']] ?? $r['estado'] }}
                             </span>

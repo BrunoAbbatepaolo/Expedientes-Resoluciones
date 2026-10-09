@@ -49,6 +49,23 @@ enum EstadoDia: string
         };
     }
 
+    /** Trazo (path SVG, viewBox 24) del ícono del chip; vacío si no lleva. */
+    public function icono(): string
+    {
+        return match ($this) {
+            self::Presente => 'M5 13l4 4L19 7',
+            self::Tarde => 'M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z',
+            self::Incompleto => 'M12 3a9 9 0 100 18V3z',
+            self::Falta => 'M6 18L18 6M6 6l12 12',
+            self::Justificado => 'M9 12l2 2 4-4M12 3l8 3v6c0 4.5-3.2 8.2-8 9-4.8-.8-8-4.5-8-9V6l8-3z',
+            self::Licencia => 'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z',
+            self::Feriado => 'M8 7V3m8 4V3M5 11h14M5 5h14a1 1 0 011 1v13a1 1 0 01-1 1H5a1 1 0 01-1-1V6a1 1 0 011-1z',
+            self::Franco => 'M20 12.8A8 8 0 1111.2 4 6.5 6.5 0 0020 12.8z',
+            self::Pendiente => 'M6 2h12M6 22h12M7 2v4a5 5 0 002 4 5 5 0 00-2 4v4M17 2v4a5 5 0 01-2 4 5 5 0 012 4v4',
+            self::Futuro => '',
+        };
+    }
+
     /** Cuenta como "no vino" en totales de tableros. */
     public function esAusencia(): bool
     {

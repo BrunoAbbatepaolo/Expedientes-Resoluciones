@@ -366,7 +366,208 @@
     .sirex-boton-ok { background: #059669; color: #fff; box-shadow: 0 1px 2px rgba(5, 150, 105, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.2); }
     .sirex-boton-ok:hover { background: #047857; }
     .sirex-boton-chico { padding: 0.375rem 0.75rem; font-size: 0.75rem; }
+
+    /* Botón que está esperando al servidor (Livewire le pone data-loading): ruedita y sin clics repetidos. */
+    .sirex-boton[data-loading] { pointer-events: none; opacity: 0.85; }
+    .sirex-boton[data-loading]::before {
+        content: '';
+        width: 0.95em;
+        height: 0.95em;
+        border: 2px solid currentColor;
+        border-right-color: transparent;
+        border-radius: 50%;
+        animation: sirex-giro 600ms linear infinite;
+    }
+
+    /* ---------- Botón con animación (x-boton-animado) ----------
+       Tres capas en la misma celda: la etiqueta, el ícono que la "recibe" y el "Listo" verde.
+       La fase la maneja Alpine (data-fase): reposo → corre → listo. */
+    .sirex-anim { overflow: hidden; transition: background-color 280ms, box-shadow 280ms, transform 150ms; }
+    .sirex-anim-pila { display: grid; place-items: center; }
+    .sirex-anim-pila > * { grid-area: 1 / 1; display: inline-flex; align-items: center; gap: 0.4rem; white-space: nowrap; }
+    .sirex-anim-icono, .sirex-anim-ok { opacity: 0; pointer-events: none; }
+    .sirex-anim-icono svg { width: 1.25rem; height: 1.25rem; overflow: visible; }
+    .sirex-anim-ok svg { width: 1.1rem; height: 1.1rem; }
+    .sirex-anim .sirex-tapa { transform-box: fill-box; transform-origin: 15% 100%; }
+
+    .sirex-anim[data-fase='corre'] .sirex-anim-texto { animation: sirex-texto-al-tacho 620ms cubic-bezier(0.5, 0, 0.75, 0.4) forwards; }
+    .sirex-anim[data-fase='corre'] .sirex-anim-icono { animation: sirex-icono-recibe 900ms ease-out forwards; }
+    .sirex-anim[data-fase='corre'] .sirex-tapa { animation: sirex-tapa 900ms ease-in-out forwards; }
+    .sirex-anim[data-fase='corre'] .sirex-vuela { animation: sirex-vuela 850ms cubic-bezier(0.4, 0, 0.6, 1) forwards; }
+    .sirex-anim[data-fase='listo'] .sirex-anim-texto { opacity: 0; }
+    .sirex-anim[data-fase='listo'] .sirex-anim-ok { opacity: 1; animation: sirex-ok-entra 320ms cubic-bezier(0.2, 1.4, 0.4, 1) backwards; }
+    .sirex-anim[data-fase='listo'] { background: #059669; box-shadow: 0 1px 2px rgba(5, 150, 105, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.2); }
+    .sirex-anim[data-fase='listo'] .sirex-trazo { stroke-dasharray: 30; animation: sirex-trazo 380ms ease-out 80ms backwards; }
+
+    /* Íconos de los chips de estado */
+    .sirex-chip-icono { width: 0.8rem; height: 0.8rem; flex: none; animation: sirex-pop 340ms cubic-bezier(0.2, 1.5, 0.4, 1) backwards; }
+    .sirex-chip-espera { animation: sirex-pop 340ms cubic-bezier(0.2, 1.5, 0.4, 1) backwards, sirex-latido 2.2s ease-in-out 400ms infinite; }
+    .sirex-chip-logrado path { stroke-dasharray: 40; animation: sirex-trazo 420ms ease-out 120ms backwards; }
+
+    /* Línea de tiempo del pedido de licencia */
+    .sirex-linea { display: flex; align-items: flex-start; margin-top: 0.5rem; }
+    .sirex-linea-paso { position: relative; display: flex; flex: 1; flex-direction: column; align-items: center; gap: 0.25rem; font-size: 0.6875rem; color: rgba(31, 41, 55, 0.5); }
+    .dark .sirex-linea-paso { color: rgba(229, 233, 238, 0.5); }
+    .sirex-linea-paso + .sirex-linea-paso::before {
+        content: '';
+        position: absolute;
+        top: 0.6875rem;
+        right: 50%;
+        width: 100%;
+        height: 2px;
+        background: rgba(0, 81, 158, 0.15);
+    }
+    .dark .sirex-linea-paso + .sirex-linea-paso::before { background: rgba(255, 255, 255, 0.14); }
+    .sirex-linea-paso[data-estado='ok'] + .sirex-linea-paso[data-estado='ok']::before,
+    .sirex-linea-paso[data-estado='ok'] + .sirex-linea-paso[data-estado='no']::before,
+    .sirex-linea-paso[data-estado='ok'] + .sirex-linea-paso[data-estado='ahora']::before {
+        background: linear-gradient(90deg, #059669, #059669) left / 100% 100% no-repeat, rgba(0, 81, 158, 0.15);
+        transform-origin: right;
+        animation: sirex-relleno 520ms ease-out calc(var(--i) * 140ms) backwards;
+    }
+    .sirex-linea-paso[data-estado='ok'] + .sirex-linea-paso[data-estado='no']::before { background: var(--color-ipv-magenta); }
+    .sirex-linea-punto {
+        position: relative;
+        z-index: 1;
+        display: grid;
+        place-items: center;
+        width: 1.375rem;
+        height: 1.375rem;
+        border-radius: 999px;
+        border: 2px solid rgba(0, 81, 158, 0.25);
+        background: #fff;
+        color: #fff;
+    }
+    .dark .sirex-linea-punto { background: #141c26; border-color: rgba(255, 255, 255, 0.2); }
+    .sirex-linea-punto svg { width: 0.7rem; height: 0.7rem; }
+    .sirex-linea-paso[data-estado='ok'] .sirex-linea-punto { background: #059669; border-color: #059669; animation: sirex-pop 360ms cubic-bezier(0.2, 1.5, 0.4, 1) calc(var(--i) * 140ms) backwards; }
+    .sirex-linea-paso[data-estado='no'] .sirex-linea-punto { background: var(--color-ipv-magenta); border-color: var(--color-ipv-magenta); }
+    .sirex-linea-paso[data-estado='ahora'] .sirex-linea-punto { border-color: var(--color-ipv-gold); animation: sirex-anillo 1.8s ease-out infinite; }
+    .sirex-linea-paso[data-estado='ok'] .sirex-trazo { stroke-dasharray: 30; animation: sirex-trazo 400ms ease-out calc(var(--i) * 140ms + 160ms) backwards; }
+
+    /* Toasts propios (reemplazan al de SweetAlert) */
+    .sirex-toasts { position: fixed; top: 1rem; right: 1rem; z-index: 200; display: flex; flex-direction: column; gap: 0.625rem; width: min(22rem, calc(100vw - 2rem)); pointer-events: none; }
+    .sirex-toast {
+        position: relative;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        overflow: hidden;
+        padding: 0.75rem 1rem;
+        border-radius: 0.875rem;
+        border: 1px solid rgba(0, 81, 158, 0.16);
+        background: rgba(255, 255, 255, 0.97);
+        box-shadow: 0 12px 32px -8px rgba(0, 20, 40, 0.35), 0 2px 8px rgba(0, 20, 40, 0.1);
+        font-size: 0.875rem;
+        font-weight: 500;
+        color: var(--color-ipv-ink);
+        pointer-events: auto;
+        animation: sirex-toast-entra 380ms cubic-bezier(0.2, 1, 0.3, 1) backwards;
+    }
+    .dark .sirex-toast { border-color: rgba(255, 255, 255, 0.1); background: rgba(20, 28, 38, 0.97); color: var(--color-ipv-ink-dark); box-shadow: 0 12px 32px -8px rgba(0, 0, 0, 0.7); }
+    .sirex-toast[data-saliendo] { animation: sirex-toast-sale 260ms ease-in forwards; }
+    .sirex-toast-icono { display: grid; flex: none; place-items: center; width: 1.75rem; height: 1.75rem; border-radius: 999px; color: #fff; background: var(--tono); }
+    .sirex-toast-icono svg { width: 0.95rem; height: 0.95rem; }
+    .sirex-toast[data-tipo='success'] { --tono: #059669; }
+    .sirex-toast[data-tipo='error'] { --tono: var(--color-ipv-magenta); }
+    .sirex-toast[data-tipo='warning'] { --tono: #d97706; }
+    .sirex-toast[data-tipo='info'] { --tono: var(--color-ipv-blue); }
+    .sirex-toast[data-tipo='error'] .sirex-toast-icono { animation: sirex-tiembla 420ms ease-out 200ms; }
+    .sirex-toast-barra { position: absolute; left: 0; right: 0; bottom: 0; height: 3px; background: var(--tono); transform-origin: left; animation: sirex-barra var(--dur) linear forwards; }
+    .sirex-toast-icono .sirex-trazo { stroke-dasharray: 30; animation: sirex-trazo 420ms ease-out 180ms backwards; }
+
+    /* Filas y elementos de lista que entran escalonados al cargar o filtrar (tablas y listas con divide-y). */
+    .divide-y > tr, .divide-y > li, .sirex-filas > tr, .sirex-filas > li { animation: sirex-fila-entra 320ms cubic-bezier(0.2, 0.8, 0.2, 1) backwards; }
+    .divide-y > :nth-child(2), .sirex-filas > :nth-child(2) { animation-delay: 30ms; }
+    .divide-y > :nth-child(3), .sirex-filas > :nth-child(3) { animation-delay: 60ms; }
+    .divide-y > :nth-child(4), .sirex-filas > :nth-child(4) { animation-delay: 90ms; }
+    .divide-y > :nth-child(5), .sirex-filas > :nth-child(5) { animation-delay: 120ms; }
+    .divide-y > :nth-child(6), .sirex-filas > :nth-child(6) { animation-delay: 150ms; }
+    .divide-y > :nth-child(7), .sirex-filas > :nth-child(7) { animation-delay: 180ms; }
+    .divide-y > :nth-child(8), .sirex-filas > :nth-child(8) { animation-delay: 210ms; }
+    .divide-y > :nth-child(n+9), .sirex-filas > :nth-child(n+9) { animation-delay: 240ms; }
+
+    /* Campo con error: tiembla una vez y se marca en magenta. */
+    .sirex-campo:has(~ .sirex-error) {
+        border-color: var(--color-ipv-magenta);
+        animation: sirex-tiembla 380ms ease-out;
+    }
+    .sirex-campo:has(~ .sirex-error):focus { box-shadow: 0 0 0 3px rgba(207, 41, 114, 0.2); }
+    .sirex-error { animation: sirex-error-entra 260ms ease-out backwards; }
+
+    /* Pantalla vacía */
+    .sirex-vacio { display: flex; flex-direction: column; align-items: center; gap: 0.5rem; padding: 1.75rem 1rem; text-align: center; color: rgba(31, 41, 55, 0.55); font-size: 0.875rem; }
+    .dark .sirex-vacio { color: rgba(229, 233, 238, 0.55); }
+    .sirex-vacio svg { width: 3.25rem; height: 3.25rem; color: var(--color-ipv-blue); opacity: 0.55; animation: sirex-flota 3.2s ease-in-out infinite; }
+    .dark .sirex-vacio svg { color: var(--color-ipv-blue-light); }
+    .sirex-vacio svg .sirex-vacio-extra { transform-box: fill-box; transform-origin: center; animation: sirex-pop 600ms cubic-bezier(0.2, 1.5, 0.4, 1) 250ms backwards; }
+
+    /* Menú lateral: el ícono se mueve al pasar el mouse. */
+    aside nav a > svg:first-child, aside nav button > svg:first-child { transition: transform 220ms cubic-bezier(0.3, 1.6, 0.5, 1); }
+    aside nav a:hover > svg:first-child, aside nav button:hover > svg:first-child { transform: scale(1.18) rotate(-6deg); }
+
+    /* Ícono de tema (sol/luna): gira al cambiar. */
+    .sirex-tema-icono { animation: sirex-gira-entra 420ms cubic-bezier(0.2, 1.2, 0.4, 1) backwards; }
+
+    /* Reloj en línea: punto que late; con falla, rojo y más rápido. */
+    .sirex-pulso { position: relative; display: inline-block; width: 0.625rem; height: 0.625rem; border-radius: 999px; background: #10b981; }
+    .sirex-pulso::after { content: ''; position: absolute; inset: 0; border-radius: inherit; background: inherit; animation: sirex-onda 1.8s ease-out infinite; }
+    .sirex-pulso-falla { background: var(--color-ipv-magenta); }
+    .sirex-pulso-falla::after { animation-duration: 0.9s; }
+    .sirex-pulso-quieto::after { display: none; }
+
+    /* Días del calendario de asistencia: entran en cascada. */
+    .sirex-cascada > * { animation: sirex-pop 320ms cubic-bezier(0.2, 1.2, 0.4, 1) backwards; }
+    .sirex-cascada > :nth-child(7n+1) { animation-delay: 0ms; }
+    .sirex-cascada > :nth-child(7n+2) { animation-delay: 25ms; }
+    .sirex-cascada > :nth-child(7n+3) { animation-delay: 50ms; }
+    .sirex-cascada > :nth-child(7n+4) { animation-delay: 75ms; }
+    .sirex-cascada > :nth-child(7n+5) { animation-delay: 100ms; }
+    .sirex-cascada > :nth-child(7n+6) { animation-delay: 125ms; }
+    .sirex-cascada > :nth-child(7n) { animation-delay: 150ms; }
+    .sirex-falta-dia { animation: sirex-tiembla 500ms ease-out 400ms; }
+
+    /* Ícono de acción rápida / tarjetas del panel */
+    .sirex-icono-vivo { transition: transform 260ms cubic-bezier(0.3, 1.6, 0.5, 1); }
+    .group:hover .sirex-icono-vivo { transform: translateY(-2px) scale(1.12) rotate(-5deg); }
 }
+
+@keyframes sirex-giro { to { transform: rotate(360deg); } }
+@keyframes sirex-pop { 0% { transform: scale(0.4); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+@keyframes sirex-latido { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.22); } }
+@keyframes sirex-trazo { from { stroke-dashoffset: 30; } to { stroke-dashoffset: 0; } }
+@keyframes sirex-anillo { 0% { box-shadow: 0 0 0 0 rgba(255, 184, 26, 0.55); } 100% { box-shadow: 0 0 0 9px rgba(255, 184, 26, 0); } }
+@keyframes sirex-relleno { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+@keyframes sirex-tiembla { 0%, 100% { transform: translateX(0); } 20% { transform: translateX(-5px); } 40% { transform: translateX(5px); } 60% { transform: translateX(-3px); } 80% { transform: translateX(3px); } }
+@keyframes sirex-error-entra { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: none; } }
+@keyframes sirex-fila-entra { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+@keyframes sirex-flota { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
+@keyframes sirex-onda { 0% { transform: scale(1); opacity: 0.6; } 100% { transform: scale(3); opacity: 0; } }
+@keyframes sirex-gira-entra { from { transform: rotate(-90deg) scale(0.4); opacity: 0; } to { transform: none; opacity: 1; } }
+@keyframes sirex-toast-entra { from { opacity: 0; transform: translateX(32px) scale(0.96); } to { opacity: 1; transform: none; } }
+@keyframes sirex-toast-sale { to { opacity: 0; transform: translateX(32px) scale(0.96); } }
+@keyframes sirex-barra { from { transform: scaleX(1); } to { transform: scaleX(0); } }
+@keyframes sirex-texto-al-tacho {
+    0% { transform: translateY(0) scale(1); opacity: 1; }
+    100% { transform: translateY(0.55rem) scale(0.2); opacity: 0; }
+}
+@keyframes sirex-icono-recibe {
+    0% { opacity: 0; transform: translateY(-4px) scale(0.7); }
+    25% { opacity: 1; transform: translateY(0) scale(1); }
+    80% { opacity: 1; transform: scale(1.12); }
+    100% { opacity: 0; transform: scale(0.6); }
+}
+@keyframes sirex-tapa {
+    0%, 15% { transform: rotate(0); }
+    30%, 62% { transform: rotate(-32deg) translateY(-1px); }
+    78%, 100% { transform: rotate(0); }
+}
+@keyframes sirex-vuela {
+    0% { transform: translate(-0.4rem, 0.3rem) scale(0.9); opacity: 0; }
+    20% { opacity: 1; }
+    100% { transform: translate(1.6rem, -1.1rem) scale(0.7); opacity: 0; }
+}
+@keyframes sirex-ok-entra { from { opacity: 0; transform: scale(0.6); } to { opacity: 1; transform: scale(1); } }
 
 @keyframes sirex-fondo-entrada {
     from { opacity: 0; }
@@ -473,6 +674,12 @@
   .sirex-modal,
   .sirex-modal-fondo {
     animation: none;
+  }
+  /* Todo lo demás (toasts, filas, chips, botones animados, ondas): sin movimiento. */
+  *, ::before, ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    animation-delay: 0ms !important;
   }
   html {
     scroll-behavior: auto;

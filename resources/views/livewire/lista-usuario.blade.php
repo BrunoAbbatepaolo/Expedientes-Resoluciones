@@ -95,8 +95,8 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="{{ auth()->user()->permiso('lista_usuario_editar') ? 5 : 4 }}" class="py-4 text-center text-sm text-ipv-ink/40 dark:text-ipv-ink-dark/40">
-                                No se encontraron usuarios.
+                            <td colspan="{{ auth()->user()->permiso('lista_usuario_editar') ? 5 : 4 }}">
+                                <x-vacio icono="persona">No se encontraron usuarios.</x-vacio>
                             </td>
                         </tr>
                     @endforelse
