@@ -34,10 +34,10 @@
             @endif
             <ul class="grid gap-1.5 sm:grid-cols-2 xl:grid-cols-3">
                 @foreach ($personas->sortBy(fn ($f) => [$f['dia']->estado === EstadoDia::Presente ? 1 : 0, $f['empleado']->apellido]) as $f)
-                    <li wire:key="hoy-{{ $f['empleado']->id }}">
+                    <li wire:key="hoy-{{ $f['empleado']->id }}" class="min-w-0">
                         <a href="{{ route('rrhh.ficha', $f['empleado']->id) }}" wire:navigate
                             class="flex items-center justify-between gap-2 rounded-lg border border-ipv-blue/10 px-3 py-2 text-sm transition hover:border-ipv-blue/30 dark:border-white/10">
-                            <span class="truncate text-ipv-ink dark:text-ipv-ink-dark">{{ $f['empleado']->apellido }}, {{ $f['empleado']->nombre }}</span>
+                            <span class="min-w-0 truncate text-ipv-ink dark:text-ipv-ink-dark">{{ $f['empleado']->apellido }}, {{ $f['empleado']->nombre }}</span>
                             <span class="flex shrink-0 items-center gap-2">
                                 @if ($f['dia']->marcas)
                                     <span class="text-xs text-ipv-ink/55 dark:text-ipv-ink-dark/55">{{ $f['dia']->marcas[0] }}</span>

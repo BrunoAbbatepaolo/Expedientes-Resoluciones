@@ -14,15 +14,15 @@
     </div>
 
     {{-- Métricas --}}
-    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+    <div class="grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4">
         @foreach ([
             ['label' => 'Activos en oficina', 'valor' => $activos, 'icon' => 'M4 4a2 2 0 0 1 2-2h4.6a2 2 0 0 1 1.4.6L15.4 6a2 2 0 0 1 .6 1.4V16a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4Z'],
             ['label' => 'Ingresados este mes', 'valor' => $ingresados, 'icon' => 'M12 4v12m0 0-4-4m4 4 4-4M4 18h16'],
             ['label' => 'Egresados este mes', 'valor' => $egresados, 'icon' => 'M12 20V8m0 0 4 4m-4-4-4 4M4 6h16'],
             ['label' => 'Resoluciones emitidas', 'valor' => $resoluciones, 'icon' => 'M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z'],
         ] as $m)
-            <div class="group sirex-glass-card rounded-[14px] p-5">
-                <div class="mb-3.5 flex items-center justify-between">
+            <div class="group sirex-glass-card rounded-[14px] p-3.5 sm:p-5">
+                <div class="mb-3 flex items-start justify-between gap-2 sm:mb-3.5 sm:items-center">
                     <span class="text-xs font-semibold uppercase tracking-wide text-ipv-ink/55 dark:text-ipv-ink-dark/55">
                         {{ $m['label'] }}
                     </span>
@@ -62,12 +62,12 @@
                 <table class="w-full border-collapse text-[13.5px]">
                     <thead>
                         <tr>
-                            <th class="px-5 py-2.5 text-left text-[11px] font-semibold uppercase tracking-wide text-ipv-ink/50 dark:text-ipv-ink-dark/50">Número</th>
-                            <th class="px-5 py-2.5 text-left text-[11px] font-semibold uppercase tracking-wide text-ipv-ink/50 dark:text-ipv-ink-dark/50">Causante</th>
-                            <th class="hidden px-5 py-2.5 text-left text-[11px] font-semibold uppercase tracking-wide text-ipv-ink/50 dark:text-ipv-ink-dark/50 md:table-cell">Oficina</th>
-                            <th class="hidden px-5 py-2.5 text-left text-[11px] font-semibold uppercase tracking-wide text-ipv-ink/50 dark:text-ipv-ink-dark/50 sm:table-cell">Fecha ingreso</th>
-                            <th class="px-5 py-2.5 text-left text-[11px] font-semibold uppercase tracking-wide text-ipv-ink/50 dark:text-ipv-ink-dark/50">Estado</th>
-                            <th class="px-5 py-2.5 text-right text-[11px] font-semibold uppercase tracking-wide text-ipv-ink/50 dark:text-ipv-ink-dark/50">Acción</th>
+                            <th class="px-3 py-2.5 sm:px-5 text-left text-[11px] font-semibold uppercase tracking-wide text-ipv-ink/50 dark:text-ipv-ink-dark/50">Número</th>
+                            <th class="px-3 py-2.5 sm:px-5 text-left text-[11px] font-semibold uppercase tracking-wide text-ipv-ink/50 dark:text-ipv-ink-dark/50">Causante</th>
+                            <th class="hidden px-3 py-2.5 sm:px-5 text-left text-[11px] font-semibold uppercase tracking-wide text-ipv-ink/50 dark:text-ipv-ink-dark/50 md:table-cell xl:hidden 2xl:table-cell">Oficina</th>
+                            <th class="hidden px-3 py-2.5 sm:px-5 text-left text-[11px] font-semibold uppercase tracking-wide text-ipv-ink/50 dark:text-ipv-ink-dark/50 sm:table-cell">Fecha ingreso</th>
+                            <th class="hidden px-3 py-2.5 sm:px-5 text-left text-[11px] font-semibold uppercase tracking-wide text-ipv-ink/50 dark:text-ipv-ink-dark/50 sm:table-cell">Estado</th>
+                            <th class="hidden px-3 py-2.5 sm:px-5 text-right text-[11px] font-semibold uppercase tracking-wide text-ipv-ink/50 dark:text-ipv-ink-dark/50 2xl:table-cell">Acción</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -77,20 +77,20 @@
                                 x-data
                                 @click="window.location.href = '{{ route('expedientes.detalle', $exp->id) }}'"
                                 style="cursor: pointer;">
-                                <td class="whitespace-nowrap px-5 py-3 font-bold text-ipv-blue dark:text-ipv-blue-light">
+                                <td class="whitespace-nowrap px-3 py-3 sm:px-5 font-bold text-ipv-blue dark:text-ipv-blue-light">
                                     {{ $exp->num_exp }}
                                 </td>
-                                <td class="px-5 py-3">
+                                <td class="px-3 py-3 sm:px-5">
                                     <p class="max-w-[200px] truncate text-ipv-ink dark:text-ipv-ink-dark">{{ $exp->asunto }}</p>
                                     @if($exp->causante)
                                         <p class="truncate text-xs text-ipv-ink/45 dark:text-ipv-ink-dark/45">{{ $exp->causante }}</p>
                                     @endif
                                 </td>
-                                <td class="hidden whitespace-nowrap px-5 py-3 text-ipv-ink/60 dark:text-ipv-ink-dark/60 md:table-cell">
+                                <td class="hidden whitespace-nowrap px-3 py-3 sm:px-5 text-ipv-ink/60 dark:text-ipv-ink-dark/60 md:table-cell xl:hidden 2xl:table-cell">
                                     {{ $exp->oficinaById?->nombre ?? '—' }}
                                 </td>
-                                <td class="hidden whitespace-nowrap px-5 py-3 text-ipv-ink/60 dark:text-ipv-ink-dark/60 sm:table-cell"> {{ \Carbon\Carbon::parse($exp->fecha_ingreso)->format('d/m/Y') }} </td>
-                                <td class="px-5 py-3">
+                                <td class="hidden whitespace-nowrap px-3 py-3 sm:px-5 text-ipv-ink/60 dark:text-ipv-ink-dark/60 sm:table-cell"> {{ \Carbon\Carbon::parse($exp->fecha_ingreso)->format('d/m/Y') }} </td>
+                                <td class="hidden px-3 py-3 sm:px-5 sm:table-cell">
                                     <span class="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full px-2.5 py-0.5 text-xs font-semibold
                                         {{ $egresado
                                             ? 'bg-gray-500/10 text-gray-500 border border-gray-400/20 dark:bg-gray-400/15 dark:text-gray-200'
@@ -99,7 +99,7 @@
                                         {{ $egresado ? 'Egresado' : 'Activo' }}
                                     </span>
                                 </td>
-                                <td class="px-5 py-3 text-right">
+                                <td class="hidden px-3 py-3 sm:px-5 text-right 2xl:table-cell">
                                     <span class="inline-flex items-center justify-center rounded-lg p-1.5 text-ipv-ink/30 transition-colors hover:bg-ipv-blue/10 hover:text-ipv-blue dark:text-ipv-ink-dark/30 dark:hover:text-ipv-blue-light">
                                         <svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                             <path d="M5 12h14M12 5l7 7-7 7"/>
@@ -134,7 +134,7 @@
             </span>
         </div>
 
-        <div class="grid grid-cols-5 gap-3">
+        <div class="grid grid-cols-3 gap-2.5 sm:grid-cols-5 sm:gap-3">
             @php
                 $accesos = [
                     ['route' => 'expedientes',      'label' => 'Expedientes',   'icon' => 'M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7Z'],

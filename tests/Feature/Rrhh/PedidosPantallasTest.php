@@ -169,7 +169,7 @@ test('el menú avisa cuántos pedidos esperan al jefe y a RRHH', function () {
         ->set('pidiendo', true)->set('pedido.tipo_ausencia_id', '96')->set('pedido.desde', '2026-11-02')->set('pedido.hasta', '2026-11-02')
         ->call('pedirLicencia');
 
-    $this->actingAs($this->jefe)->get(route('dashboard'))->assertSee('rounded-full bg-ipv-gold px-1.5 text-[11px]', false);
+    $this->actingAs($this->jefe)->get(route('dashboard'))->assertSee('class="sirex-contador"', false);
     app()->forgetScopedInstances();
     expect(PedidosLicencia::contadores($this->jefe))->toBe(['aprobar' => 1, 'confirmar' => 0]);
 });

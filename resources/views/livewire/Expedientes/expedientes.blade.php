@@ -68,13 +68,13 @@
 
         <div class="sirex-glass-card overflow-x-auto rounded-[14px] transition-opacity duration-150" wire:loading.delay.class="opacity-50 pointer-events-none" aria-live="polite">
             @if ($tipoVista === 'entrantes')
-                <table class="w-full min-w-[640px] table-fixed">
+                <table class="w-full table-fixed sm:min-w-[640px]">
                     <thead>
                         <tr>
                             <th class="w-[110px] px-4 py-2.5 text-center text-xs font-semibold uppercase tracking-wide text-ipv-ink/50 dark:text-ipv-ink-dark/50">Número</th>
-                            <th class="w-[180px] px-4 py-2.5 text-center text-xs font-semibold uppercase tracking-wide text-ipv-ink/50 dark:text-ipv-ink-dark/50">Causante</th>
-                            <th class="w-[180px] px-4 py-2.5 text-center text-xs font-semibold uppercase tracking-wide text-ipv-ink/50 dark:text-ipv-ink-dark/50">Origen</th>
-                            <th class="w-[100px] px-4 py-2.5 text-center text-xs font-semibold uppercase tracking-wide text-ipv-ink/50 dark:text-ipv-ink-dark/50">Fecha</th>
+                            <th class="hidden w-[180px] px-4 py-2.5 text-center text-xs font-semibold uppercase tracking-wide text-ipv-ink/50 dark:text-ipv-ink-dark/50 sm:table-cell">Causante</th>
+                            <th class="px-4 py-2.5 text-center text-xs font-semibold uppercase tracking-wide text-ipv-ink/50 dark:text-ipv-ink-dark/50 sm:w-[180px]">Origen</th>
+                            <th class="hidden w-[100px] px-4 py-2.5 text-center text-xs font-semibold uppercase tracking-wide text-ipv-ink/50 dark:text-ipv-ink-dark/50 sm:table-cell">Fecha</th>
                             <th class="w-[100px] px-4 py-2.5 text-center text-xs font-semibold uppercase tracking-wide text-ipv-ink/50 dark:text-ipv-ink-dark/50">Acciones</th>
                         </tr>
                     </thead>
@@ -85,13 +85,13 @@
                                     class="cursor-pointer overflow-hidden text-ellipsis whitespace-nowrap px-4 py-2.5 text-center text-sm text-ipv-ink dark:text-ipv-ink-dark">
                                     {{ $pase->expediente->num_exp ?? '-' }}
                                 </td>
-                                <td class="overflow-hidden text-ellipsis whitespace-nowrap px-4 py-2.5 text-center text-sm text-ipv-ink dark:text-ipv-ink-dark">
+                                <td class="hidden overflow-hidden text-ellipsis whitespace-nowrap px-4 py-2.5 text-center text-sm text-ipv-ink dark:text-ipv-ink-dark sm:table-cell">
                                     {{ $this->formatearCausante($pase->expediente->causante ?? '-') }}
                                 </td>
                                 <td class="overflow-hidden text-ellipsis whitespace-nowrap px-4 py-2.5 text-center text-sm text-ipv-ink/70 dark:text-ipv-ink-dark/70">
                                     {{ $pase->oficinaOrigen->nombre ?? '-' }}
                                 </td>
-                                <td class="overflow-hidden text-ellipsis whitespace-nowrap px-4 py-2.5 text-center text-sm text-ipv-ink/70 dark:text-ipv-ink-dark/70">
+                                <td class="hidden overflow-hidden text-ellipsis whitespace-nowrap px-4 py-2.5 text-center text-sm text-ipv-ink/70 dark:text-ipv-ink-dark/70 sm:table-cell">
                                     {{ $this->obtenerDMY($pase->fecha) }}
                                 </td>
                                 <td class="px-4 py-2.5 text-center">
@@ -113,16 +113,16 @@
                     </tbody>
                 </table>
             @else
-                <table class="w-full min-w-[640px] table-fixed">
+                <table class="w-full table-fixed sm:min-w-[640px]">
                     <thead>
                         <tr>
                             <th class="w-[110px] px-4 py-2.5 text-center text-xs font-semibold uppercase tracking-wide text-ipv-ink/50 dark:text-ipv-ink-dark/50">Número</th>
                             <th class="hidden w-[80px] px-4 py-2.5 text-center text-xs font-semibold uppercase tracking-wide text-ipv-ink/50 dark:text-ipv-ink-dark/50 2xl:table-cell">Fojas</th>
-                            <th class="w-[100px] px-4 py-2.5 text-center text-xs font-semibold uppercase tracking-wide text-ipv-ink/50 dark:text-ipv-ink-dark/50">Ingreso</th>
-                            <th class="w-[180px] px-4 py-2.5 text-center text-xs font-semibold uppercase tracking-wide text-ipv-ink/50 dark:text-ipv-ink-dark/50">Causante</th>
+                            <th class="hidden w-[100px] px-4 py-2.5 text-center text-xs font-semibold uppercase tracking-wide text-ipv-ink/50 dark:text-ipv-ink-dark/50 sm:table-cell">Ingreso</th>
+                            <th class="hidden w-[180px] px-4 py-2.5 text-center text-xs font-semibold uppercase tracking-wide text-ipv-ink/50 dark:text-ipv-ink-dark/50 sm:table-cell">Causante</th>
                             <th class="hidden w-[200px] px-4 py-2.5 text-center text-xs font-semibold uppercase tracking-wide text-ipv-ink/50 dark:text-ipv-ink-dark/50 2xl:table-cell">Asunto</th>
-                            <th class="w-[220px] px-4 py-2.5 text-center text-xs font-semibold uppercase tracking-wide text-ipv-ink/50 dark:text-ipv-ink-dark/50">Hoy está en (IPV)</th>
-                            <th class="w-[100px] px-4 py-2.5 text-center text-xs font-semibold uppercase tracking-wide text-ipv-ink/50 dark:text-ipv-ink-dark/50">Salida</th>
+                            <th class="px-4 py-2.5 text-center text-xs font-semibold uppercase tracking-wide text-ipv-ink/50 dark:text-ipv-ink-dark/50 sm:w-[220px]">Hoy está en (IPV)</th>
+                            <th class="hidden w-[100px] px-4 py-2.5 text-center text-xs font-semibold uppercase tracking-wide text-ipv-ink/50 dark:text-ipv-ink-dark/50 md:table-cell">Salida</th>
                             @if (auth()->user()->permiso('expediente_editar'))
                                 <th class="w-[80px] px-4 py-2.5 text-center text-xs font-semibold uppercase tracking-wide text-ipv-ink/50 dark:text-ipv-ink-dark/50">Acciones</th>
                             @endif
@@ -138,10 +138,10 @@
                                 <td class="hidden overflow-hidden text-ellipsis whitespace-nowrap px-4 py-2.5 text-center text-sm text-ipv-ink/70 dark:text-ipv-ink-dark/70 2xl:table-cell">
                                     {{ $expediente->folio }}
                                 </td>
-                                <td class="overflow-hidden text-ellipsis whitespace-nowrap px-4 py-2.5 text-center text-sm text-ipv-ink/70 dark:text-ipv-ink-dark/70">
+                                <td class="hidden overflow-hidden text-ellipsis whitespace-nowrap px-4 py-2.5 text-center text-sm text-ipv-ink/70 dark:text-ipv-ink-dark/70 sm:table-cell">
                                     {{ $this->obtenerDMY($expediente->fecha_ingreso) }}
                                 </td>
-                                <td class="overflow-hidden text-ellipsis whitespace-nowrap px-4 py-2.5 text-center text-sm text-ipv-ink dark:text-ipv-ink-dark">
+                                <td class="hidden overflow-hidden text-ellipsis whitespace-nowrap px-4 py-2.5 text-center text-sm text-ipv-ink dark:text-ipv-ink-dark sm:table-cell">
                                     {{ $this->formatearCausante($expediente->causante) }}
                                 </td>
                                 <td class="hidden px-4 py-2.5 text-center 2xl:table-cell">
@@ -151,16 +151,16 @@
                                     @php($ipv = $ubicacionesIpv->get($expediente->num_exp))
                                     @if ($ipv)
                                         <a href="{{ route('expedientes.ipv.ficha', $ipv->id) }}" wire:navigate.hover
-                                            class="group inline-flex max-w-full items-center gap-2 rounded-md px-1.5 py-0.5 transition hover:bg-ipv-blue/[0.06]"
+                                            class="group inline-flex max-w-full flex-wrap items-center justify-center gap-x-2 gap-y-0.5 rounded-md px-1.5 py-0.5 transition hover:bg-ipv-blue/[0.06] sm:flex-nowrap"
                                             title="Ver recorrido completo">
-                                            <span class="truncate text-ipv-ink/80 group-hover:text-ipv-blue dark:text-ipv-ink-dark/80 dark:group-hover:text-ipv-blue-light">{{ $ipv->ubicacion ?? 'Sin pases' }}</span>
+                                            <span class="text-ipv-ink/80 sm:truncate group-hover:text-ipv-blue dark:text-ipv-ink-dark/80 dark:group-hover:text-ipv-blue-light">{{ $ipv->ubicacion ?? 'Sin pases' }}</span>
                                             <x-dias-badge :dias="$ipv->dias_en_ubicacion" />
                                         </a>
                                     @else
                                         <span class="text-xs text-ipv-ink/40 dark:text-ipv-ink-dark/40">No figura en IPV</span>
                                     @endif
                                 </td>
-                                <td class="overflow-hidden text-ellipsis whitespace-nowrap px-4 py-2.5 text-center text-sm text-ipv-ink/70 dark:text-ipv-ink-dark/70">
+                                <td class="hidden overflow-hidden text-ellipsis whitespace-nowrap px-4 py-2.5 text-center text-sm text-ipv-ink/70 dark:text-ipv-ink-dark/70 md:table-cell">
                                     {{ $this->obtenerDMY($expediente->fecha_salida) }}
                                 </td>
                                 @if (auth()->user()->permiso('expediente_editar'))
