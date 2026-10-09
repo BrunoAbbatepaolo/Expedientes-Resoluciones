@@ -50,3 +50,8 @@ Spec: `docs/spec-agente-relojes.md` (sección 5 = puesta en marcha paso a paso).
 - Auditoría en `audits` (`Audit::registrar`): `permisos` (agregados/quitados), `usuario_creado`, `oficina`, `clave_cambiada`, `clave_inicial_cambiada`. Todavía no hay pantalla para verla.
 - `concurrently` pasó a devDependencies; `npm audit fix` aplicado (queda 1 aviso bajo de Quill que no aplica: no se usa su exportación HTML).
 - Pendiente en producción: `APP_DEBUG=false`, HTTPS + `SESSION_SECURE_COOKIE=true`, `SESSION_ENCRYPT=true`, rotar claves expuestas, usuario PostgreSQL acotado, `storage:link` no debe exponer PDFs viejos. Sin 2FA.
+
+## Próximo paso (acordado, para otro día): pantalla de Auditoría
+- Hoy `audits` ya guarda: `permisos`, `usuario_creado`, `oficina`, `clave_cambiada`, `clave_inicial_cambiada` (vía `Audit::registrar`) y, por el trait `Auditable`, created/updated/deleted de Expediente, RrhhHorarioEspecial y RrhhPedidoLicencia. Falta la pantalla para verlos.
+- Ideas a validar con Bruno antes de armarla: quién puede verla (¿`lista_usuario_editar` o un permiso nuevo?), filtros (usuario, evento, fechas, texto), detalle legible del antes/después (permisos agregados/quitados con nombres del catálogo), paginación, exportar, y no mostrar nunca claves. Evaluar auditar también inicios de sesión fallidos y cambios de permisos hechos por consola.
+- Usar el diseño actual (sirex-glass-card, x-rrhh.estado/chips, x-vacio, filas con `divide-y`) y agregar test de autorización y de consultas (RendimientoTest).
