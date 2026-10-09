@@ -23,20 +23,30 @@ new class extends Component
     }
 }; ?>
 
-<section class="mt-10 space-y-6">
-    <div class="relative mb-5">
-        <h3 class="text-base font-semibold text-ipv-ink dark:text-ipv-ink-dark">{{ __('Eliminar cuenta') }}</h3>
-        <p class="text-sm text-ipv-ink/60 dark:text-ipv-ink-dark/60">{{ __('Eliminá tu cuenta y todos sus recursos') }}</p>
-    </div>
-
+<section class="mt-10">
+    {{-- Zona de peligro --}}
     <div x-data="{ show: {{ $errors->isNotEmpty() ? 'true' : 'false' }} }"
         x-on:open-modal.window="if ($event.detail[0] === 'confirm-user-deletion') show = true"
-        x-on:close-modal.window="if ($event.detail[0] === 'confirm-user-deletion') show = false">
+        x-on:close-modal.window="if ($event.detail[0] === 'confirm-user-deletion') show = false"
+        class="rounded-xl border border-ipv-magenta/25 bg-ipv-magenta/[0.04] p-4 dark:border-ipv-magenta-light/20 dark:bg-ipv-magenta/[0.07]">
 
-        <button type="button" @click="show = true"
-            class="rounded-lg bg-ipv-magenta px-4 py-2 text-sm font-semibold text-white hover:opacity-90">
-            {{ __('Eliminar cuenta') }}
-        </button>
+        <div class="flex flex-wrap items-center justify-between gap-4">
+            <div class="flex min-w-0 items-start gap-3">
+                <span class="sirex-modal-icono sirex-modal-icono-peligro">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
+                    </svg>
+                </span>
+                <div class="min-w-0">
+                    <h3 class="text-sm font-semibold text-ipv-ink dark:text-ipv-ink-dark">{{ __('Eliminar cuenta') }}</h3>
+                    <p class="text-xs text-ipv-ink/60 dark:text-ipv-ink-dark/60">{{ __('Eliminá tu cuenta y todos sus recursos') }}</p>
+                </div>
+            </div>
+
+            <button type="button" @click="show = true" class="sirex-boton sirex-boton-peligro sirex-boton-chico">
+                {{ __('Eliminar cuenta') }}
+            </button>
+        </div>
 
         <div x-show="show" x-cloak x-on:keydown.escape.window="show = false"
             class="sirex-modal-fondo" x-on:click.self="show = false">
@@ -58,7 +68,7 @@ new class extends Component
                 <div class="sirex-modal-cuerpo">
                     <div>
                         <label class="sirex-etiqueta">{{ __('Contraseña') }}</label>
-                        <input wire:model="password" type="password" class="sirex-campo">
+                        <input wire:model="password" type="password" autocomplete="current-password" class="sirex-campo">
                         @error('password') <p class="sirex-error">{{ $message }}</p> @enderror
                     </div>
                 </div>

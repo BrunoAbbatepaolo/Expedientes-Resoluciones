@@ -80,6 +80,7 @@ new class extends Component
         $user->save();
 
         $this->dispatch('profile-updated', name: $user->nombre);
+        $this->dispatch('toast', type: 'success', message: 'Perfil actualizado.');
     }
 
     /**
@@ -98,6 +99,7 @@ new class extends Component
 
         $this->currentPhoto = null;
         $this->dispatch('profile-photo-deleted');
+        $this->dispatch('toast', type: 'success', message: 'Foto eliminada.');
     }
 
     /**
@@ -123,111 +125,106 @@ new class extends Component
     @include('partials.settings-heading')
 
     <x-settings.layout :heading="__('Perfil')" :subheading="__('Actualizá la información de tu perfil')">
-        <form wire:submit="updateProfileInformation" class="my-6 w-full space-y-6">
-            <!-- Sección de foto de perfil -->
-            <div class="mb-6">
-                <label class="block text-sm font-medium text-ipv-ink/80 dark:text-ipv-ink-dark/80">{{ __('Foto de Perfil') }}</label>
-
-                <div class="mt-4 flex items-center space-x-6">
-                    <div class="relative h-20 w-20 overflow-hidden rounded-full">
+        <form wire:submit="updateProfileInformation" class="w-full space-y-6">
+            <!-- Foto de perfil: el círculo es el botón para elegir una nueva -->
+            <div class="flex flex-wrap items-center gap-5">
+                <div class="group relative size-24 shrink-0">
+                    <div class="size-full overflow-hidden rounded-full ring-4 ring-ipv-gold/40 transition group-hover:ring-ipv-gold">
                         @if ($profilePhoto)
                             <img src="{{ $profilePhoto->temporaryUrl() }}" alt="{{ __('Vista previa de foto') }}" class="h-full w-full object-cover">
                         @elseif ($currentPhoto)
                             <img src="{{ Storage::url($currentPhoto) }}" alt="{{ __('Foto actual') }}" class="h-full w-full object-cover">
                         @else
-                            <div class="flex h-full w-full items-center justify-center rounded-full bg-ipv-gold text-ipv-gold-ink dark:text-ipv-gold-ink-dark">
-                                {{ substr($nombre, 0, 1).substr($apellido, 0, 1) }}
+                            <div class="flex h-full w-full items-center justify-center bg-ipv-gold text-2xl font-bold text-ipv-gold-ink dark:text-ipv-gold-ink-dark">
+                                {{ strtoupper(mb_substr($nombre, 0, 1).mb_substr($apellido, 0, 1)) }}
                             </div>
                         @endif
                     </div>
 
-                    <div class="flex flex-col space-y-2 p-2">
-                        <input
-                            type="file"
-                            wire:model="profilePhoto"
-                            id="photo-upload"
-                            class="hidden"
-                            accept="image/*"
-                        />
-                        <button
-                            type="button"
-                            onclick="document.getElementById('photo-upload').click();"
-                            class="inline-flex items-center rounded-md border border-ipv-blue/20 bg-white/70 px-4 py-2 text-xs font-semibold uppercase tracking-widest text-ipv-ink/80 transition hover:bg-white dark:border-white/15 dark:bg-white/[0.06] dark:text-ipv-ink-dark/85 dark:hover:bg-white/[0.1]"
-                        >
-                            {{ __('Cambiar Foto') }}
-                        </button>
-
-                        @if ($currentPhoto || $profilePhoto)
-                            <button type="button" wire:click="deleteProfilePhoto"
-                                class="rounded-lg bg-ipv-magenta px-3 py-1.5 text-xs font-semibold text-white hover:opacity-90">
-                                {{ __('Eliminar Foto') }}
-                            </button>
-                        @endif
-                    </div>
-
-                @error('profilePhoto')
-                    <span class="mt-2 block text-sm text-ipv-magenta">{{ $message }}</span>
-                @enderror
-
-                @if ($profilePhoto)
-                    <div class="mt-2">
-                        <button type="button" wire:click="$set('profilePhoto', null)"
-                            class="rounded-lg border border-ipv-blue/20 px-3 py-1.5 text-xs font-semibold text-ipv-ink/75 hover:bg-black/[0.03] dark:border-white/15 dark:text-ipv-ink-dark/80 dark:hover:bg-white/5">
-                            {{ __('Cancelar cambio') }}
-                        </button>
-                    </div>
-                @endif
-            </div>
-
-            <!-- Campos existentes -->
-            <div>
-                <label class="mb-1 block text-sm font-medium text-ipv-ink/80 dark:text-ipv-ink-dark/80">{{ __('Nombre') }}</label>
-                <input wire:model="nombre" type="text" required autofocus autocomplete="nombre"
-                    class="w-full rounded-lg border border-ipv-blue/20 bg-white/80 px-3 py-2 text-sm text-ipv-ink focus:outline-none focus:ring-2 focus:ring-ipv-blue/40 dark:border-white/15 dark:bg-white/[0.06] dark:text-ipv-ink-dark">
-                @error('nombre') <span class="mt-1 block text-xs text-ipv-magenta">{{ $message }}</span> @enderror
-            </div>
-
-            <div>
-                <label class="mb-1 block text-sm font-medium text-ipv-ink/80 dark:text-ipv-ink-dark/80">{{ __('Apellido') }}</label>
-                <input wire:model="apellido" type="text" required autocomplete="apellido"
-                    class="w-full rounded-lg border border-ipv-blue/20 bg-white/80 px-3 py-2 text-sm text-ipv-ink focus:outline-none focus:ring-2 focus:ring-ipv-blue/40 dark:border-white/15 dark:bg-white/[0.06] dark:text-ipv-ink-dark">
-                @error('apellido') <span class="mt-1 block text-xs text-ipv-magenta">{{ $message }}</span> @enderror
-            </div>
-
-            <div>
-                <label class="mb-1 block text-sm font-medium text-ipv-ink/80 dark:text-ipv-ink-dark/80">{{ __('Email') }}</label>
-                <input wire:model="email" type="email" required autocomplete="email"
-                    class="w-full rounded-lg border border-ipv-blue/20 bg-white/80 px-3 py-2 text-sm text-ipv-ink focus:outline-none focus:ring-2 focus:ring-ipv-blue/40 dark:border-white/15 dark:bg-white/[0.06] dark:text-ipv-ink-dark">
-                @error('email') <span class="mt-1 block text-xs text-ipv-magenta">{{ $message }}</span> @enderror
-
-                @if (auth()->user() instanceof \Illuminate\Contracts\Auth\MustVerifyEmail && ! auth()->user()->hasVerifiedEmail())
-                    <div>
-                        <p class="mt-4 text-sm text-ipv-ink/70 dark:text-ipv-ink-dark/75">
-                            {{ __('Tu dirección de email no está verificada.') }}
-
-                            <button type="button" wire:click.prevent="resendVerificationNotification"
-                                class="cursor-pointer text-sm text-ipv-blue hover:underline dark:text-ipv-blue-light">
-                                {{ __('Hacé clic acá para reenviar el email de verificación.') }}
-                            </button>
-                        </p>
-
-                        @if (session('status') === 'verification-link-sent')
-                            <p class="mt-2 text-sm font-medium text-ipv-blue dark:text-ipv-blue-light">
-                                {{ __('Se envió un nuevo enlace de verificación a tu dirección de email.') }}
-                            </p>
-                        @endif
-                    </div>
-                @endif
-            </div>
-
-            <div class="flex items-center gap-4">
-                <div class="flex items-center justify-end">
-                    <button type="submit" class="w-full rounded-lg bg-ipv-blue px-4 py-2.5 text-sm font-semibold text-white hover:bg-ipv-blue-dark">
-                        {{ __('Guardar') }}
+                    <input type="file" wire:model="profilePhoto" id="photo-upload" class="hidden" accept="image/*" />
+                    <button type="button" onclick="document.getElementById('photo-upload').click();" aria-label="{{ __('Cambiar Foto') }}"
+                        class="absolute inset-0 flex items-center justify-center rounded-full bg-[#001428]/55 text-white opacity-0 transition focus-visible:opacity-100 group-hover:opacity-100">
+                        <svg class="size-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <path d="M3 8a2 2 0 0 1 2-2h1.5l1.2-1.8A1 1 0 0 1 8.5 4h7a1 1 0 0 1 .8.2L17.5 6H19a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8Z" /><circle cx="12" cy="12.5" r="3.5" />
+                        </svg>
                     </button>
+
+                    <div wire:loading wire:target="profilePhoto" class="absolute inset-0 flex items-center justify-center rounded-full bg-white/70 dark:bg-black/60">
+                        <span class="size-6 animate-spin rounded-full border-2 border-ipv-blue border-r-transparent"></span>
+                    </div>
                 </div>
 
-                <x-action-message class="me-3" on="profile-updated">
+                <div class="min-w-0 space-y-2">
+                    <p class="text-sm font-semibold text-ipv-ink dark:text-ipv-ink-dark">{{ __('Foto de Perfil') }}</p>
+                    <p class="sirex-ayuda">JPG o PNG, hasta 1 MB.</p>
+                    <div class="flex flex-wrap gap-2">
+                        <button type="button" onclick="document.getElementById('photo-upload').click();" class="sirex-boton sirex-boton-secundario sirex-boton-chico">{{ __('Cambiar Foto') }}</button>
+                        @if ($profilePhoto)
+                            <button type="button" wire:click="$set('profilePhoto', null)" class="sirex-boton sirex-boton-secundario sirex-boton-chico">{{ __('Cancelar cambio') }}</button>
+                        @elseif ($currentPhoto)
+                            <button type="button" wire:click="deleteProfilePhoto" wire:confirm="¿Eliminar tu foto de perfil?" class="sirex-boton sirex-boton-chico text-ipv-magenta hover:bg-ipv-magenta/10 dark:text-ipv-magenta-light">{{ __('Eliminar Foto') }}</button>
+                        @endif
+                    </div>
+                    @error('profilePhoto') <p class="sirex-error">{{ $message }}</p> @enderror
+                </div>
+            </div>
+
+            <!-- Datos de la cuenta que no se editan acá -->
+            @if (auth()->user()->legajo || auth()->user()->oficinaAsignada())
+                <dl class="grid gap-2 rounded-xl border border-ipv-blue/10 bg-ipv-blue/[0.03] p-3.5 text-sm dark:border-white/10 dark:bg-white/[0.03] sm:grid-cols-2">
+                    @if (auth()->user()->legajo)
+                        <div><dt class="text-xs text-ipv-ink/50 dark:text-ipv-ink-dark/50">Legajo</dt><dd class="font-medium text-ipv-ink dark:text-ipv-ink-dark">{{ auth()->user()->legajo }}</dd></div>
+                    @endif
+                    @if (auth()->user()->oficinaAsignada())
+                        <div><dt class="text-xs text-ipv-ink/50 dark:text-ipv-ink-dark/50">Oficina</dt><dd class="font-medium text-ipv-ink dark:text-ipv-ink-dark">{{ auth()->user()->oficinaAsignada()->nombre }}</dd></div>
+                    @endif
+                </dl>
+            @endif
+
+            <div class="grid gap-4 sm:grid-cols-2">
+                <div>
+                    <label for="perfil-nombre" class="sirex-etiqueta">{{ __('Nombre') }}</label>
+                    <input id="perfil-nombre" wire:model="nombre" type="text" required autocomplete="given-name" class="sirex-campo">
+                    @error('nombre') <p class="sirex-error">{{ $message }}</p> @enderror
+                </div>
+
+                <div>
+                    <label for="perfil-apellido" class="sirex-etiqueta">{{ __('Apellido') }}</label>
+                    <input id="perfil-apellido" wire:model="apellido" type="text" required autocomplete="family-name" class="sirex-campo">
+                    @error('apellido') <p class="sirex-error">{{ $message }}</p> @enderror
+                </div>
+
+                <div class="sm:col-span-2">
+                    <label for="perfil-email" class="sirex-etiqueta">{{ __('Email') }}</label>
+                    <input id="perfil-email" wire:model="email" type="email" required autocomplete="email" class="sirex-campo">
+                    @error('email') <p class="sirex-error">{{ $message }}</p> @enderror
+
+                    @if (auth()->user() instanceof \Illuminate\Contracts\Auth\MustVerifyEmail && ! auth()->user()->hasVerifiedEmail())
+                        <div>
+                            <p class="mt-3 text-sm text-ipv-ink/70 dark:text-ipv-ink-dark/75">
+                                {{ __('Tu dirección de email no está verificada.') }}
+
+                                <button type="button" wire:click.prevent="resendVerificationNotification"
+                                    class="cursor-pointer text-sm text-ipv-blue hover:underline dark:text-ipv-blue-light">
+                                    {{ __('Hacé clic acá para reenviar el email de verificación.') }}
+                                </button>
+                            </p>
+
+                            @if (session('status') === 'verification-link-sent')
+                                <p class="mt-2 text-sm font-medium text-ipv-blue dark:text-ipv-blue-light">
+                                    {{ __('Se envió un nuevo enlace de verificación a tu dirección de email.') }}
+                                </p>
+                            @endif
+                        </div>
+                    @endif
+                </div>
+            </div>
+
+            <div class="flex items-center gap-3 border-t border-ipv-blue/10 pt-5 dark:border-white/10">
+                <button type="submit" wire:loading.attr="disabled" wire:target="updateProfileInformation" class="sirex-boton sirex-boton-primario">
+                    {{ __('Guardar') }}
+                </button>
+                <x-action-message class="text-emerald-600 dark:text-emerald-300" on="profile-updated">
                     {{ __('Guardado.') }}
                 </x-action-message>
             </div>
