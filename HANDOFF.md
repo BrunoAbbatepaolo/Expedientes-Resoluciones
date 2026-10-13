@@ -21,6 +21,9 @@ Verificado: 219 tests verdes, PHPStan limpio, prueba de humo con datos reales de
 - Fase 3: automatizar el programa lector de relojes (el usuario lo va a pasar).
 - Abrir PR draft cuando el usuario lo pida.
 
+## Servidor demo y agente de relojes
+Un comando: `wsl -d Ubuntu -- bash /mnt/c/Users/Bruno/Documents/Claude/Expedientes-Resoluciones/scripts/demo-wsl.sh up` (`down|status|sync`). Detalle, variables, lentitud y botón «Sincronizar ahora»: `docs/entorno-demo-wsl.md`.
+
 ## Cómo correr tests
 PHP solo en WSL. Copia rápida en `~/sirex-bench`: rsync del repo (excluir .env, vendor, storage, node_modules, .git) y `php artisan test` ahí. Entorno demo con datos reales de mitiv en solo lectura: SQLite en `~/sirex-demo` + variables `DB_*`/`ADMIN_DB_*`/`LEGUI_DB_*` a sqlite, `SESSION_DRIVER=file`, `CACHE_STORE=file`. Usuario `demo@sirex.test` / `demo1234` (tiene `rrhh_ver` y es jefe de Cómputos).
 
