@@ -2,11 +2,18 @@
 
 namespace App\Services\Resoluciones;
 
+use Smalot\PdfParser\Config;
 use Smalot\PdfParser\Parser;
 
 /** Saca el texto de un PDF (con texto) o de un Word .docx para poder analizarlo. */
 class LectorDocumento
 {
+    /** Tope de lo que se expande de un archivo de usuario (una resolución real pesa mucho menos). */
+    private const MAX_BYTES_EXPANDIDOS = 10 * 1024 * 1024;
+
+    /** Texto máximo que se analiza: más que suficiente para una resolución. */
+    private const MAX_CARACTERES = 200_000;
+
     /**
      * @throws \DomainException con un mensaje pensado para mostrar a la persona
      */
@@ -21,8 +28,15 @@ class LectorDocumento
 
     private function deUnPdf(string $ruta): string
     {
+        // El archivo viene de un usuario: se acota lo que el lector puede expandir en memoria
+        // (flujos comprimidos que crecen de golpe) y cuánto se anida.
+        $config = new Config;
+        $config->setDecodeMemoryLimit(self::MAX_BYTES_EXPANDIDOS);
+        $config->setMaxNestingDepth(50);
+        $config->setRetainImageContent(false);
+
         try {
-            $texto = (new Parser)->parseFile($ruta)->getText();
+            $texto = mb_substr((new Parser([], $config))->parseFile($ruta)->getText(), 0, self::MAX_CARACTERES);
         } catch (\Throwable $e) {
             report($e);
 
@@ -47,7 +61,21 @@ class LectorDocumento
             throw new \DomainException('No se pudo abrir el archivo de Word. Puede estar dañado.');
         }
 
-        $xml = $zip->getFromName('word/document.xml');
+        // Se mira el tamaño ya descomprimido ANTES de leerlo: un .docx chico puede expandirse
+        // a gigabytes (zip bomb) y agotar la memoria del servidor.
+        $datos = $zip->statName('word/document.xml');
+        if ($datos === false) {
+            $zip->close();
+
+            throw new \DomainException('El archivo no parece un documento de Word válido.');
+        }
+        if ($datos['size'] > self::MAX_BYTES_EXPANDIDOS) {
+            $zip->close();
+
+            throw new \DomainException('El documento de Word es demasiado grande para leerlo. Completá los datos a mano.');
+        }
+
+        $xml = $zip->getFromName('word/document.xml', self::MAX_BYTES_EXPANDIDOS);
         $zip->close();
 
         if ($xml === false) {
@@ -56,7 +84,7 @@ class LectorDocumento
 
         // Cada párrafo y cada tabulación pasan a ser salto/espacio; el resto de las etiquetas se descarta.
         $xml = preg_replace(['#</w:p>#', '#<w:tab/>#', '#<w:br/>#'], ["\n", ' ', "\n"], $xml);
-        $texto = html_entity_decode(strip_tags($xml), ENT_QUOTES | ENT_XML1, 'UTF-8');
+        $texto = mb_substr(html_entity_decode(strip_tags($xml), ENT_QUOTES | ENT_XML1, 'UTF-8'), 0, self::MAX_CARACTERES);
 
         if (mb_strlen(trim($texto)) < 30) {
             throw new \DomainException('El documento de Word está vacío o casi vacío.');
