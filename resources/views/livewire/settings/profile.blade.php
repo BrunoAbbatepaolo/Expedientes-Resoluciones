@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 use Livewire\Volt\Component;
 use Livewire\WithFileUploads;
 
@@ -33,6 +34,24 @@ new class extends Component
         $this->currentPhoto = Auth::user()->profile_photo_path;
     }
 
+    /** Reglas de la foto: solo formatos que el navegador muestra y Livewire puede previsualizar. */
+    private const REGLAS_FOTO = ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:1024']; // Máximo 1MB
+
+    /**
+     * Valida la foto apenas se sube (antes de previsualizarla); si no sirve, la descarta
+     * y muestra el error en pantalla en vez de romper la vista previa.
+     */
+    public function updatedProfilePhoto(): void
+    {
+        try {
+            $this->validateOnly('profilePhoto', ['profilePhoto' => self::REGLAS_FOTO]);
+        } catch (ValidationException $e) {
+            $this->reset('profilePhoto');
+
+            throw $e;
+        }
+    }
+
     /**
      * Update the profile information for the currently authenticated user.
      */
@@ -51,7 +70,7 @@ new class extends Component
                 'max:255',
                 Rule::unique(User::class)->ignore($user->id),
             ],
-            'profilePhoto' => ['nullable', 'image', 'max:1024'], // Máximo 1MB
+            'profilePhoto' => self::REGLAS_FOTO,
         ]);
 
         $user->fill([
@@ -130,7 +149,7 @@ new class extends Component
             <div class="flex flex-wrap items-center gap-5">
                 <div class="group relative size-24 shrink-0">
                     <div class="size-full overflow-hidden rounded-full ring-4 ring-ipv-gold/40 transition group-hover:ring-ipv-gold">
-                        @if ($profilePhoto)
+                        @if ($profilePhoto && $profilePhoto->isPreviewable())
                             <img src="{{ $profilePhoto->temporaryUrl() }}" alt="{{ __('Vista previa de foto') }}" class="h-full w-full object-cover">
                         @elseif ($currentPhoto)
                             <img src="{{ Storage::url($currentPhoto) }}" alt="{{ __('Foto actual') }}" class="h-full w-full object-cover">
@@ -141,7 +160,7 @@ new class extends Component
                         @endif
                     </div>
 
-                    <input type="file" wire:model="profilePhoto" id="photo-upload" class="hidden" accept="image/*" />
+                    <input type="file" wire:model="profilePhoto" id="photo-upload" class="hidden" accept="image/jpeg,image/png,image/webp" />
                     <button type="button" onclick="document.getElementById('photo-upload').click();" aria-label="{{ __('Cambiar Foto') }}"
                         class="absolute inset-0 flex items-center justify-center rounded-full bg-[#001428]/55 text-white opacity-0 transition focus-visible:opacity-100 group-hover:opacity-100">
                         <svg class="size-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -156,7 +175,7 @@ new class extends Component
 
                 <div class="min-w-0 space-y-2">
                     <p class="text-sm font-semibold text-ipv-ink dark:text-ipv-ink-dark">{{ __('Foto de Perfil') }}</p>
-                    <p class="sirex-ayuda">JPG o PNG, hasta 1 MB.</p>
+                    <p class="sirex-ayuda">JPG, PNG o WebP, hasta 1 MB.</p>
                     <div class="flex flex-wrap gap-2">
                         <button type="button" onclick="document.getElementById('photo-upload').click();" class="sirex-boton sirex-boton-secundario sirex-boton-chico">{{ __('Cambiar Foto') }}</button>
                         @if ($profilePhoto)

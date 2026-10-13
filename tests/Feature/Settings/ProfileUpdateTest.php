@@ -78,3 +78,23 @@ test('correct password must be provided to delete account', function () {
 
     expect($user->fresh())->not->toBeNull();
 });
+
+test('una foto en formato no soportado (.ico) se rechaza con aviso y sin romper la vista previa', function () {
+    $this->actingAs(User::factory()->create());
+
+    Volt::test('settings.profile')
+        ->set('profilePhoto', \Illuminate\Http\UploadedFile::fake()->create('icono.ico', 10, 'image/x-icon'))
+        ->assertHasErrors(['profilePhoto'])
+        ->assertSee('Ese archivo no es una foto que podamos usar. Elegí una imagen en formato JPG, PNG o WebP.')
+        ->assertSet('profilePhoto', null)
+        ->assertOk();
+});
+
+test('una foto PNG válida se acepta y se previsualiza', function () {
+    $this->actingAs(User::factory()->create());
+
+    Volt::test('settings.profile')
+        ->set('profilePhoto', \Illuminate\Http\UploadedFile::fake()->createWithContent('foto.png', base64_decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==')))
+        ->assertHasNoErrors()
+        ->assertSee('Vista previa de foto');
+});

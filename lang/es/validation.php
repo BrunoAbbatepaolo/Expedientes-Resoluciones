@@ -152,6 +152,15 @@ return [
     'uppercase' => 'El campo :attribute debe estar en mayúscula.',
     'url' => 'El campo :attribute debe ser una URL válida.',
     'uuid' => 'El campo :attribute debe ser un UUID válido.',
+    'custom' => [
+        // Foto de perfil: mensajes en lenguaje llano (qué pasó y qué hacer).
+        'profilePhoto' => [
+            'image' => 'Ese archivo no es una foto que podamos usar. Elegí una imagen en formato JPG, PNG o WebP.',
+            'mimes' => 'Ese archivo no es una foto que podamos usar. Elegí una imagen en formato JPG, PNG o WebP.',
+            'max' => 'La foto pesa demasiado. Elegí una de hasta 1 MB.',
+            'uploaded' => 'No se pudo subir la foto. Probá de nuevo con otra imagen de hasta 1 MB.',
+        ],
+    ],
     'attributes' => [
         'address' => 'dirección',
         'affiliate_url' => 'URL de afiliado',

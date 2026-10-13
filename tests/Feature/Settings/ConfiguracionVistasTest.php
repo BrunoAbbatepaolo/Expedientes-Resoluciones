@@ -18,7 +18,7 @@ test('el perfil permite cambiar la foto desde el círculo y tiene la zona de pel
     $this->get('/settings/profile')
         ->assertOk()
         ->assertSee('photo-upload', false)
-        ->assertSee('JPG o PNG, hasta 1 MB.')
+        ->assertSee('JPG, PNG o WebP, hasta 1 MB.')
         ->assertSee('Eliminar cuenta');
 });
 
