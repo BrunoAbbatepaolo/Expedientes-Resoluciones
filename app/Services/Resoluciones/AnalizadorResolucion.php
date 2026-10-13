@@ -15,13 +15,16 @@ class AnalizadorResolucion
     private const FIRMAS = [
         'Transferencia-Cancelacion' => ['transferencia y aprobacion de cancelacion' => 10, 'transferencia y cancelacion' => 10, 'aprobando la transferencia y la cancelacion' => 10],
         'Transferencias' => ['autorizacion de transferencia' => 4, 'boleto de venta' => 2, 'aprobar la transferencia' => 3, 'plan de readecuacion de pagos' => 2],
-        'Cancelaciones' => ['cancelacion definitiva y levantamiento de hipoteca' => 5, 'levantamiento de hipoteca' => 3],
+        'Cancelaciones' => ['cancelacion definitiva y levantamiento de hipoteca' => 5, 'levantamiento de hipoteca' => 3, 'cancelacion definitiva' => 3],
         'Resciciones' => ['sin efecto el acta de tenencia' => 4, 'falta de pago' => 2, 'desalojo' => 2, 'revocar la resolucion de adjudicacion' => 3],
         'Rectificacion' => ['rectificar' => 3, 'donde dice' => 4, 'rectificacion de resolucion' => 3],
         'AplicarPagos' => ['aplicar pago' => 5, 'pago especial' => 3],
         'ReconocimientoCuotaPagadaDosVeces' => ['pagada dos veces' => 5, 'pagadas doblemente' => 4, 'pagada doblemente' => 4],
         'ReconocimientoCuotaPagadaNoCargada' => ['pagada y no cargada' => 5, 'pagadas y no cargadas' => 5],
     ];
+
+    /** Nombre propio: palabras en mayúsculas o Capitalizadas, con "de/del/la" en el medio. Termina antes de "DNI". */
+    private const NOMBRE = '((?:\p{Lu}[\p{L}´\'’]*,?(?:\s+(?:de|del|la|las|los|el))*\s+){1,8}?)';
 
     private const MESES = [
         'enero' => 1, 'febrero' => 2, 'marzo' => 3, 'abril' => 4, 'mayo' => 5, 'junio' => 6,
@@ -33,6 +36,9 @@ class AnalizadorResolucion
      */
     public function analizar(string $texto): array
     {
+        // Palabras cortadas al final del renglón ("Se-\nñores") y "INFRAEST RUCTURA" (el PDF parte la palabra).
+        $texto = preg_replace('/(\p{L})-[ \t]*\R[ \t]*(\p{L})/u', '$1$2', $texto);
+        $texto = preg_replace('/I\s*N\s*F\s*R\s*A\s*E\s*S\s*T\s*R\s*U\s*C\s*T\s*U\s*R\s*A/iu', 'INFRAESTRUCTURA', $texto);
         $plano = trim(preg_replace('/\s+/u', ' ', $texto));
         $tipo = $this->detectarTipo($plano);
 
@@ -74,8 +80,10 @@ class AnalizadorResolucion
         };
 
         // Encabezado común.
-        $poner('num_exp', $this->buscar('/Expte\.?\s*N[°º]?\s*([\w\/\-\.]+)/iu', $t));
-        $poner('num_res', $this->buscar('/RESOLUCI[ÓO]N\s*N[°º]?\s*([\w\/\-\.]+)/iu', $t));
+        $poner('num_exp', $this->buscar('/Expte\.?\s*N[°º]?\s*([\w\/\-\.]*[\w\/])/iu', $t));
+        // Solo el encabezado ("R E S O L U C I O N N° 55/2026"): una "Resolución Nº 185/2017" citada
+        // en el texto es otra resolución. Si el número está en blanco no se completa nada.
+        $poner('num_res', $this->buscar('/R\s*E\s*S\s*O\s*L\s*U\s*C\s*I\s*[ÓO]\s*N\s+N\s*[°º]?\s*(\d[\w\/\-\.]*)/iu', mb_substr(preg_split('/\bVISTO\b/u', $t)[0], 0, 600)));
         $poner('fecha_res', $this->primeraFecha($t));
 
         if (in_array($tipo, ['AplicarPagos', 'ReconocimientoCuotaPagadaDosVeces', 'ReconocimientoCuotaPagadaNoCargada'], true)) {
@@ -83,10 +91,11 @@ class AnalizadorResolucion
         }
 
         // Vivienda: manzana, lote/casa, barrio o plan.
-        $poner('manzana', $this->buscar('/MANZANA\s+(\d+)/iu', $t));
+        // La manzana puede ser número ("08") o letra ("C").
+        $poner('manzana', $this->buscar('/\b(?:MANZANA|MZA?\.?)\s+([A-Z]\d?|\d+)(?![\p{L}\d])/iu', $t));
         $poner('lote', $this->buscar('/(?:LOTE|CASA)\s+(\d+)/iu', $t));
-        $poner('nombre_barrio', $this->buscar('/DEL BARRIO\s+(.+?)\s+CONSIDERANDO/iu', $t));
-        $poner('nombre_plan', $this->buscar('/DEL (?:PLAN|EMPRENDIMIENTO)\s+"?([^";]+?)"?\s*(?:-|;|CONSIDERANDO)/iu', $t));
+        $poner('nombre_barrio', $this->nombreDe('BARRIO', $t));
+        $poner('nombre_plan', $this->nombreDe('(?:PLAN|EMPRENDIMIENTO)', $t));
 
         // Fojas y datos que se repiten en varios tipos.
         $poner('num_foja_solicitud', $this->buscar('/fs\.\s*([\w\/]+)\s+obra solicitud/iu', $t));
@@ -110,9 +119,9 @@ class AnalizadorResolucion
             }
         }
 
-        if ($clave) {
-            $poner('nombre_titular_nuevo', $this->buscar('/a favor de\s+(?:la Se[ñn]ora|el Se[ñn]or|los Se[ñn]ores)\s+(.+?)(?:\s+DNI|\.|,)/iu', $t));
-            $poner('dni_titular_nuevo', $this->buscar('/a favor de\s+(?:la Se[ñn]ora|el Se[ñn]or|los Se[ñn]ores)\s+.+?DNI\s*N[°º]?\s*([\d\.]+)/iu', $t));
+        if ($clave && preg_match('/a favor del?\s+(?:la\s+|el\s+|los\s+|las\s+)?(?i:Se[ñn]or(?:es|as|a)?)\s+'.self::NOMBRE.'D\s?NI\s*N?[°º]?\s*(\d[\d\.]*\d)/u', $t, $m)) {
+            $poner('nombre_titular_nuevo', $this->limpiarNombre($m[1]));
+            $poner('dni_titular_nuevo', $m[2]);
         }
 
         return $datos;
@@ -146,16 +155,34 @@ class AnalizadorResolucion
     /** @return list<array{nombre: string, dni: string}> */
     private function titulares(string $t): array
     {
-        if (! preg_match('/Se[ñn]ores?\s+(.+?)\s+DNI\s*N[°º]?\s*([\d\.]+)(?:\s*,?\s+y\s+(.+?)\s*,?\s+DNI\s*N[°º]?\s*([\d\.]+))?/iu', $t, $m)) {
+        // Señor/Señora/Señores/Señoras + nombre en mayúsculas + DNI (y opcionalmente un cotitular).
+        $nombre = self::NOMBRE;
+        $dni = 'D\s?NI\s*N?[°º]?\s*(\d[\d\.]*\d)';
+        if (! preg_match('/(?i:Se[ñn]or(?:es|as|a)?)\s+'.$nombre.$dni.'(?:\s*,?\s+y\s+(?:la\s+|el\s+)?(?i:Se[ñn]or(?:a)?\s+)?'.$nombre.'\s*,?\s*'.$dni.')?/u', $t, $m)) {
             return [];
         }
 
-        $lista = [['nombre' => trim($m[1]), 'dni' => rtrim($m[2], '.')]];
+        $lista = [['nombre' => $this->limpiarNombre($m[1]), 'dni' => $m[2]]];
         if (! empty($m[3])) {
-            $lista[] = ['nombre' => trim($m[3]), 'dni' => rtrim($m[4], '.')];
+            $lista[] = ['nombre' => $this->limpiarNombre($m[3]), 'dni' => $m[4]];
         }
 
         return $lista;
+    }
+
+    /** "CHAVE Z" (la Z quedó sola por un corte del PDF) -> "CHAVEZ". */
+    private function limpiarNombre(string $nombre): string
+    {
+        return preg_replace('/(?<=\p{Lu}{3}) (\p{Lu})$/u', '$1', trim($nombre));
+    }
+
+    /** Nombre que sigue a "DEL BARRIO" / "DEL PLAN": entre comillas, o hasta el próximo corte. */
+    private function nombreDe(string $palabra, string $t): ?string
+    {
+        $valor = $this->buscar('/\bDEL\s+'.$palabra.'\s+[“"]([^”"]+)[”"]/iu', $t)
+            ?? $this->buscar('/\bDEL\s+'.$palabra.'\s+(.+?)\s*(?:CONSIDERANDO|;|,| - )/iu', $t);
+
+        return $valor === null ? null : trim($valor);
     }
 
     private function buscar(string $patron, string $texto): ?string
