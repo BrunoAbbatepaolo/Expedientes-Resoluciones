@@ -4,6 +4,8 @@ namespace App\Livewire;
 
 use App\Models\Resolucion;
 use App\Models\ResolucionArchivo;
+use App\Services\Resoluciones\AnalizadorResolucion;
+use App\Services\Resoluciones\LectorDocumento;
 use App\Traits\AuthorizesOficina;
 use App\Traits\NotificaUi;
 use Illuminate\Support\Facades\DB;
@@ -29,6 +31,19 @@ class CrearResolucion extends Component
 
     // Archivos temporales para PDFs
     public $archivosPDF = [];
+
+    // Documento subido solo para leerlo y autocompletar (no se guarda con la resolución).
+    public $documentoAnalizar = null;
+
+    // Tipo detectado distinto al de esta pantalla: ['tipo' => ..., 'nombre' => ...].
+    #[Locked]
+    public ?array $sugerencia = null;
+
+    /** Tipos de resolución con formulario (los mismos nombres que prototipos.*). */
+    public const TIPOS = [
+        'Cancelaciones', 'Resciciones', 'Transferencias', 'Transferencia-Cancelacion',
+        'Rectificacion', 'AplicarPagos', 'ReconocimientoCuotaPagadaDosVeces', 'ReconocimientoCuotaPagadaNoCargada',
+    ];
 
     // Usar array para mejor organización
     public array $datos = [
@@ -151,6 +166,15 @@ class CrearResolucion extends Component
         $this->tipo = $tipo;
         // Establecer la fecha inicial en el formato correcto
         $this->datos['fecha_res'] = date('Y-m-d');
+
+        // Viene de "Autocompletar": precarga los datos del documento y abre el formulario.
+        $sugerida = session('sugerencia_resolucion');
+        if (is_array($sugerida) && ($sugerida['tipo'] ?? null) === $tipo) {
+            session()->forget('sugerencia_resolucion');
+            $cargados = $this->aplicarDatosDetectados($sugerida['datos'] ?? []);
+            $this->modo = 'completo';
+            $this->toast('info', "Completé {$cargados} campos con los datos del documento. Revisalos antes de guardar y volvé a adjuntar el archivo si lo necesitás.", 8000);
+        }
     }
 
     public function usarCompleto()
@@ -430,28 +454,125 @@ class CrearResolucion extends Component
         if (! empty($this->tempArchivos)) {
             // Sin esto, se podía subir cualquier tipo de archivo (incluido .php/.html)
             // al disco público: mismo riesgo que un upload sin restricción de tipo.
-            $this->validate([
-                'tempArchivos.*' => 'file|mimes:pdf,jpg,jpeg,png|max:2048',
-            ]);
+            try {
+                $this->validarConAviso(['tempArchivos.*' => 'file|mimes:pdf,jpg,jpeg,png|max:2048']);
+            } catch (ValidationException $e) {
+                $this->tempArchivos = [];
 
-            $sesionArchivos = session()->get('archivos_pdf_resolucion', []);
-
-            foreach ($this->tempArchivos as $archivo) {
-                // Copia temporal en disco privado para la vista previa. Nombre generado
-                // a partir de la extensión ya validada, no del nombre original del
-                // cliente: ese nombre podía traer '../' y escribir fuera de 'temp'.
-                $nombreArchivo = 'temp_'.uniqid().'.'.$archivo->getClientOriginalExtension();
-                $ruta = $archivo->storeAs('temp', $nombreArchivo, 'local');
-
-                $this->archivosPDF[] = $archivo;
-
-                // Guardar en sesión para la ruta
-                $sesionArchivos[] = $ruta;
+                throw $e;
             }
 
-            session()->put('archivos_pdf_resolucion', $sesionArchivos);
+            foreach ($this->tempArchivos as $archivo) {
+                $this->adjuntar($archivo);
+            }
+
             $this->tempArchivos = [];
         }
+    }
+
+    /** Deja el archivo adjunto a la resolución que se está creando (se guarda con ella). */
+    private function adjuntar($archivo): void
+    {
+        $sesionArchivos = session()->get('archivos_pdf_resolucion', []);
+
+        // Copia temporal en disco privado para la vista previa. Nombre generado
+        // a partir de la extensión ya validada, no del nombre original del
+        // cliente: ese nombre podía traer '../' y escribir fuera de 'temp'.
+        $nombreArchivo = 'temp_'.uniqid().'.'.$archivo->getClientOriginalExtension();
+        $sesionArchivos[] = $archivo->storeAs('temp', $nombreArchivo, 'local');
+
+        $this->archivosPDF[] = $archivo;
+
+        session()->put('archivos_pdf_resolucion', $sesionArchivos);
+    }
+
+    /**
+     * Sube un PDF o Word, detecta de qué tipo de resolución es y precarga el formulario.
+     * Es una sugerencia: nunca guarda; la persona revisa los datos antes de guardar.
+     */
+    public function updatedDocumentoAnalizar(): void
+    {
+        $archivo = $this->documentoAnalizar;
+        $this->sugerencia = null;
+
+        try {
+            $this->validarConAviso(['documentoAnalizar' => 'required|file|mimes:pdf,docx|max:5120']);
+        } catch (ValidationException $e) {
+            $this->documentoAnalizar = null;
+
+            throw $e;
+        }
+
+        try {
+            $texto = app(LectorDocumento::class)->texto($archivo->getRealPath(), $archivo->getClientOriginalExtension());
+        } catch (\DomainException $e) {
+            $this->toast('warning', $e->getMessage(), 7000);
+
+            return;
+        }
+
+        $resultado = app(AnalizadorResolucion::class)->analizar($texto);
+
+        if (! $resultado['tipo']) {
+            $this->toast('warning', 'No pude reconocer qué tipo de resolución es. Elegí el formulario y completá los datos a mano.', 7000);
+
+            return;
+        }
+
+        if ($resultado['tipo'] !== $this->tipo) {
+            // Los datos viajan por sesión al formulario correcto (no por el cliente).
+            session()->put('sugerencia_resolucion', $resultado);
+            $this->sugerencia = ['tipo' => $resultado['tipo'], 'nombre' => self::nombreDeTipo($resultado['tipo'])];
+            $this->toast('info', 'Este documento parece ser de otro tipo: '.self::nombreDeTipo($resultado['tipo']).'.', 6000);
+
+            return;
+        }
+
+        $cargados = $this->aplicarDatosDetectados($resultado['datos']);
+        $this->modo = 'completo';
+        if (strtolower($archivo->getClientOriginalExtension()) === 'pdf') {
+            $this->adjuntar($archivo);
+        }
+        $this->toast('info', "Completé {$cargados} campos con los datos del documento. Revisalos antes de guardar.", 7000);
+    }
+
+    /** Pasa al formulario del tipo detectado, con los datos del documento ya cargados. */
+    public function aplicarSugerencia() // redirección: devuelve el redirect de Livewire
+    {
+        $tipo = session('sugerencia_resolucion.tipo');
+        abort_unless(is_string($tipo) && in_array($tipo, self::TIPOS, true), 404);
+
+        return $this->redirectRoute('resoluciones.crear', ['tipo' => $tipo], navigate: true);
+    }
+
+    /** @param  array<string, string>  $detectados */
+    private function aplicarDatosDetectados(array $detectados): int
+    {
+        $cargados = 0;
+        foreach ($detectados as $campo => $valor) {
+            if (array_key_exists($campo, $this->datos)) {
+                $this->datos[$campo] = $valor;
+                $cargados++;
+            }
+        }
+        $this->resetearVistaPrevia();
+
+        return $cargados;
+    }
+
+    public static function nombreDeTipo(string $tipo): string
+    {
+        return match ($tipo) {
+            'Cancelaciones' => 'Cancelaciones',
+            'Resciciones' => 'Rescisiones',
+            'Transferencias' => 'Transferencias',
+            'Transferencia-Cancelacion' => 'Transferencia y Cancelación',
+            'Rectificacion' => 'Rectificación',
+            'AplicarPagos' => 'Aplicar pagos',
+            'ReconocimientoCuotaPagadaDosVeces' => 'Reconocimiento de cuota pagada dos veces',
+            'ReconocimientoCuotaPagadaNoCargada' => 'Reconocimiento de cuota pagada y no cargada',
+            default => $tipo,
+        };
     }
 
     public function guardar()

@@ -153,6 +153,17 @@ return [
     'url' => 'El campo :attribute debe ser una URL válida.',
     'uuid' => 'El campo :attribute debe ser un UUID válido.',
     'custom' => [
+        // Autocompletar desde un documento y adjuntar PDFs a una resolución.
+        'documentoAnalizar' => [
+            'mimes' => 'Ese archivo no se puede leer. Subí un PDF o un Word (.docx).',
+            'max' => 'El archivo pesa demasiado. Elegí uno de hasta 5 MB.',
+            'uploaded' => 'No se pudo subir el archivo. Probá de nuevo.',
+        ],
+        'tempArchivos.*' => [
+            'mimes' => 'Ese archivo no se puede adjuntar. Elegí un PDF (o una foto JPG o PNG).',
+            'max' => 'El archivo pesa demasiado. Elegí uno de hasta 2 MB.',
+            'uploaded' => 'No se pudo subir el archivo. Probá de nuevo.',
+        ],
         // Foto de perfil: mensajes en lenguaje llano (qué pasó y qué hacer).
         'profilePhoto' => [
             'image' => 'Ese archivo no es una foto que podamos usar. Elegí una imagen en formato JPG, PNG o WebP.',

@@ -21,7 +21,7 @@ test('todos los modales usan el diseño compartido', function (string $archivo) 
     'livewire/resoluciones',
     'livewire/dashboard-calendar',
     'livewire/settings/delete-user-form',
-    'livewire/crear-resolucion',
+    'livewire/partials/adjuntos-resolucion',
 ]);
 
 test('el diseño compartido de modales está definido en el CSS', function () {
