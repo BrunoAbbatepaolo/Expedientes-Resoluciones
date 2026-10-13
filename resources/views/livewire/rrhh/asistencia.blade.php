@@ -11,6 +11,16 @@
             <span class="text-xs opacity-80">
                 Última fichada: {{ $lector['ultima_fichada']?->format('d/m H:i') ?? '—' }} · Último chequeo: {{ $lector['ultimo_chequeo']?->format('d/m H:i') ?? '—' }}
             </span>
+            <span class="flex flex-wrap items-center gap-2">
+                @if ($avisoSincronizacion)
+                    <span class="text-xs {{ $avisoSincronizacion['error'] ? 'font-medium' : 'opacity-80' }}">{{ $avisoSincronizacion['texto'] }}</span>
+                @endif
+                <button type="button" wire:click="sincronizarAhora" wire:loading.attr="disabled" wire:target="sincronizarAhora"
+                    class="rounded-lg border border-current/30 px-3 py-1 text-xs font-semibold transition hover:bg-black/[0.05] disabled:cursor-wait disabled:opacity-60 dark:hover:bg-white/10">
+                    <span wire:loading.remove wire:target="sincronizarAhora">Sincronizar ahora</span>
+                    <span wire:loading wire:target="sincronizarAhora">Sincronizando…</span>
+                </button>
+            </span>
         </div>
 
         @if (! empty($lector['relojes']))

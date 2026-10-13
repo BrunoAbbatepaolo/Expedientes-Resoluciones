@@ -6,10 +6,13 @@ use App\Models\RrhhReloj;
 use App\Models\User;
 use App\Services\Rrhh\Contracts\LectorReloj;
 use App\Services\Rrhh\Mitiv\LectorRelojMitiv;
+use App\Services\Rrhh\Relojes\FabricaClienteReloj;
 use App\Services\Rrhh\Relojes\LectorRelojSirex;
 use Carbon\CarbonImmutable;
 use Livewire\Livewire;
+use Tests\Support\FabricaRelojesSimulada;
 use Tests\Support\MitivFalso;
+use Tests\Support\RelojSimulado;
 
 beforeEach(function () {
     $this->travelTo(CarbonImmutable::parse('2026-10-20 10:00')); // martes, hora local = 10:00
@@ -113,4 +116,22 @@ test('Asistencia: tarjetas por reloj y aviso cuando uno no responde', function (
         ->assertSee('3 fallas seguidas: El reloj no respondió a tiempo.')
         ->assertSee('21.201')
         ->assertSee('El reloj Planta baja (192.168.7.199) no responde');
+});
+
+test('Asistencia: el botón sincroniza los relojes al instante y resume el resultado', function () {
+    relojConContacto('Mesa de entradas', '192.168.7.198', '2026-10-20 09:59:00');
+    relojConContacto('Planta baja', '192.168.7.199', '2026-10-20 09:59:00');
+    $fabrica = new FabricaRelojesSimulada;
+    $fabrica->relojes = [
+        '192.168.7.198' => new RelojSimulado([['101', '2026-10-19 07:05:10', 15, 0], ['102', '2026-10-19 07:12:00', 15, 4]], hora: '2026-10-20 10:00:00'),
+        '192.168.7.199' => new RelojSimulado([['201', '2026-10-19 08:00:00', 15, 0]], hora: '2026-10-20 10:00:00'),
+    ];
+    app()->instance(FabricaClienteReloj::class, $fabrica);
+    $rrhh = User::factory()->create();
+    Permiso::create(['user_id' => $rrhh->id, 'nombre' => 'rrhh_ver']);
+
+    Livewire::actingAs($rrhh)->test(Asistencia::class)
+        ->assertSee('Sincronizar ahora')
+        ->call('sincronizarAhora')
+        ->assertSee('3 fichadas nuevas de 2 relojes.');
 });

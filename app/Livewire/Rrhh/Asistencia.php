@@ -8,6 +8,7 @@ use App\Services\Rrhh\Contracts\Asistencias;
 use App\Services\Rrhh\Contracts\LectorReloj;
 use App\Services\Rrhh\Hora;
 use App\Services\Rrhh\Organigrama;
+use App\Services\Rrhh\Relojes\SincronizadorRelojes;
 use Illuminate\Contracts\View\View;
 use Livewire\Attributes\Title;
 use Livewire\Attributes\Url;
@@ -42,6 +43,9 @@ class Asistencia extends Component
     #[Url(except: '')]
     public string $hasta = '';
 
+    /** @var array{error: bool, texto: string}|null */
+    public ?array $avisoSincronizacion = null;
+
     public function mount(): void
     {
         $this->exigir($this->alcance()->rrhh);
@@ -49,6 +53,29 @@ class Asistencia extends Component
         if (! array_key_exists($this->vista, self::VISTAS)) {
             $this->vista = 'hoy';
         }
+    }
+
+    /** Lee los relojes ahora, sin esperar al planificador (cada 5 min). */
+    public function sincronizarAhora(SincronizadorRelojes $sincronizador): void
+    {
+        $this->exigir($this->alcance()->rrhh);
+
+        $resultados = $sincronizador->sincronizar();
+
+        if ($resultados === []) {
+            $this->avisoSincronizacion = ['error' => true, 'texto' => 'No hay relojes activos para sincronizar.'];
+
+            return;
+        }
+
+        $fallaron = collect($resultados)->where('estado', 'error')->count();
+        $nuevas = collect($resultados)->sum('nuevas');
+        $texto = $nuevas.' '.($nuevas === 1 ? 'fichada nueva' : 'fichadas nuevas').' de '.count($resultados).' '.(count($resultados) === 1 ? 'reloj' : 'relojes').'.';
+
+        $this->avisoSincronizacion = [
+            'error' => $fallaron === count($resultados),
+            'texto' => $fallaron > 0 ? $texto.' '.$fallaron.' sin respuesta.' : $texto,
+        ];
     }
 
     public function updated(string $propiedad): void
