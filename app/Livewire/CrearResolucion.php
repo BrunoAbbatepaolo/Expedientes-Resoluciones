@@ -5,9 +5,11 @@ namespace App\Livewire;
 use App\Models\Resolucion;
 use App\Models\ResolucionArchivo;
 use App\Traits\AuthorizesOficina;
+use App\Traits\NotificaUi;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\View;
+use Illuminate\Validation\ValidationException;
 use Livewire\Attributes\Locked;
 use Livewire\Component;
 use Livewire\WithFileUploads;
@@ -16,6 +18,7 @@ use Mews\Purifier\Facades\Purifier;
 class CrearResolucion extends Component
 {
     use AuthorizesOficina;
+    use NotificaUi;
     use WithFileUploads;
 
     // Locked: se usa para armar el nombre de la vista (prototipos.{tipo}).
@@ -392,13 +395,13 @@ class CrearResolucion extends Component
         // DomainException = error de negocio con mensaje pensado para el usuario;
         // el resto se loguea y se muestra un mensaje genérico (sin SQL ni rutas).
         if ($e instanceof \DomainException) {
-            session()->flash('error', $e->getMessage());
+            $this->toast('error', $e->getMessage(), 6000);
 
             return;
         }
 
         report($e);
-        session()->flash('error', 'Ocurrió un error al guardar la resolución. Intentá de nuevo.');
+        $this->toast('error', 'Ocurrió un error al guardar la resolución. Intentá de nuevo.', 6000);
     }
 
     public function removeArchivo($index)
@@ -454,12 +457,12 @@ class CrearResolucion extends Component
     public function guardar()
     {
         if (! View::exists("prototipos.{$this->tipo}")) {
-            session()->flash('error', $this->mensajePlantillaNoDisponible());
+            $this->toast('error', $this->mensajePlantillaNoDisponible(), 6000);
 
             return;
         }
 
-        $this->validate($this->rules(), $this->messages());
+        $this->validarConAviso($this->rules(), $this->messages());
 
         try {
             $html = View::make("prototipos.{$this->tipo}", array_merge($this->datos, [
@@ -480,7 +483,7 @@ class CrearResolucion extends Component
                 plantilla: $html,
             );
 
-            session()->flash('message', 'Resolución guardada exitosamente'.($cantidadArchivos ? " con {$cantidadArchivos} archivo(s)" : ''));
+            $this->toast('success', 'Resolución guardada exitosamente'.($cantidadArchivos ? " con {$cantidadArchivos} archivo(s)" : ''), 4000);
             $this->resetFormulario();
         } catch (\Exception $e) {
             $this->flashErrorGuardado($e);
@@ -489,8 +492,24 @@ class CrearResolucion extends Component
 
     public function guardarPersonalizado()
     {
-        $this->validate([
-            'plantilla' => 'required|min:20',
+        $this->validarConAviso([
+            'plantilla' => [
+                'required',
+                function (string $atributo, mixed $valor, \Closure $fallar) {
+                    $texto = trim(html_entity_decode(strip_tags((string) $valor)));
+                    if (mb_strlen($texto) < 20) {
+                        $fallar('La resolución está vacía o es demasiado corta. Escribí el contenido antes de guardar.');
+
+                        return;
+                    }
+
+                    // Marcadores de la plantilla ([NÚMERO_EXPEDIENTE], [FECHA_RESOLUCIÓN]...) sin reemplazar.
+                    if (preg_match_all('/\[[A-ZÁÉÍÓÚÜÑ0-9]+(?:_[A-ZÁÉÍÓÚÜÑ0-9]+)*\]/u', $texto, $m)) {
+                        $lista = implode(', ', array_slice(array_unique($m[0]), 0, 5));
+                        $fallar("Todavía hay datos sin completar: {$lista}. Reemplazalos por los datos reales antes de guardar.");
+                    }
+                },
+            ],
         ]);
 
         try {
@@ -506,9 +525,29 @@ class CrearResolucion extends Component
                 plantilla: $this->plantilla,
             );
 
-            session()->flash('message', 'Resolución guardada exitosamente'.($cantidadArchivos ? " con {$cantidadArchivos} archivo(s)" : ''));
+            $this->toast('success', 'Resolución guardada exitosamente'.($cantidadArchivos ? " con {$cantidadArchivos} archivo(s)" : ''), 4000);
+            // Vuelve al selector: evita guardar la misma resolución dos veces con otro clic.
+            $this->plantilla = '';
+            $this->modo = '';
         } catch (\Exception $e) {
             $this->flashErrorGuardado($e);
+        }
+    }
+
+    /**
+     * Valida y, si falla, avisa con un cartel (además de dejar los errores en $errors para
+     * el resumen de la pantalla): antes la validación fallaba sin que se viera nada.
+     */
+    private function validarConAviso(array $reglas, array $mensajes = []): void
+    {
+        try {
+            $this->validate($reglas, $mensajes);
+        } catch (ValidationException $e) {
+            $cantidad = count($e->errors());
+            $primero = collect($e->errors())->flatten()->first() ?: 'Revisá los datos.';
+            $this->toast('error', $primero.($cantidad > 1 ? ' (y '.($cantidad - 1).' más)' : ''), 6000);
+
+            throw $e;
         }
     }
 
@@ -633,8 +672,10 @@ class CrearResolucion extends Component
             'datos.num_foja_informe' => 'nullable|string|max:50',
             'datos.fecha_cancelacion' => 'nullable|date',
             'datos.num_foja_dictamen' => 'nullable|string|max:50',
-            'datos.nombre_titular' => 'required|string|max:255',
-            'datos.dni_titular' => 'required|string|max:20',
+            // El titular que se exige depende del formulario: Transferencias usa el titular
+            // nuevo y Rectificación no tiene titular (antes no se podían guardar nunca).
+            'datos.nombre_titular' => [$this->tipoConTitular() ? 'required' : 'nullable', 'string', 'max:255'],
+            'datos.dni_titular' => [$this->tipoConTitular() ? 'required' : 'nullable', 'string', 'max:20'],
             'datos.nombre_cotitular' => 'nullable|string|max:255',
             'datos.dni_cotitular' => 'nullable|string|max:20',
             'datos.num_escritura' => 'nullable|string|max:50',
@@ -649,8 +690,8 @@ class CrearResolucion extends Component
             'datos.num_res_adjudicacion' => 'nullable|string|max:50',
             // Campos específicos de Transferencia
             'datos.nombre_plan' => 'nullable|string|max:255',
-            'datos.nombre_titular_nuevo' => 'nullable|string|max:255',
-            'datos.dni_titular_nuevo' => 'nullable|string|max:20',
+            'datos.nombre_titular_nuevo' => [$this->tipoConTitularNuevo() ? 'required' : 'nullable', 'string', 'max:255'],
+            'datos.dni_titular_nuevo' => [$this->tipoConTitularNuevo() ? 'required' : 'nullable', 'string', 'max:20'],
             'datos.fecha_nacimiento_titular' => 'nullable|date',
             'datos.nombre_cotitular_nuevo' => 'nullable|string|max:255',
             'datos.dni_cotitular_nuevo' => 'nullable|string|max:20',
@@ -693,9 +734,21 @@ class CrearResolucion extends Component
         ];
     }
 
+    private function tipoConTitularNuevo(): bool
+    {
+        return in_array($this->tipo, ['Transferencias', 'Transferencia-Cancelacion'], true);
+    }
+
+    private function tipoConTitular(): bool
+    {
+        return ! $this->tipoConTitularNuevo() && $this->tipo !== 'Rectificacion';
+    }
+
     protected function messages(): array
     {
         return [
+            'datos.nombre_titular_nuevo.required' => 'El nombre del nuevo titular es obligatorio',
+            'datos.dni_titular_nuevo.required' => 'El DNI del nuevo titular es obligatorio',
             'datos.fecha_res.required' => 'La fecha de resolución es obligatoria',
             'datos.num_exp.required' => 'El número de expediente es obligatorio',
             'datos.num_res.required' => 'El número de resolución es obligatorio',

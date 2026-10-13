@@ -4,6 +4,17 @@
             Crear resolución: <span class="text-ipv-blue dark:text-ipv-blue-light">{{ $this->displayName }}</span>
         </h1>
 
+        @if ($errors->any())
+            <div role="alert" class="mb-4 rounded-lg border border-ipv-magenta/30 bg-ipv-magenta/10 px-4 py-3 text-sm text-ipv-magenta dark:text-ipv-magenta-light">
+                <p class="font-semibold">No se pudo guardar. Revisá lo siguiente:</p>
+                <ul class="mt-1 list-disc space-y-0.5 pl-5">
+                    @foreach (array_unique($errors->all()) as $mensajeError)
+                        <li>{{ $mensajeError }}</li>
+                    @endforeach
+                </ul>
+            </div>
+        @endif
+
         @if ($modo === '')
         <div class="mb-4">
             <button type="button" onclick="window.location.href='/resoluciones/elegir'"
