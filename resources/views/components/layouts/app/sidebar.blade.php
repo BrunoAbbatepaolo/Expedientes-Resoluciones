@@ -116,7 +116,7 @@
                     </button>
 
                     <div x-show="open" x-cloak x-collapse.duration.220ms class="sirex-subnav">
-                        @foreach (['expedientes' => ['Mi oficina', ['expedientes', 'expedientes.ingresados', 'expedientes.egresados', 'expedientes.detalle']], 'expedientes.ipv' => ['Expedientes IPV', ['expedientes.ipv', 'expedientes.ipv.ficha']], 'expedientes.ipv.ingresos' => ['Ingresos a oficina', ['expedientes.ipv.ingresos*']]] as $ruta => [$etiqueta, $activas])
+                        @foreach (['expedientes' => ['Mi oficina', ['expedientes', 'expedientes.ingresados', 'expedientes.egresados', 'expedientes.detalle']], 'expedientes.ipv' => ['Expedientes IPV', ['expedientes.ipv', 'expedientes.ipv.ficha']], 'expedientes.ipv.ingresos' => ['Ingresos a oficina', ['expedientes.ipv.ingresos*']], 'expedientes.ipv.pases' => ['Pases emitidos', ['expedientes.ipv.pases*']]] as $ruta => [$etiqueta, $activas])
                             <a href="{{ route($ruta) }}" wire:navigate.hover
                                 @if (request()->routeIs(...$activas)) aria-current="page" @endif
                                 class="sirex-subitem">{{ $etiqueta }}</a>

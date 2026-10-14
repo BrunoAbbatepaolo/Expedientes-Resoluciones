@@ -6,6 +6,7 @@
         'oficina' => ['label' => 'Mi oficina', 'ruta' => route('expedientes'), 'detalle' => 'Registro de ingresos y egresos'],
         'ipv' => ['label' => 'Expedientes IPV', 'ruta' => route('expedientes.ipv'), 'detalle' => 'Consulta y pases de todo el instituto'],
         'ingresos' => ['label' => 'Ingresos a oficina', 'ruta' => route('expedientes.ipv.ingresos'), 'detalle' => 'Qué entró a una oficina en un período'],
+        'pases' => ['label' => 'Pases emitidos', 'ruta' => route('expedientes.ipv.pases'), 'detalle' => 'Qué salió de una oficina y a dónde'],
     ];
 @endphp
 

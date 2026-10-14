@@ -411,6 +411,36 @@ class ExpedientesIpv
     }
 
     /**
+     * Pases que SALIERON de una oficina (o de todas) entre dos fechas: de dónde a dónde, quién y cuándo.
+     * Usa la vista `expediente_pases_origen` de mitivdb (origen = oficina del pase anterior del expediente);
+     * el alta del expediente no cuenta porque no tiene origen.
+     *
+     * @return array{filas: Collection<int, \stdClass>, truncado: bool}
+     */
+    public function pasesEmitidos(?int $origenId, string $desde, string $hasta): array
+    {
+        $filas = $this->db()->table('expediente_pases_origen as p')
+            ->join('expedientes as e', 'e.id', '=', 'p.expediente_id')
+            ->join('causantes as c', 'c.id', '=', 'e.causante_id')
+            ->join('expediente_oficinas as o', 'o.id', '=', 'p.origen_id')
+            ->leftJoin('expediente_oficinas as d', 'd.id', '=', 'p.oficina_id')
+            ->leftJoin('empleados as em', 'em.id', '=', 'p.empleado_id')
+            ->select('e.id', 'e.numero', 'e.asunto', 'c.nombre as causante', 'p.fecha_hora', 'p.observacion',
+                'o.nombre as origen', 'd.nombre as destino', 'em.apellido', 'em.nombre as nombre_empleado')
+            ->where('p.habilitado', true)
+            ->where('e.habilitado', true)
+            ->when($origenId, fn ($q) => $q->where('p.origen_id', $origenId))
+            ->whereBetween('p.fecha_hora', [$desde.' 00:00:00', $hasta.' 23:59:59'])
+            ->orderBy('p.fecha_hora')->orderBy('p.id')
+            ->limit(self::MAX_PASES_INGRESOS + 1)
+            ->get();
+
+        $truncado = $filas->count() > self::MAX_PASES_INGRESOS;
+
+        return ['filas' => $filas->take(self::MAX_PASES_INGRESOS)->values(), 'truncado' => $truncado];
+    }
+
+    /**
      * Valida el período de un informe de ingresos: fechas Y-m-d, desde <= hasta y no más de un año.
      * Devuelve el motivo del rechazo, o null si está bien.
      */

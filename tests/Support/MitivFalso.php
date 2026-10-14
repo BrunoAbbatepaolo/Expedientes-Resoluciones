@@ -99,6 +99,10 @@ class MitivFalso
             $t->text('observacion')->nullable();
             $t->boolean('habilitado')->default(true);
         });
+        // En mitivdb real es una vista: origen = oficina del pase anterior del mismo expediente.
+        DB::connection('pgsql_mitiv')->statement(
+            'create view expediente_pases_origen as select p.*, (select ep.oficina_id from expediente_pases ep where ep.expediente_id = p.expediente_id and ep.id < p.id order by ep.id desc limit 1) as origen_id from expediente_pases p'
+        );
         $s->create('expediente_relacionados', function (Blueprint $t) {
             $t->id();
             $t->integer('expediente_principal_id');

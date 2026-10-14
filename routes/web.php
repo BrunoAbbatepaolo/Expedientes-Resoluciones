@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\ImprimirExpedienteIpvController;
+use App\Http\Controllers\InformesExpedientesController;
 use App\Http\Controllers\IngresosOficinaCsvController;
 use App\Http\Controllers\ResolucionArchivoController;
 use App\Http\Controllers\Rrhh\AdjuntoPedidoController;
@@ -10,6 +11,7 @@ use App\Livewire\Admin;
 use App\Livewire\ConsultaIpv;
 use App\Livewire\FichaIpv;
 use App\Livewire\IngresosOficina;
+use App\Livewire\PasesEmitidos;
 use App\Livewire\Rrhh;
 use Illuminate\Support\Facades\Route;
 use Livewire\Volt\Volt;
@@ -46,6 +48,10 @@ Route::middleware(['auth', 'password.change'])->group(function () {
     Route::livewire('expedientes/ipv', ConsultaIpv::class)->name('expedientes.ipv');
     Route::livewire('expedientes/ipv/ingresos', IngresosOficina::class)->name('expedientes.ipv.ingresos');
     Route::get('expedientes/ipv/ingresos/csv', IngresosOficinaCsvController::class)->name('expedientes.ipv.ingresos.csv');
+    Route::get('expedientes/ipv/ingresos/imprimir', [InformesExpedientesController::class, 'ingresosImprimir'])->name('expedientes.ipv.ingresos.imprimir');
+    Route::livewire('expedientes/ipv/pases-emitidos', PasesEmitidos::class)->name('expedientes.ipv.pases');
+    Route::get('expedientes/ipv/pases-emitidos/csv', [InformesExpedientesController::class, 'pasesCsv'])->name('expedientes.ipv.pases.csv');
+    Route::get('expedientes/ipv/pases-emitidos/imprimir', [InformesExpedientesController::class, 'pasesImprimir'])->name('expedientes.ipv.pases.imprimir');
     Route::livewire('expedientes/ipv/{id}', FichaIpv::class)->whereNumber('id')->name('expedientes.ipv.ficha');
     Route::get('expedientes/ipv/{id}/imprimir', ImprimirExpedienteIpvController::class)->whereNumber('id')->name('expedientes.ipv.imprimir');
     // RRHH (fase 1: consulta de solo lectura del sistema viejo). Ver docs/spec-modulo-rrhh.md.

@@ -12,7 +12,7 @@
         </p>
     </div>
 
-    <div class="sirex-glass-card grid gap-3 rounded-[14px] p-3 sm:grid-cols-2 lg:grid-cols-[2fr_1fr_1fr_auto]">
+    <div class="sirex-glass-card grid gap-3 rounded-[14px] p-3 sm:grid-cols-2 lg:grid-cols-[2fr_1fr_1fr_auto_auto]">
         <label class="block sm:col-span-2 lg:col-span-1">
             <span class="sr-only">Oficina</span>
             <select wire:model.live="oficinaId" class="{{ $entrada }} dark:bg-[#141c26]">
@@ -35,6 +35,10 @@
                 class="sirex-btn inline-flex items-center justify-center gap-1.5 rounded-lg bg-ipv-blue px-4 py-2 text-sm font-medium text-white">
                 <svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11m0 0-4-4m4 4 4-4M5 20h14" /></svg>
                 Exportar CSV
+            </a>
+            <a href="{{ route('expedientes.ipv.ingresos.imprimir', ['oficina' => $oficinaId, 'desde' => $desde, 'hasta' => $hasta]) }}" target="_blank" rel="noopener"
+                class="sirex-btn inline-flex items-center justify-center gap-1.5 rounded-lg border border-ipv-blue/30 px-4 py-2 text-sm font-medium text-ipv-blue dark:border-white/20 dark:text-ipv-blue-light">
+                Imprimir
             </a>
         @endif
     </div>
