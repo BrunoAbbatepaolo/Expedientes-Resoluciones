@@ -19,8 +19,10 @@ class RegistrarAcceso
                 return;
             }
 
+            // Si lo tipeado no parece un correo se descarta: a veces la gente escribe la clave en ese campo.
             $email = (string) ($evento->credentials['email'] ?? '');
-            $this->escribir((int) ($evento->user?->getAuthIdentifier() ?? 0), 'login_fallido', ['email' => mb_substr($email, 0, 150)]);
+            $email = filter_var($email, FILTER_VALIDATE_EMAIL) ? mb_substr($email, 0, 150) : '(no es un correo)';
+            $this->escribir((int) ($evento->user?->getAuthIdentifier() ?? 0), 'login_fallido', ['email' => $email]);
         } catch (\Throwable $e) {
             // Una falla al auditar nunca debe impedir (ni mostrar un error en) el ingreso.
             report($e);

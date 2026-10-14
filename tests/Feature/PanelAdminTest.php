@@ -63,6 +63,13 @@ test('un login y un fallo quedan registrados sin guardar la contraseña', functi
     expect(json_encode(Audit::all()->toArray()))->not->toContain('MalaClave1');
 });
 
+test('un intento con algo que no es un correo no deja lo tipeado en la auditoría (puede ser una clave)', function () {
+    Livewire::test('auth.login')->set('email', 'MiClaveSecreta99')->set('password', 'otra')->call('login');
+
+    expect(json_encode(Audit::where('event', 'login_fallido')->get()->toArray()))
+        ->not->toContain('MiClaveSecreta99');
+});
+
 test('los accesos aparecen solo en su pestaña', function () {
     $admin = adminDelPanel();
     Audit::create(['auditable_type' => User::class, 'auditable_id' => 0, 'event' => 'login_fallido', 'new_values' => ['email' => 'intruso@x.test'], 'ip_address' => '9.9.9.9']);

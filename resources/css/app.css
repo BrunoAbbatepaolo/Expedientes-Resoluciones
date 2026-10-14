@@ -1009,8 +1009,8 @@
 .sirex-login-logo {
     position: relative;
     display: flex;
-    width: 3.5rem;
-    height: 3.5rem;
+    width: 5rem;
+    height: 5rem;
     align-items: center;
     justify-content: center;
 }
@@ -1022,7 +1022,7 @@
 .sirex-login-halo {
     position: absolute;
     inset: 0;
-    border-radius: 1rem;
+    border-radius: 9999px;
     border: 2px solid var(--color-ipv-gold);
     opacity: 0;
     animation: sirex-login-halo 3s ease-out infinite;

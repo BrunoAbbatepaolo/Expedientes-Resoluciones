@@ -72,13 +72,7 @@
         <!-- Marca -->
         <div class="sirex-marca flex items-center gap-2.5 px-2 pb-3 pt-1.5">
             <a href="{{ route('dashboard') }}" wire:navigate.hover class="flex min-w-0 flex-1 items-center gap-2.5" title="SiRex · Gestión de expedientes">
-                <span class="relative flex size-10 shrink-0 items-center justify-center overflow-hidden rounded-[13px] bg-gradient-to-br from-ipv-gold-light to-ipv-gold shadow-[0_4px_14px_rgba(255,184,26,0.4)]">
-                    <svg class="size-[21px] text-ipv-blue-dark" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                        stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                        <path
-                            d="M6.7 13.8a42 42 0 0 1 10.6 0M6.3 18h11.4m-1.1-4.2a48 48 0 0 1 1.9.2M17.7 18l.2 2.5a1.1 1.1 0 0 1-1.1 1.2H7.2a1.1 1.1 0 0 1-1.1-1.2L6.3 18m11.3 0h1.1a2.25 2.25 0 0 0 2.3-2.25V9.5c0-1.1-.8-2-1.8-2.2M6.3 18H5.3a2.25 2.25 0 0 1-2.3-2.25V9.5c0-1.1.8-2 1.8-2.2m10.5 0a48 48 0 0 0-10.5 0M18 3.4v3.7" />
-                    </svg>
-                </span>
+                <img src="{{ asset('images/logo-ipv-simbolo.png') }}" alt="" class="size-10 shrink-0 drop-shadow-[0_3px_8px_rgba(255,184,26,0.4)]" />
                 <span class="sirex-marca-texto min-w-0">
                     <span class="block truncate text-[17px] font-bold leading-tight tracking-tight">SiRex</span>
                     <span class="block truncate text-[11px] text-ipv-ink/55 dark:text-ipv-ink-dark/50">Gestión de expedientes</span>
@@ -298,11 +292,7 @@
     <!-- Barra superior en celulares y tablets: marca a la izquierda, menú a la derecha -->
     <header class="sirex-glass sirex-topbar sticky top-0 z-30 flex items-center justify-between gap-3 border-b border-ipv-blue/12 px-3 py-2 dark:border-white/10 lg:hidden">
         <a href="{{ route('dashboard') }}" wire:navigate class="flex min-w-0 items-center gap-2.5">
-            <span class="flex size-8 shrink-0 items-center justify-center rounded-[10px] bg-gradient-to-br from-ipv-gold-light to-ipv-gold">
-                <svg class="size-[17px] text-ipv-blue-dark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                    <path d="M6.7 13.8a42 42 0 0 1 10.6 0M6.3 18h11.4m-1.1-4.2a48 48 0 0 1 1.9.2M17.7 18l.2 2.5a1.1 1.1 0 0 1-1.1 1.2H7.2a1.1 1.1 0 0 1-1.1-1.2L6.3 18m11.3 0h1.1a2.25 2.25 0 0 0 2.3-2.25V9.5c0-1.1-.8-2-1.8-2.2M6.3 18H5.3a2.25 2.25 0 0 1-2.3-2.25V9.5c0-1.1.8-2 1.8-2.2m10.5 0a48 48 0 0 0-10.5 0M18 3.4v3.7" />
-                </svg>
-            </span>
+            <img src="{{ asset('images/logo-ipv-simbolo.png') }}" alt="" class="size-8 shrink-0" />
             <span class="truncate text-[15px] font-bold tracking-tight">SiRex</span>
         </a>
         <button @click="sidebarOpen = true" type="button" aria-label="Abrir menú" aria-controls="menu-lateral" :aria-expanded="sidebarOpen.toString()"
