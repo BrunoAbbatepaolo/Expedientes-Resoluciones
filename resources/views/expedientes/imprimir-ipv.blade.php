@@ -10,6 +10,20 @@
         <dt>Ubicación actual</dt><dd>{{ $ficha['ubicacion']->oficina ?? 'Sin pases' }}</dd>
     </dl>
 
+    @foreach (['cabeceras' => 'Agregado a', 'agregados' => 'Expedientes agregados'] as $clave => $titulo)
+        @if ($ficha[$clave]->isNotEmpty())
+            <h2>{{ $titulo }}</h2>
+            <table>
+                <thead><tr><th>N°</th><th>Causante</th><th>Asunto</th></tr></thead>
+                <tbody>
+                    @foreach ($ficha[$clave] as $adj)
+                        <tr><td>{{ str_repeat('— ', $adj->nivel - 1) }}{{ $adj->numero }}</td><td>{{ $adj->causante }}</td><td>{{ $adj->asunto }}</td></tr>
+                    @endforeach
+                </tbody>
+            </table>
+        @endif
+    @endforeach
+
     <h2>Historial de pases</h2>
     <table>
         <thead><tr><th>#</th><th>Fecha</th><th>Oficina</th><th>Pasó</th><th>Folios</th><th>Días</th><th>Observación</th></tr></thead>

@@ -103,6 +103,13 @@ class MitivFalso
         DB::connection('pgsql_mitiv')->statement(
             'create view expediente_pases_origen as select p.*, (select ep.oficina_id from expediente_pases ep where ep.expediente_id = p.expediente_id and ep.id < p.id order by ep.id desc limit 1) as origen_id from expediente_pases p'
         );
+        $s->create('expediente_adjuntos', function (Blueprint $t) {
+            $t->id();
+            $t->integer('expediente_id');
+            $t->integer('cabecera_id');
+            $t->integer('empleado_id')->nullable();
+            $t->boolean('habilitado')->default(true);
+        });
         $s->create('expediente_relacionados', function (Blueprint $t) {
             $t->id();
             $t->integer('expediente_principal_id');

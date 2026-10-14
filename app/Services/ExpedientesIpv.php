@@ -207,7 +207,63 @@ class ExpedientesIpv
             'pases' => $timeline,
             'relacionados' => $relacionados,
             'ubicacion' => $timeline->last(),
+        ] + $this->adjuntos($id);
+    }
+
+    /** Tope de niveles y de expedientes al recorrer adjuntos (el sistema viejo recorría sin control de ciclos). */
+    private const MAX_NIVELES_ADJUNTOS = 10;
+
+    private const MAX_ADJUNTOS = 200;
+
+    /**
+     * Expedientes agregados (adjuntos) a este y expedientes a los que este está agregado (cabeceras),
+     * con todos sus niveles. Recorrido iterativo con control de ciclos.
+     *
+     * @return array{agregados: Collection<int, \stdClass>, cabeceras: Collection<int, \stdClass>}
+     */
+    public function adjuntos(int $id): array
+    {
+        return [
+            'agregados' => $this->recorrerAdjuntos($id, 'cabecera_id', 'expediente_id'),
+            'cabeceras' => $this->recorrerAdjuntos($id, 'expediente_id', 'cabecera_id'),
         ];
+    }
+
+    /**
+     * @param  string  $desde  columna por la que se busca el expediente actual
+     * @param  string  $hacia  columna con el expediente que se sigue
+     * @return Collection<int, \stdClass> con numero, asunto, causante y nivel (1 = directo)
+     */
+    private function recorrerAdjuntos(int $id, string $desde, string $hacia): Collection
+    {
+        $visitados = [$id => true];
+        $frontera = [$id];
+        $encontrados = collect();
+
+        for ($nivel = 1; $nivel <= self::MAX_NIVELES_ADJUNTOS && $frontera !== [] && $encontrados->count() < self::MAX_ADJUNTOS; $nivel++) {
+            $filas = $this->db()->table('expediente_adjuntos as a')
+                ->join('expedientes as e', 'e.id', '=', 'a.'.$hacia)
+                ->leftJoin('causantes as c', 'c.id', '=', 'e.causante_id')
+                ->whereIn('a.'.$desde, $frontera)
+                ->whereColumn('a.expediente_id', '<>', 'a.cabecera_id')
+                ->where('e.habilitado', true)
+                ->orderBy('e.numero')
+                ->limit(self::MAX_ADJUNTOS)
+                ->get(['e.id', 'e.numero', 'e.asunto', 'c.nombre as causante']);
+
+            $frontera = [];
+            foreach ($filas as $fila) {
+                if (isset($visitados[$fila->id])) {
+                    continue;
+                }
+                $visitados[$fila->id] = true;
+                $fila->nivel = $nivel;
+                $encontrados->push($fila);
+                $frontera[] = $fila->id;
+            }
+        }
+
+        return $encontrados->take(self::MAX_ADJUNTOS)->values();
     }
 
     /**

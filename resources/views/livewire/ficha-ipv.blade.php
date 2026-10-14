@@ -159,6 +159,28 @@
                 @endforelse
             </section>
 
+            {{-- Agregados (adjuntos) y cabeceras --}}
+            @if ($ficha['agregados']->isNotEmpty() || $ficha['cabeceras']->isNotEmpty())
+                <section class="sirex-glass-card rounded-[14px] p-5 lg:col-span-2" aria-labelledby="adjuntos">
+                    <h2 id="adjuntos" class="mb-3 text-sm font-semibold uppercase tracking-wide text-ipv-ink/50 dark:text-ipv-ink-dark/50">Expedientes agregados</h2>
+                    @foreach (['cabeceras' => 'Está agregado a', 'agregados' => 'Tiene agregados'] as $clave => $titulo)
+                        @if ($ficha[$clave]->isNotEmpty())
+                            <div class="mb-3 last:mb-0">
+                                <div class="mb-1.5 text-xs font-medium text-ipv-ink/60 dark:text-ipv-ink-dark/60">{{ $titulo }}</div>
+                                <ul class="space-y-1.5 text-sm">
+                                    @foreach ($ficha[$clave] as $adj)
+                                        <li wire:key="adj-{{ $clave }}-{{ $adj->id }}" class="flex flex-wrap items-baseline gap-x-2" style="padding-left: {{ ($adj->nivel - 1) * 1.25 }}rem">
+                                            <a href="{{ route('expedientes.ipv.ficha', $adj->id) }}" wire:navigate.hover class="font-mono text-xs font-semibold text-ipv-blue hover:underline dark:text-ipv-blue-light">{{ $adj->numero }}</a>
+                                            <span class="text-ipv-ink/70 dark:text-ipv-ink-dark/70">{{ $adj->causante }} · {{ \Illuminate\Support\Str::limit($adj->asunto, 90) }}</span>
+                                        </li>
+                                    @endforeach
+                                </ul>
+                            </div>
+                        @endif
+                    @endforeach
+                </section>
+            @endif
+
             {{-- Lo que SiRex sabe del expediente --}}
             <section class="sirex-glass-card rounded-[14px] p-5" aria-labelledby="sirex">
                 <h2 id="sirex" class="mb-3 text-sm font-semibold uppercase tracking-wide text-ipv-ink/50 dark:text-ipv-ink-dark/50">En SiRex</h2>
