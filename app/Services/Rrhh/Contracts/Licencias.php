@@ -49,6 +49,13 @@ interface Licencias
      */
     public function porTipo(Alcance $alcance, CarbonImmutable $desde, CarbonImmutable $hasta, ?int $oficinaId = null): Collection;
 
+    /**
+     * Inasistencias registradas por empleado y tipo en un período (solo RRHH).
+     *
+     * @return Collection<int, \stdClass> cada uno con legajo, apellido, nombre, oficina, tipo y cantidad
+     */
+    public function inasistenciasEntre(Alcance $alcance, CarbonImmutable $desde, CarbonImmutable $hasta, ?int $oficinaId = null): Collection;
+
     /** @return Collection<int, string> id => descripción */
     public function tipos(): Collection;
 

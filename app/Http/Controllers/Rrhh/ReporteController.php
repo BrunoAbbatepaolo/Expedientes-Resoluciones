@@ -28,6 +28,10 @@ class ReporteController extends Controller
         'presentismo' => 'Presentismo mensual por oficina',
         'adeudadas' => 'Vacaciones adeudadas',
         'licencias' => 'Licencias por tipo',
+        'inasistencias' => 'Inasistencias por empleado',
+        'cumpleanios' => 'Cumpleaños del mes',
+        'antiguedad' => 'Antigüedad del personal',
+        'personal' => 'Listado de personal',
     ];
 
     public function __construct(
@@ -53,6 +57,10 @@ class ReporteController extends Controller
             'presentismo' => $this->presentismo($request, $alcance, $oficinaId, $oficina),
             'adeudadas' => $this->adeudadas($alcance, $oficinaId, $oficina),
             'licencias' => $this->porTipo($request, $alcance, $oficinaId, $oficina),
+            'inasistencias' => $this->inasistencias($request, $alcance, $oficinaId, $oficina),
+            'cumpleanios' => $this->cumpleanios($request, $alcance),
+            'antiguedad' => $this->antiguedad($request, $alcance),
+            'personal' => $this->personal($request, $alcance, $oficinaId, $oficina),
         };
 
         if ($request->query('formato') === 'csv') {
@@ -130,13 +138,87 @@ class ReporteController extends Controller
         ];
     }
 
+    /** Fecha Y-m-d válida del query o el valor por defecto. */
+    private function fecha(Request $request, string $campo, CarbonImmutable $defecto): CarbonImmutable
+    {
+        $valor = (string) $request->query($campo);
+
+        return preg_match('/^\d{4}-\d{2}-\d{2}$/', $valor) && CarbonImmutable::hasFormat($valor, 'Y-m-d') ? CarbonImmutable::parse($valor) : $defecto;
+    }
+
+    private function inasistencias(Request $request, Alcance $alcance, ?int $oficinaId, ?string $oficina): array
+    {
+        $desde = $this->fecha($request, 'desde', Hora::hoy()->startOfYear());
+        $hasta = $this->fecha($request, 'hasta', Hora::hoy());
+        abort_if($desde->gt($hasta) || $desde->diffInDays($hasta) > 366, 422, 'El período no es válido (máximo un año).');
+
+        $filas = $this->licencias->inasistenciasEntre($alcance, $desde, $hasta, $oficinaId)
+            ->map(fn ($f) => [$f->legajo, $f->apellido.', '.$f->nombre, $f->oficina, $f->tipo, $f->cantidad])->all();
+
+        return [
+            ($oficina ?? 'Todas las oficinas').' · '.$desde->format('d/m/Y').' al '.$hasta->format('d/m/Y'),
+            ['Legajo', 'Apellido y nombre', 'Oficina', 'Tipo', 'Cantidad'],
+            $filas,
+        ];
+    }
+
+    private function cumpleanios(Request $request, Alcance $alcance): array
+    {
+        $mes = $request->integer('mes') ?: Hora::hoy()->month;
+        abort_unless($mes >= 1 && $mes <= 12, 422, 'Mes inválido.');
+
+        $filas = $this->legajos->cumpleanios($alcance, $mes)
+            ->map(fn ($f) => [$f->dia, $f->legajo, $f->apellido.', '.$f->nombre, $f->oficina])->all();
+
+        return [
+            ucfirst(CarbonImmutable::create(2000, $mes, 1)->locale('es')->translatedFormat('F')),
+            ['Día', 'Legajo', 'Apellido y nombre', 'Oficina'],
+            $filas,
+        ];
+    }
+
+    private function antiguedad(Request $request, Alcance $alcance): array
+    {
+        $al = $this->fecha($request, 'al', Hora::hoy());
+        $situacionId = $request->integer('situacion') ?: null;
+        $situacion = $situacionId ? ($this->legajos->situaciones()[$situacionId] ?? null) : null;
+        abort_if($situacionId && $situacion === null, 404);
+
+        $filas = $this->legajos->antiguedad($alcance, $al, $situacionId)
+            ->map(fn ($f) => [$f->legajo, $f->apellido.', '.$f->nombre, $f->situacion, $f->ingreso->format('d/m/Y'), $f->antiguedad_ipv, $f->antiguedad_total])->all();
+
+        return [
+            ($situacion ?? 'Todas las situaciones').' · al '.$al->format('d/m/Y'),
+            ['Legajo', 'Apellido y nombre', 'Situación', 'Ingreso', 'Antigüedad en el IPV', 'Antigüedad total (con reconocimientos)'],
+            $filas,
+        ];
+    }
+
+    private function personal(Request $request, Alcance $alcance, ?int $oficinaId, ?string $oficina): array
+    {
+        $estado = in_array($request->query('estado'), ['activos', 'pasivos', 'todos'], true) ? $request->query('estado') : 'activos';
+
+        $filas = collect($this->legajos->buscar($alcance, ['estado' => $estado, 'oficina_id' => $oficinaId], 5000)->items())
+            ->map(fn ($e) => [
+                $e->legajo,
+                $e->apellido.', '.$e->nombre,
+                $e->oficinaRrhh->nombre ?? '',
+                $e->situacionLaboral->nombre ?? '',
+                $e->fecha_ingreso?->format('d/m/Y') ?? '',
+                $e->espasivo ? 'Pasivo' : 'Activo',
+            ])->all();
+
+        return [
+            ($oficina ?? 'Todas las oficinas').' · '.$estado,
+            ['Legajo', 'Apellido y nombre', 'Oficina', 'Situación', 'Ingreso', 'Estado'],
+            $filas,
+        ];
+    }
+
     private function porTipo(Request $request, Alcance $alcance, ?int $oficinaId, ?string $oficina): array
     {
-        $fecha = fn (string $campo, CarbonImmutable $defecto) => preg_match('/^\d{4}-\d{2}-\d{2}$/', (string) $request->query($campo))
-            ? CarbonImmutable::parse($request->query($campo))
-            : $defecto;
-        $desde = $fecha('desde', Hora::hoy()->startOfYear());
-        $hasta = $fecha('hasta', Hora::hoy());
+        $desde = $this->fecha($request, 'desde', Hora::hoy()->startOfYear());
+        $hasta = $this->fecha($request, 'hasta', Hora::hoy());
 
         $filas = $this->licencias->porTipo($alcance, $desde, $hasta, $oficinaId)
             ->map(fn ($t) => [$t->tipo, $t->cantidad, $t->dias])->all();

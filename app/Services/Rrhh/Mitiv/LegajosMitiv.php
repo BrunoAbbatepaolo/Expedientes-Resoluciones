@@ -14,6 +14,7 @@ use App\Models\Mitiv\SituacionLaboral;
 use App\Models\RrhhAcceso;
 use App\Services\Rrhh\Alcance;
 use App\Services\Rrhh\Contracts\Legajos;
+use Carbon\CarbonImmutable;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
@@ -142,6 +143,74 @@ class LegajosMitiv implements Legajos
         $this->filtrarTexto($query, $texto, false);
 
         return $query->orderBy('empleados.apellido')->limit($limite)->get();
+    }
+
+    public function cumpleanios(Alcance $alcance, int $mes): Collection
+    {
+        $this->soloRrhh($alcance);
+
+        return Empleado::query()->conNivel(NivelDatoRrhh::Basico)->addSelect('empleados.fecha_nacimiento')
+            ->activos()
+            ->whereNotNull('empleados.fecha_nacimiento')
+            ->whereMonth('empleados.fecha_nacimiento', $mes)
+            ->with('oficinaRrhh:id,nombre')
+            ->get()
+            ->map(fn (Empleado $e) => (object) [
+                // Solo día y mes: la fecha de nacimiento completa es un dato personal que este informe no muestra.
+                'dia' => $e->fecha_nacimiento->day,
+                'legajo' => $e->legajo,
+                'apellido' => $e->apellido,
+                'nombre' => $e->nombre,
+                'oficina' => $e->oficinaRrhh->nombre ?? '',
+            ])
+            ->sortBy([['dia', 'asc'], ['apellido', 'asc'], ['nombre', 'asc']])
+            ->values();
+    }
+
+    public function antiguedad(Alcance $alcance, CarbonImmutable $al, ?int $situacionId = null): Collection
+    {
+        $this->soloRrhh($alcance);
+
+        $ambitos = ['nacional', 'provincial', 'municipal'];
+        $columnas = [];
+        foreach ($ambitos as $ambito) {
+            foreach (['anio', 'mes', 'dia'] as $parte) {
+                $columnas[] = "empleados.{$parte}_reconocimiento_{$ambito}";
+            }
+        }
+
+        return Empleado::query()->conNivel(NivelDatoRrhh::Basico)->addSelect($columnas)
+            ->activos()
+            ->whereNotNull('empleados.fecha_ingreso')
+            ->where('empleados.fecha_ingreso', '<=', $al->toDateString())
+            ->when($situacionId, fn ($q) => $q->where('empleados.situacion_laboral_id', $situacionId))
+            ->with('situacionLaboral:id,nombre')
+            ->orderBy('empleados.fecha_ingreso')->orderBy('empleados.apellido')
+            ->get()
+            ->map(function (Empleado $e) use ($al, $ambitos) {
+                $dif = $e->fecha_ingreso->diff($al);
+                $meses = $dif->y * 12 + $dif->m;
+                $dias = $dif->d;
+                $reconocidos = [0, 0, 0];
+                foreach ($ambitos as $ambito) {
+                    $reconocidos[0] += (int) $e->{"anio_reconocimiento_{$ambito}"};
+                    $reconocidos[1] += (int) $e->{"mes_reconocimiento_{$ambito}"};
+                    $reconocidos[2] += (int) $e->{"dia_reconocimiento_{$ambito}"};
+                }
+                $totalMeses = $meses + $reconocidos[0] * 12 + $reconocidos[1] + intdiv($dias + $reconocidos[2], 30);
+                $totalDias = ($dias + $reconocidos[2]) % 30;
+
+                return (object) [
+                    'legajo' => $e->legajo,
+                    'apellido' => $e->apellido,
+                    'nombre' => $e->nombre,
+                    'situacion' => $e->situacionLaboral->nombre ?? '',
+                    'ingreso' => $e->fecha_ingreso,
+                    'antiguedad_ipv' => intdiv($meses, 12).' años, '.($meses % 12).' meses, '.$dias.' días',
+                    'antiguedad_total' => intdiv($totalMeses, 12).' años, '.($totalMeses % 12).' meses, '.$totalDias.' días',
+                ];
+            })
+            ->values();
     }
 
     public function situaciones(): Collection

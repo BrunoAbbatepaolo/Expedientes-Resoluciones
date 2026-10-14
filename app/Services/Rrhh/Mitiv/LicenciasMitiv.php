@@ -221,6 +221,35 @@ class LicenciasMitiv implements Licencias
             ->values();
     }
 
+    public function inasistenciasEntre(Alcance $alcance, CarbonImmutable $desde, CarbonImmutable $hasta, ?int $oficinaId = null): Collection
+    {
+        $this->soloRrhh($alcance);
+
+        $empleados = Empleado::query()->conNivel(NivelDatoRrhh::Basico)->with('oficinaRrhh:id,nombre')
+            ->when($oficinaId, fn ($q) => $q->where('empleados.oficina_id', $oficinaId))
+            ->get()->keyBy('id');
+
+        return Inasistencia::vigentes()->with('tipo:id,nombre')
+            ->whereBetween('fecha', [$desde->toDateString(), $hasta->toDateString()])
+            ->whereIn('empleado_id', $empleados->keys()->all() ?: [0])
+            ->get(['id', 'empleado_id', 'tipo_inasistencia_id'])
+            ->groupBy(fn (Inasistencia $i) => $i->empleado_id.'|'.$i->tipo_inasistencia_id)
+            ->map(function (Collection $grupo) use ($empleados) {
+                $e = $empleados[$grupo->first()->empleado_id];
+
+                return (object) [
+                    'legajo' => $e->legajo,
+                    'apellido' => $e->apellido,
+                    'nombre' => $e->nombre,
+                    'oficina' => $e->oficinaRrhh->nombre ?? '',
+                    'tipo' => (string) ($grupo->first()->tipo->nombre ?? 'Sin tipo'),
+                    'cantidad' => $grupo->count(),
+                ];
+            })
+            ->sortBy([['apellido', 'asc'], ['nombre', 'asc'], ['tipo', 'asc']])
+            ->values();
+    }
+
     public function esTipoVacaciones(int $tipoAusenciaId): bool
     {
         return in_array($tipoAusenciaId, $this->tiposVacaciones(), true);

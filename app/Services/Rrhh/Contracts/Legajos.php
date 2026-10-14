@@ -5,6 +5,7 @@ namespace App\Services\Rrhh\Contracts;
 use App\Enums\NivelDatoRrhh;
 use App\Models\Mitiv\Empleado;
 use App\Services\Rrhh\Alcance;
+use Carbon\CarbonImmutable;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
 
@@ -38,6 +39,21 @@ interface Legajos
 
     /** Para la búsqueda global: apellido, nombre o legajo. @return Collection<int, Empleado> */
     public function buscarRapido(Alcance $alcance, string $texto, int $limite = 5): Collection;
+
+    /**
+     * Cumpleaños de los empleados activos en un mes (solo RRHH). Devuelve solo día y mes, nunca el año ni la edad.
+     *
+     * @return Collection<int, \stdClass> cada uno con dia, legajo, apellido, nombre y oficina
+     */
+    public function cumpleanios(Alcance $alcance, int $mes): Collection;
+
+    /**
+     * Antigüedad de los empleados activos al día `$al` (solo RRHH): tiempo en el IPV más los reconocimientos
+     * (nacional, provincial y municipal). Más antiguos primero.
+     *
+     * @return Collection<int, \stdClass> cada uno con legajo, apellido, nombre, situacion, ingreso, antiguedad_ipv y antiguedad_total
+     */
+    public function antiguedad(Alcance $alcance, CarbonImmutable $al, ?int $situacionId = null): Collection;
 
     /** @return Collection<int, string> id => nombre */
     public function situaciones(): Collection;

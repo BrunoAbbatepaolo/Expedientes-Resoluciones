@@ -62,3 +62,54 @@ test('vacaciones adeudadas y licencias por tipo salen en CSV para Excel', functi
 test('un reporte inexistente da 404', function () {
     $this->actingAs($this->rrhh)->get(route('rrhh.reportes.ver', ['reporte' => 'sueldos']))->assertNotFound();
 });
+
+test('inasistencias por empleado cuenta por tipo y respeta el período', function () {
+    MitivFalso::inasistencia($this->ana, '2026-09-15', 82);
+    MitivFalso::inasistencia($this->ana, '2026-02-01', 82); // fuera del período
+
+    $csv = $this->actingAs($this->rrhh)
+        ->get(route('rrhh.reportes.ver', ['reporte' => 'inasistencias', 'desde' => '2026-09-01', 'hasta' => '2026-09-30', 'formato' => 'csv']))
+        ->assertOk()->streamedContent();
+
+    expect($csv)->toContain('"GOMEZ, ANA"')->toContain('AUSENTE')->toContain(';2');
+
+    $this->actingAs($this->rrhh)->get(route('rrhh.reportes.ver', ['reporte' => 'inasistencias', 'desde' => '2026-09-30', 'hasta' => '2026-09-01']))->assertStatus(422);
+});
+
+test('cumpleaños del mes muestra solo día y mes, nunca el año ni la edad', function () {
+    DB::connection('pgsql_mitiv')->table('empleados')->where('id', $this->ana)->update(['fecha_nacimiento' => '1985-10-23']);
+    $otra = MitivFalso::empleadoRrhh(['apellido' => 'RUIZ', 'nombre' => 'EVA', 'oficina_id' => $this->oficina]);
+    DB::connection('pgsql_mitiv')->table('empleados')->where('id', $otra)->update(['fecha_nacimiento' => '1990-11-02']);
+
+    $r = $this->actingAs($this->rrhh)->get(route('rrhh.reportes.ver', ['reporte' => 'cumpleanios', 'mes' => 10]))->assertOk();
+
+    $r->assertSee('GOMEZ, ANA')->assertDontSee('RUIZ, EVA')->assertDontSee('1985')->assertDontSee('1990');
+});
+
+test('cumpleaños, antigüedad y personal son solo para RRHH', function () {
+    foreach (['cumpleanios', 'antiguedad', 'personal', 'inasistencias'] as $reporte) {
+        $this->actingAs(User::factory()->create())->get(route('rrhh.reportes.ver', ['reporte' => $reporte]))->assertForbidden();
+    }
+});
+
+test('antigüedad suma los reconocimientos al tiempo en el IPV', function () {
+    DB::connection('pgsql_mitiv')->table('empleados')->where('id', $this->ana)->update([
+        'fecha_ingreso' => '2016-10-20', 'anio_reconocimiento_nacional' => 2, 'mes_reconocimiento_provincial' => 3,
+    ]);
+
+    $csv = $this->actingAs($this->rrhh)->get(route('rrhh.reportes.ver', ['reporte' => 'antiguedad', 'formato' => 'csv']))->assertOk()->streamedContent();
+
+    expect($csv)->toContain('10 años, 0 meses, 0 días')->toContain('12 años, 3 meses, 0 días');
+});
+
+test('el listado de personal separa activos y pasivos', function () {
+    $pasivo = MitivFalso::empleadoRrhh(['apellido' => 'LUNA', 'nombre' => 'OSCAR', 'oficina_id' => $this->oficina, 'espasivo' => true]);
+
+    $this->actingAs($this->rrhh)->get(route('rrhh.reportes.ver', ['reporte' => 'personal']))->assertSee('GOMEZ, ANA')->assertDontSee('LUNA, OSCAR');
+    $this->actingAs($this->rrhh)->get(route('rrhh.reportes.ver', ['reporte' => 'personal', 'estado' => 'pasivos']))->assertSee('LUNA, OSCAR')->assertDontSee('GOMEZ, ANA');
+});
+
+test('la pantalla de reportes ofrece los nuevos informes', function () {
+    $this->actingAs($this->rrhh)->get(route('rrhh.reportes'))->assertOk()
+        ->assertSee('Inasistencias por empleado')->assertSee('Cumpleaños del mes')->assertSee('Antigüedad del personal')->assertSee('Listado de personal');
+});

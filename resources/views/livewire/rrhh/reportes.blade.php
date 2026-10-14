@@ -54,5 +54,58 @@
                 <a href="{{ $url('licencias', ['oficina' => $oficinaLicencias, 'desde' => $desde, 'hasta' => $hasta], true) }}" class="{{ $botonCsv }}">Excel (CSV)</a>
             </div>
         </section>
+        <section class="sirex-glass-card space-y-3 rounded-[14px] p-4">
+            <h2 class="font-semibold text-ipv-ink dark:text-ipv-ink-dark">Inasistencias por empleado</h2>
+            <div class="grid gap-2 sm:grid-cols-3">
+                <x-rrhh.select etiqueta="Oficina" wire:model.live="oficinaInasistencias" vacio="Todas las oficinas" :opciones="$oficinas" />
+                <input type="date" wire:model.live="desde" class="{{ $entrada }}" title="Desde" />
+                <input type="date" wire:model.live="hasta" class="{{ $entrada }}" title="Hasta" />
+            </div>
+            <div class="flex flex-wrap gap-2">
+                <a href="{{ $url('inasistencias', ['oficina' => $oficinaInasistencias, 'desde' => $desde, 'hasta' => $hasta]) }}" target="_blank" class="{{ $boton }}">Ver / imprimir</a>
+                <a href="{{ $url('inasistencias', ['oficina' => $oficinaInasistencias, 'desde' => $desde, 'hasta' => $hasta], true) }}" class="{{ $botonCsv }}">Excel (CSV)</a>
+            </div>
+        </section>
+
+        <section class="sirex-glass-card space-y-3 rounded-[14px] p-4">
+            <h2 class="font-semibold text-ipv-ink dark:text-ipv-ink-dark">Cumpleaños del mes</h2>
+            <select wire:model.live="mesCumple" class="{{ $entrada }} dark:bg-[#141c26]" aria-label="Mes">
+                @foreach (range(1, 12) as $m)
+                    <option value="{{ $m }}">{{ ucfirst(\Carbon\Carbon::create(2000, $m, 1)->locale('es')->translatedFormat('F')) }}</option>
+                @endforeach
+            </select>
+            <div class="flex flex-wrap gap-2">
+                <a href="{{ $url('cumpleanios', ['mes' => $mesCumple]) }}" target="_blank" class="{{ $boton }}">Ver / imprimir</a>
+                <a href="{{ $url('cumpleanios', ['mes' => $mesCumple], true) }}" class="{{ $botonCsv }}">Excel (CSV)</a>
+            </div>
+        </section>
+
+        <section class="sirex-glass-card space-y-3 rounded-[14px] p-4">
+            <h2 class="font-semibold text-ipv-ink dark:text-ipv-ink-dark">Antigüedad del personal</h2>
+            <div class="grid gap-2 sm:grid-cols-2">
+                <x-rrhh.select etiqueta="Situación laboral" wire:model.live="situacionAntiguedad" vacio="Todas las situaciones" :opciones="$situaciones" />
+                <input type="date" wire:model.live="al" class="{{ $entrada }}" title="Al día" />
+            </div>
+            <div class="flex flex-wrap gap-2">
+                <a href="{{ $url('antiguedad', ['situacion' => $situacionAntiguedad, 'al' => $al]) }}" target="_blank" class="{{ $boton }}">Ver / imprimir</a>
+                <a href="{{ $url('antiguedad', ['situacion' => $situacionAntiguedad, 'al' => $al], true) }}" class="{{ $botonCsv }}">Excel (CSV)</a>
+            </div>
+        </section>
+
+        <section class="sirex-glass-card space-y-3 rounded-[14px] p-4">
+            <h2 class="font-semibold text-ipv-ink dark:text-ipv-ink-dark">Listado de personal</h2>
+            <div class="grid gap-2 sm:grid-cols-2">
+                <x-rrhh.select etiqueta="Oficina" wire:model.live="oficinaPersonal" vacio="Todas las oficinas" :opciones="$oficinas" />
+                <select wire:model.live="estadoPersonal" class="{{ $entrada }} dark:bg-[#141c26]" aria-label="Estado">
+                    <option value="activos">Activos</option>
+                    <option value="pasivos">Pasivos</option>
+                    <option value="todos">Todos</option>
+                </select>
+            </div>
+            <div class="flex flex-wrap gap-2">
+                <a href="{{ $url('personal', ['oficina' => $oficinaPersonal, 'estado' => $estadoPersonal]) }}" target="_blank" class="{{ $boton }}">Ver / imprimir</a>
+                <a href="{{ $url('personal', ['oficina' => $oficinaPersonal, 'estado' => $estadoPersonal], true) }}" class="{{ $botonCsv }}">Excel (CSV)</a>
+            </div>
+        </section>
     </div>
 </div>
