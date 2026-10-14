@@ -32,9 +32,12 @@ class AppServiceProvider extends ServiceProvider
                 : Limit::perMinute(max(1, intdiv($limite, 3)))->by('ip'.$request->ip());
         });
 
-        // Política de contraseñas (cambio de clave, clave inicial y restablecimiento): 10 caracteres como
+        // Política de contraseñas (cambio de clave, clave inicial y restablecimiento): 8 caracteres como
         // mínimo, con mayúsculas, minúsculas y números. El símbolo se recomienda pero no se exige.
-        Password::defaults(fn () => Password::min(10)->mixedCase()->numbers());
+        Password::defaults(fn () => Password::min(8)->mixedCase()->numbers());
+
+        // Ingresos y fallos de ingreso quedan en la auditoría (App\Listeners\RegistrarAcceso, que Laravel
+        // registra solo por su tipo de evento: registrarlo acá también lo duplicaría).
 
         // mitivdb es la base del sistema viejo, que sigue en producción: SiRex solo la
         // consulta. Cada sesión se abre en modo solo lectura para que ningún error de
