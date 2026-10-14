@@ -16,6 +16,7 @@ use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Locked;
@@ -43,6 +44,7 @@ class ListaUsuario extends Component
         'resolucion_editar' => false,
         'lista_usuario_ver' => false,
         'lista_usuario_editar' => false,
+        'admin_ver' => false,
     ];
 
     // Permisos que tenía el usuario al abrir la ventana: sirve para mostrar qué se va a cambiar.
@@ -55,6 +57,18 @@ class ListaUsuario extends Component
     // Clave provisoria del último usuario creado, para que el admin se la comunique.
     #[Locked]
     public ?string $claveGenerada = null;
+
+    #[Locked]
+    public string $claveTitulo = 'Usuario creado.';
+
+    // --- Cuenta de un usuario existente (email y restablecer contraseña) ---
+    #[Locked]
+    public ?int $cuentaUserId = null;
+
+    #[Locked]
+    public string $cuentaNombre = '';
+
+    public string $cuentaEmail = '';
 
     public ?int $oficina_id = null;
 
@@ -311,6 +325,7 @@ class ListaUsuario extends Component
                 'email' => $usuario->email,
                 'oficina_id' => (int) $this->nuevoOficinaId,
             ]);
+            $this->claveTitulo = 'Usuario creado.';
             $this->claveGenerada = $usuario->email.': '.$clave;
 
             $this->dispatch('toast', type: 'success', message: 'Usuario creado. Deberá cambiar su contraseña al iniciar sesión.');
@@ -402,6 +417,134 @@ class ListaUsuario extends Component
             ]);
 
             $this->dispatch('toast', type: 'error', message: 'Ocurrió un error al guardar permisos.');
+        }
+    }
+
+    /** Abre la ventana de cuenta (email y restablecer contraseña) de un usuario. */
+    public function abrirCuenta(int $userId): void
+    {
+        if (! $this->puedeEditarUsuarios()) {
+            return;
+        }
+
+        $usuario = User::on('mysql_admin')->find($userId);
+        if (! $usuario) {
+            $this->dispatch('toast', type: 'error', message: 'Usuario no encontrado.');
+
+            return;
+        }
+
+        $this->resetValidation();
+        $this->cuentaUserId = $usuario->id;
+        $this->cuentaNombre = trim($usuario->apellido.', '.$usuario->nombre);
+        $this->cuentaEmail = (string) $usuario->email;
+
+        $this->dispatch('open-modal', 'modal-cuenta');
+    }
+
+    public function guardarEmail(): void
+    {
+        if (! $this->puedeEditarUsuarios() || ! ($usuario = $this->usuarioDeCuenta())) {
+            return;
+        }
+
+        $this->cuentaEmail = trim($this->cuentaEmail);
+
+        try {
+            $this->validate([
+                'cuentaEmail' => ['required', 'string', 'email', 'max:255', Rule::unique('mysql_admin.users', 'email')->ignore($usuario->id)],
+            ], [
+                'cuentaEmail.required' => 'Escribí el email.',
+                'cuentaEmail.email' => 'Ese email no es válido. Revisá que tenga la forma nombre@dominio.com.',
+                'cuentaEmail.unique' => 'Ese email ya lo usa otro usuario.',
+            ], ['cuentaEmail' => 'email']);
+        } catch (ValidationException $ve) {
+            $this->dispatch('toast', type: 'error', message: $ve->validator->errors()->first());
+            throw $ve;
+        }
+
+        $anterior = (string) $usuario->email;
+        if ($anterior === $this->cuentaEmail) {
+            $this->dispatch('toast', type: 'info', message: 'El email es el mismo, no hay nada que cambiar.');
+
+            return;
+        }
+
+        $usuario->update(['email' => $this->cuentaEmail]);
+        Audit::registrar($usuario, 'email', ['email' => $anterior], ['email' => $this->cuentaEmail]);
+
+        $this->dispatch('toast', type: 'success', message: 'Email actualizado.');
+        $this->dispatch('close-modal', 'modal-cuenta');
+    }
+
+    /**
+     * Deja al usuario con una contraseña provisoria nueva: tendrá que cambiarla al entrar
+     * y se le cierran las sesiones abiertas.
+     */
+    public function restablecerClave(): void
+    {
+        if (! $this->puedeEditarUsuarios() || ! ($usuario = $this->usuarioDeCuenta())) {
+            return;
+        }
+
+        if ($usuario->id === auth()->id()) {
+            $this->dispatch('toast', type: 'error', message: 'Tu propia contraseña se cambia desde Configuración > Contraseña.');
+
+            return;
+        }
+
+        $clave = Str::password(12, symbols: false);
+        $usuario->forceFill([
+            'password' => $clave,
+            'require_password_change' => true,
+            'remember_token' => null,
+        ])->save();
+
+        $this->cerrarSesionesDe($usuario);
+        Audit::registrar($usuario, 'clave_restablecida');
+
+        $this->claveTitulo = 'Contraseña restablecida.';
+        $this->claveGenerada = $usuario->email.': '.$clave;
+
+        $this->dispatch('toast', type: 'success', message: 'Contraseña restablecida. Deberá cambiarla al iniciar sesión.');
+        $this->dispatch('close-modal', 'modal-cuenta');
+    }
+
+    private function puedeEditarUsuarios(): bool
+    {
+        if (auth()->user()?->permiso('lista_usuario_editar')) {
+            return true;
+        }
+
+        $this->dispatch('toast', type: 'error', message: 'No tenés permiso para editar usuarios.');
+
+        return false;
+    }
+
+    private function usuarioDeCuenta(): ?User
+    {
+        $usuario = $this->cuentaUserId ? User::on('mysql_admin')->find($this->cuentaUserId) : null;
+
+        if (! $usuario) {
+            $this->dispatch('toast', type: 'error', message: 'Usuario no encontrado.');
+        }
+
+        return $usuario;
+    }
+
+    /** Con sesiones en base de datos se pueden cerrar las del usuario; con otros drivers no hay forma. */
+    private function cerrarSesionesDe(User $usuario): void
+    {
+        if (config('session.driver') !== 'database') {
+            return;
+        }
+
+        try {
+            DB::connection(config('session.connection'))->table(config('session.table', 'sessions'))
+                ->where('user_id', $usuario->id)
+                ->delete();
+        } catch (\Throwable $e) {
+            report($e);
         }
     }
 

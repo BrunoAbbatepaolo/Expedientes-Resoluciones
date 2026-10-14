@@ -1,7 +1,5 @@
 <?php
 
-it('returns a successful response', function () {
-    $response = $this->get('/');
-
-    $response->assertStatus(200);
+it('manda a quien no inició sesión directo al login', function () {
+    $this->get('/')->assertRedirect(route('login'));
 });

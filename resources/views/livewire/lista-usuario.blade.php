@@ -1,6 +1,6 @@
-<div class="space-y-4" x-data="{ showOficina: false, showCrearUsuario: false }"
-    x-on:open-modal.window="if ($event.detail[0] === 'modal-oficina') showOficina = true; if ($event.detail[0] === 'modal-crear-usuario') showCrearUsuario = true"
-    x-on:close-modal.window="if ($event.detail[0] === 'modal-oficina') showOficina = false; if ($event.detail[0] === 'modal-crear-usuario') showCrearUsuario = false">
+<div class="space-y-4" x-data="{ showOficina: false, showCrearUsuario: false, showCuenta: false }"
+    x-on:open-modal.window="if ($event.detail[0] === 'modal-oficina') showOficina = true; if ($event.detail[0] === 'modal-crear-usuario') showCrearUsuario = true; if ($event.detail[0] === 'modal-cuenta') showCuenta = true"
+    x-on:close-modal.window="if ($event.detail[0] === 'modal-oficina') showOficina = false; if ($event.detail[0] === 'modal-crear-usuario') showCrearUsuario = false; if ($event.detail[0] === 'modal-cuenta') showCuenta = false">
     @if (auth()->user()->permiso('lista_usuario_ver'))
         <h1 class="text-2xl font-semibold text-ipv-ink dark:text-ipv-ink-dark">
             Carga y Configuración de Usuarios
@@ -30,7 +30,7 @@
         @if ($claveGenerada)
             <div class="flex items-start justify-between gap-3 rounded-lg border border-ipv-blue/30 bg-ipv-blue/10 px-4 py-3 text-sm text-ipv-ink dark:text-ipv-ink-dark">
                 <p>
-                    Usuario creado. Contraseña provisoria (se muestra una sola vez):
+                    {{ $claveTitulo }} Contraseña provisoria (se muestra una sola vez):
                     <span class="font-mono font-semibold select-all">{{ $claveGenerada }}</span>
                 </p>
                 <button type="button" wire:click="ocultarClave" aria-label="Cerrar aviso"
@@ -86,10 +86,16 @@
                             @if (auth()->user()->permiso('lista_usuario_editar'))
                                 {{-- Columna Permisos --}}
                                 <td class="px-4 py-2.5">
-                                    <button type="button" wire:click="seleccionarUsuario({{ $usuario->id }})" @click="$dispatch('open-modal', ['modal-permisos'])"
-                                        class="rounded bg-ipv-blue px-3 py-1 text-xs text-white hover:bg-ipv-blue-dark">
-                                        Asignar Permisos
-                                    </button>
+                                    <div class="flex flex-wrap gap-2">
+                                        <button type="button" wire:click="seleccionarUsuario({{ $usuario->id }})" @click="$dispatch('open-modal', ['modal-permisos'])"
+                                            class="rounded bg-ipv-blue px-3 py-1 text-xs text-white hover:bg-ipv-blue-dark">
+                                            Asignar Permisos
+                                        </button>
+                                        <button type="button" wire:click="abrirCuenta({{ $usuario->id }})"
+                                            class="rounded border border-ipv-blue/40 px-3 py-1 text-xs font-medium text-ipv-blue hover:bg-ipv-blue/10 dark:border-ipv-blue-light/40 dark:text-ipv-blue-light">
+                                            Cuenta
+                                        </button>
+                                    </div>
                                 </td>
                             @endif
                         </tr>
@@ -193,6 +199,68 @@
                             <span wire:loading.remove>Crear usuario</span>
                             <span wire:loading>Creando…</span>
                         </button>
+                    </div>
+                </div>
+            </div>
+        @endif
+
+        {{-- Modal de cuenta: email y restablecer contraseña --}}
+        @if (auth()->user()->permiso('lista_usuario_editar'))
+            <div x-show="showCuenta" x-cloak x-on:keydown.escape.window="showCuenta = false"
+                class="sirex-modal-fondo" x-on:click.self="showCuenta = false">
+                <div class="sirex-modal sirex-modal-sm" role="dialog" aria-modal="true" aria-labelledby="titulo-cuenta">
+                    <div class="sirex-modal-cabeza">
+                        <div class="sirex-modal-icono">
+                            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                            </svg>
+                        </div>
+                        <div>
+                            <h3 id="titulo-cuenta" class="sirex-modal-titulo">Cuenta de usuario</h3>
+                            <p class="sirex-modal-subtitulo">{{ $cuentaNombre }}</p>
+                        </div>
+                        <button type="button" @click="showCuenta = false" class="sirex-modal-cerrar" aria-label="Cerrar">
+                            <svg fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" viewBox="0 0 24 24"><path d="M6 18 18 6M6 6l12 12" /></svg>
+                        </button>
+                    </div>
+
+                    <div class="sirex-modal-cuerpo">
+                        <div class="space-y-5">
+                            <div>
+                                <label for="cuentaEmail" class="sirex-etiqueta">Email</label>
+                                <div class="flex gap-2">
+                                    <input id="cuentaEmail" wire:model="cuentaEmail" type="email" class="sirex-campo" autocomplete="off">
+                                    <button type="button" wire:click="guardarEmail" wire:loading.attr="disabled" wire:target="guardarEmail"
+                                        class="sirex-boton sirex-boton-primario shrink-0">
+                                        <span wire:loading.remove wire:target="guardarEmail">Guardar</span>
+                                        <span wire:loading wire:target="guardarEmail">Guardando…</span>
+                                    </button>
+                                </div>
+                                @error('cuentaEmail') <p class="sirex-error">{{ $message }}</p> @enderror
+                            </div>
+
+                            <div class="border-t border-ipv-blue/10 pt-4 dark:border-white/10" x-data="{ confirmar: false }">
+                                <p class="sirex-etiqueta">Restablecer contraseña</p>
+                                <p class="sirex-ayuda">
+                                    Genera una contraseña provisoria nueva y cierra las sesiones abiertas del usuario. Al entrar tendrá que cambiarla.
+                                </p>
+                                <button type="button" x-show="! confirmar" @click="confirmar = true" class="sirex-boton sirex-boton-secundario mt-2">
+                                    Restablecer contraseña
+                                </button>
+                                <div x-show="confirmar" x-cloak class="mt-2 flex items-center gap-2">
+                                    <button type="button" wire:click="restablecerClave" wire:loading.attr="disabled" wire:target="restablecerClave"
+                                        class="sirex-boton sirex-boton-peligro">
+                                        <span wire:loading.remove wire:target="restablecerClave">Sí, restablecer</span>
+                                        <span wire:loading wire:target="restablecerClave">Restableciendo…</span>
+                                    </button>
+                                    <button type="button" @click="confirmar = false" class="sirex-boton sirex-boton-secundario">No</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="sirex-modal-pie">
+                        <button type="button" @click="showCuenta = false" class="sirex-boton sirex-boton-secundario">Cerrar</button>
                     </div>
                 </div>
             </div>

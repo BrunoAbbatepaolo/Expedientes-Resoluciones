@@ -23,41 +23,53 @@ class DashboardPanel extends Component
     public function render()
     {
         $oficina = $this->oficinaId;
+        $usuario = Auth::user();
+
+        // Cada bloque del panel responde a un permiso: sin él no se muestra ni se consulta.
+        $verExpedientes = (bool) $usuario->permiso('expediente_ver');
+        $verResoluciones = (bool) $usuario->permiso('resolucion_ver');
+
+        $activos = $egresados = $ingresados = $resoluciones = 0;
+        $recientes = collect();
 
         // Métricas del mes actual
         $mesInicio = now()->startOfMonth();
         $mesFin    = now()->endOfMonth();
 
-        $activos    = Expediente::deOficina($oficina)
-                        ->whereNull('fecha_salida')
-                        ->whereNull('deleted_at')
-                        ->count();
+        if ($verExpedientes) {
+            $activos    = Expediente::deOficina($oficina)
+                            ->whereNull('fecha_salida')
+                            ->whereNull('deleted_at')
+                            ->count();
 
-        $egresados  = Expediente::deOficina($oficina)
-                        ->whereNotNull('fecha_salida')
-                        ->whereBetween('fecha_salida', [$mesInicio, $mesFin])
-                        ->whereNull('deleted_at')
-                        ->count();
+            $egresados  = Expediente::deOficina($oficina)
+                            ->whereNotNull('fecha_salida')
+                            ->whereBetween('fecha_salida', [$mesInicio, $mesFin])
+                            ->whereNull('deleted_at')
+                            ->count();
 
-        $ingresados = Expediente::deOficina($oficina)
-                        ->whereBetween('fecha_ingreso', [$mesInicio, $mesFin])
-                        ->whereNull('deleted_at')
-                        ->count();
+            $ingresados = Expediente::deOficina($oficina)
+                            ->whereBetween('fecha_ingreso', [$mesInicio, $mesFin])
+                            ->whereNull('deleted_at')
+                            ->count();
 
-        $resoluciones = Resolucion::whereBetween('fecha', [$mesInicio, $mesFin])
-                        ->whereNull('deleted_at')
-                        ->count();
+            // Últimos 5 expedientes ingresados a la oficina
+            $recientes = Expediente::deOficina($oficina)
+                            ->whereNull('deleted_at')
+                            ->with('oficinaById')
+                            ->orderByDesc('fecha_ingreso')
+                            ->limit(5)
+                            ->get();
+        }
 
-        // Últimos 5 expedientes ingresados a la oficina
-        $recientes = Expediente::deOficina($oficina)
-                        ->whereNull('deleted_at')
-                        ->with('oficinaById')
-                        ->orderByDesc('fecha_ingreso')
-                        ->limit(5)
-                        ->get();
+        if ($verResoluciones) {
+            $resoluciones = Resolucion::whereBetween('fecha', [$mesInicio, $mesFin])
+                            ->whereNull('deleted_at')
+                            ->count();
+        }
 
         return view('livewire.dashboard-panel', compact(
-            'activos', 'egresados', 'ingresados', 'resoluciones', 'recientes'
+            'activos', 'egresados', 'ingresados', 'resoluciones', 'recientes', 'verExpedientes', 'verResoluciones'
         ));
     }
 }

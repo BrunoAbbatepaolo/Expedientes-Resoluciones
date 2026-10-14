@@ -53,7 +53,7 @@ new class extends Component
                 nueva: '', conf: '',
                 reglas() {
                     return [
-                        { texto: '10 caracteres o más', ok: this.nueva.length >= 10 },
+                        { texto: '8 caracteres o más', ok: this.nueva.length >= 8 },
                         { texto: 'Mayúsculas y minúsculas', ok: /[a-z]/.test(this.nueva) && /[A-Z]/.test(this.nueva) },
                         { texto: 'Al menos un número', ok: /\d/.test(this.nueva) },
                         { texto: 'Un símbolo (recomendado)', ok: /[^A-Za-z0-9]/.test(this.nueva) },

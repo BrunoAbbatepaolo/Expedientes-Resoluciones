@@ -25,7 +25,7 @@ test('el perfil permite cambiar la foto desde el círculo y tiene la zona de pel
 test('la contraseña muestra el medidor, los requisitos y el botón de ver', function () {
     $this->get('/settings/password')
         ->assertOk()
-        ->assertSee('10 caracteres o más')
+        ->assertSee('8 caracteres o más')
         ->assertSee('Las contraseñas coinciden')
         ->assertSee('Mostrar contraseña', false)
         ->assertSee('autocomplete="new-password"', false);

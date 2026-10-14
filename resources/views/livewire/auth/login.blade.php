@@ -73,8 +73,8 @@ new #[Layout('components.layouts.auth')] class extends Component
     }
 }; ?>
 
-<div class="flex flex-col gap-6">
-    <x-auth-header :title="__('Inicie sesión en su cuenta')" :description="__('Ingrese su correo electrónico y contraseña a continuación para iniciar sesión')" />
+<div class="sirex-login-form flex flex-col gap-6">
+    <h1 class="sr-only">{{ __('Inicie sesión en su cuenta') }}</h1>
 
     <x-auth-session-status class="text-center" :status="session('status')" />
 
