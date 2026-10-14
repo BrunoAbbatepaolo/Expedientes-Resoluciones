@@ -30,6 +30,12 @@ trait ConsultaMitiv
             ?? throw new AuthorizationException('No tenés acceso a los datos de este empleado.');
     }
 
+    /** @param  array<string, mixed>  $datos */
+    protected static function fila(array $datos): \stdClass
+    {
+        return (object) $datos;
+    }
+
     protected function soloRrhh(Alcance $alcance): void
     {
         if (! $alcance->rrhh) {

@@ -24,6 +24,9 @@ entorno() {
   export SESSION_DRIVER=file CACHE_STORE=file
   export SIREX_RELOJES_ESCRIBIR_MITIV=false SIREX_RELOJES_ACTIVO=true
   export APP_URL=http://127.0.0.1:8012   # Storage::url() arma las URLs de las fotos con esto
+  # Para entrar desde otra PC de la red: guardar la URL (ej. http://192.168.1.69:8012) en $DEMO/app_url
+  [ -s "$DEMO/app_url" ] && export APP_URL="$(head -n1 "$DEMO/app_url" | tr -d '
+')"
   [ -e public/storage ] || php artisan storage:link >/dev/null 2>&1   # sirve las fotos subidas
   export VIEW_COMPILED_PATH=$HOME/sirex-cache/views PHP_CLI_SERVER_WORKERS=4
   # NO definir MITIV_DB_DRIVER: el sistema viejo se lee del PostgreSQL real (solo lectura).
@@ -53,7 +56,7 @@ case "${1:-up}" in
       curl -s -o /dev/null http://127.0.0.1:8012/login && break
       sleep 1
     done
-    echo "Listo: http://127.0.0.1:8012  (demo@sirex.test / demo1234). Logs en $LOGS"
+    echo "Listo: http://127.0.0.1:8012  (demo@sirex.test, clave en ~/sirex-demo/clave_demo.txt). Logs en $LOGS"
     ;;
   *) echo "Uso: $0 up|down|status|sync"; exit 1 ;;
 esac

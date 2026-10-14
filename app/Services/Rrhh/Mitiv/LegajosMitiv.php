@@ -155,14 +155,14 @@ class LegajosMitiv implements Legajos
             ->whereMonth('empleados.fecha_nacimiento', $mes)
             ->with('oficinaRrhh:id,nombre')
             ->get()
-            ->map(fn (Empleado $e) => (object) [
+            ->map(fn (Empleado $e) => self::fila([
                 // Solo día y mes: la fecha de nacimiento completa es un dato personal que este informe no muestra.
                 'dia' => $e->fecha_nacimiento->day,
                 'legajo' => $e->legajo,
                 'apellido' => $e->apellido,
                 'nombre' => $e->nombre,
                 'oficina' => $e->oficinaRrhh->nombre ?? '',
-            ])
+            ]))
             ->sortBy([['dia', 'asc'], ['apellido', 'asc'], ['nombre', 'asc']])
             ->values();
     }
@@ -200,7 +200,7 @@ class LegajosMitiv implements Legajos
                 $totalMeses = $meses + $reconocidos[0] * 12 + $reconocidos[1] + intdiv($dias + $reconocidos[2], 30);
                 $totalDias = ($dias + $reconocidos[2]) % 30;
 
-                return (object) [
+                return self::fila([
                     'legajo' => $e->legajo,
                     'apellido' => $e->apellido,
                     'nombre' => $e->nombre,
@@ -208,7 +208,7 @@ class LegajosMitiv implements Legajos
                     'ingreso' => $e->fecha_ingreso,
                     'antiguedad_ipv' => intdiv($meses, 12).' años, '.($meses % 12).' meses, '.$dias.' días',
                     'antiguedad_total' => intdiv($totalMeses, 12).' años, '.($totalMeses % 12).' meses, '.$totalDias.' días',
-                ];
+                ]);
             })
             ->values();
     }

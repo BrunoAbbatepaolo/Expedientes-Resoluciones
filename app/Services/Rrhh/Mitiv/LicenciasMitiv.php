@@ -237,14 +237,14 @@ class LicenciasMitiv implements Licencias
             ->map(function (Collection $grupo) use ($empleados) {
                 $e = $empleados[$grupo->first()->empleado_id];
 
-                return (object) [
+                return self::fila([
                     'legajo' => $e->legajo,
                     'apellido' => $e->apellido,
                     'nombre' => $e->nombre,
                     'oficina' => $e->oficinaRrhh->nombre ?? '',
                     'tipo' => (string) ($grupo->first()->tipo->nombre ?? 'Sin tipo'),
                     'cantidad' => $grupo->count(),
-                ];
+                ]);
             })
             ->sortBy([['apellido', 'asc'], ['nombre', 'asc'], ['tipo', 'asc']])
             ->values();

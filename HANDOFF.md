@@ -73,3 +73,16 @@ Spec: `docs/spec-agente-relojes.md` (sección 5 = puesta en marcha paso a paso).
 - Vista previa: "×" por artículo de RESUELVE; los siguientes se renumeran (`Services/Resoluciones/Articulos`, estado `articulosQuitados`). También afecta lo que se guarda. Rectificación: el artículo citado lleva `data-art-fijo` y no cuenta.
 - Ficha IPV: sección "Resoluciones" con PDF (solo oficina dueña). Listado de resoluciones enlaza al expediente.
 - Pendiente: reporte de resoluciones viejas cuyo `numero_exp` no existe en mitivdb.
+
+## Paridad con el 95 y mejoras (2026-10-14, tarde)
+Plan: `docs/plan-paridad-95.md`. Rama `feature/modulo-rrhh` (subida a origin).
+- **Pases emitidos** (`/expedientes/ipv/pases-emitidos`, CSV e impresión A4) sobre la vista `expediente_pases_origen` de mitivdb (origen = oficina del pase anterior). **Ingresos a oficina** ahora también se imprime (`InformesExpedientesController`).
+- **Expedientes agregados** (`expediente_adjuntos`) en la ficha y la carátula impresa: recorrido iterativo con control de ciclos (`ExpedientesIpv::adjuntos`).
+- **Reportes RRHH nuevos**: inasistencias, cumpleaños (solo día y mes; solo RRHH), antigüedad con reconocimientos, listado de personal. Todos con CSV.
+- **Resoluciones sin expediente**: `php artisan resoluciones:sin-expediente [--csv=archivo]` y conteo en Admin → Sistema. Solo informa, no corrige.
+- **Seguridad**: `App\Support\Csv` (neutraliza = + - @ tab CR; usado en todos los CSV), `Auditable` no guarda claves/ocultos y el panel Admin los enmascara, `RegistrarAcceso` no guarda lo tipeado si no es correo, `Pase` de SiRex ahora se audita, `admin_ver` solo lo otorga/quita quien ya lo tiene.
+- **Logo**: símbolo del IPV (`public/images/logo-ipv-simbolo.png`, recortado de `Logo-ipv.png`) en login y sidebar. Requiere `npm run build`.
+- **404** con el diseño animado.
+- **Demo**: `APP_URL` se toma de `~/sirex-demo/app_url` si existe (hoy `http://192.168.1.69:8012`); clave de `demo@sirex.test` aleatoria en `~/sirex-demo/clave_demo.txt` (no está en el repo).
+- **No se hizo**: `expediente_ver` por defecto para usuarios nuevos. `expediente_ver` NO está acotado a la oficina propia (da consulta de todo el IPV), así que darlo por defecto abriría datos de ciudadanos; decidir con el usuario.
+- **Sigue pendiente**: Personas / Soluciones habitacionales / Novedades del 95 (fuera de alcance hasta que el área lo pida); migrar en producción `2026_10_14_100000_permitir_varias_resoluciones_por_expediente`.

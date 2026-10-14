@@ -33,7 +33,7 @@ test('las pantallas principales renderizan con el layout propio (sin Flux)', fun
 test('la página 404 funciona también sin sesión iniciada', function () {
     $this->get('/no-existe')
         ->assertNotFound()
-        ->assertSee('No encontrado');
+        ->assertSee('Página no encontrada');
 });
 
 test('un tipo de resolución con caracteres inválidos da 404', function () {
