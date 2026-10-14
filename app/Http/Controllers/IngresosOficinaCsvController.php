@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Services\ExpedientesIpv;
+use App\Support\Csv;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -34,7 +35,7 @@ class IngresosOficinaCsvController extends Controller
             fputcsv($salida, ['Expediente', 'Causante', 'Asunto', 'Primer ingreso', 'Viene de', 'Veces que entró'], ';');
 
             foreach ($filas as $f) {
-                fputcsv($salida, array_map([self::class, 'sinFormulas'], [
+                fputcsv($salida, Csv::fila([
                     $f->numero,
                     $f->causante,
                     $f->asunto,
@@ -46,11 +47,5 @@ class IngresosOficinaCsvController extends Controller
 
             fclose($salida);
         }, $nombre, ['Content-Type' => 'text/csv; charset=UTF-8']);
-    }
-
-    /** Excel ejecuta como fórmula lo que empieza con = + - @: se neutraliza en datos que escribe cualquier persona. */
-    public static function sinFormulas(mixed $valor): mixed
-    {
-        return is_string($valor) && $valor !== '' && str_contains('=+-@', $valor[0]) ? "'".$valor : $valor;
     }
 }

@@ -12,6 +12,7 @@ use App\Services\Rrhh\Contracts\Legajos;
 use App\Services\Rrhh\Contracts\Licencias;
 use App\Services\Rrhh\Hora;
 use App\Services\Rrhh\Organigrama;
+use App\Support\Csv;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -154,7 +155,7 @@ class ReporteController extends Controller
             fwrite($salida, "\xEF\xBB\xBF");
             fputcsv($salida, $columnas, ';');
             foreach ($filas as $fila) {
-                fputcsv($salida, $fila, ';');
+                fputcsv($salida, Csv::fila($fila), ';');
             }
             fclose($salida);
         }, "rrhh-$reporte-".Hora::hoy()->format('Y-m-d').'.csv', ['Content-Type' => 'text/csv; charset=UTF-8']);

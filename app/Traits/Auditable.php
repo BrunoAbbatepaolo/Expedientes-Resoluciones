@@ -22,8 +22,19 @@ trait Auditable
         });
     }
 
+    /** Claves que nunca se guardan en la auditoría: las ocultas del modelo, claves y tokens. */
+    private function sinSecretos(array $valores): array
+    {
+        $secretos = array_merge($this->getHidden(), ['password', 'remember_token']);
+
+        return array_diff_key($valores, array_flip($secretos));
+    }
+
     public function recordAudit($event, $old, $new): void
     {
+        $old = $this->sinSecretos((array) $old);
+        $new = $this->sinSecretos((array) $new);
+
         Audit::create([
             'auditable_type' => get_class($this),
             'auditable_id' => $this->getKey(),

@@ -136,7 +136,7 @@
                                         @foreach (['Antes' => $r->old_values, 'Después' => $r->new_values] as $titulo => $valores)
                                             <div>
                                                 <div class="mb-1 font-semibold text-ipv-ink/70 dark:text-ipv-ink-dark/70">{{ $titulo }}</div>
-                                                <pre class="max-h-56 overflow-auto whitespace-pre-wrap break-words rounded-lg bg-black/5 p-2 dark:bg-white/5">{{ $valores ? json_encode($valores, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) : '—' }}</pre>
+                                                <pre class="max-h-56 overflow-auto whitespace-pre-wrap break-words rounded-lg bg-black/5 p-2 dark:bg-white/5">{{ $valores ? json_encode(\Illuminate\Support\Arr::except($valores, ['password', 'remember_token']), JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) : '—' }}</pre>
                                             </div>
                                         @endforeach
                                     </div>
