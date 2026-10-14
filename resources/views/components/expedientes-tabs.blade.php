@@ -5,6 +5,7 @@
     $tabs = [
         'oficina' => ['label' => 'Mi oficina', 'ruta' => route('expedientes'), 'detalle' => 'Registro de ingresos y egresos'],
         'ipv' => ['label' => 'Expedientes IPV', 'ruta' => route('expedientes.ipv'), 'detalle' => 'Consulta y pases de todo el instituto'],
+        'ingresos' => ['label' => 'Ingresos a oficina', 'ruta' => route('expedientes.ipv.ingresos'), 'detalle' => 'Qué entró a una oficina en un período'],
     ];
 @endphp
 

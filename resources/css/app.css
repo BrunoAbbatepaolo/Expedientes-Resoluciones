@@ -871,3 +871,301 @@
     scroll-behavior: auto;
   }
 }
+
+/* ── Página 403 (acceso denegado) ───────────────────────────────────────────
+   Todo es transform/opacity (lo compone la GPU). Con prefers-reduced-motion el
+   bloque de arriba apaga las animaciones y la página queda quieta y legible. */
+.sirex-403 { position: relative; isolation: isolate; }
+
+/* Ondas que salen del candado, como una alarma suave. */
+.sirex-403-onda {
+    position: absolute;
+    inset: 0;
+    border-radius: 9999px;
+    border: 2px solid var(--color-ipv-magenta);
+    opacity: 0;
+    animation: sirex-403-onda 3.2s ease-out infinite;
+}
+.sirex-403-onda:nth-child(2) { animation-delay: 1.05s; }
+.sirex-403-onda:nth-child(3) { animation-delay: 2.1s; }
+@keyframes sirex-403-onda {
+    0%   { transform: scale(0.85); opacity: 0.55; }
+    80%  { opacity: 0; }
+    100% { transform: scale(2.6); opacity: 0; }
+}
+
+/* El candado entra con rebote y cada tanto intenta abrirse y se vuelve a trabar. */
+.sirex-403-candado {
+    animation: sirex-403-entrada 700ms cubic-bezier(0.34, 1.56, 0.64, 1) backwards,
+               sirex-403-sacudida 4.5s 1.4s ease-in-out infinite;
+    transform-origin: 50% 70%;
+}
+@keyframes sirex-403-entrada {
+    from { opacity: 0; transform: scale(0.3) rotate(-18deg); }
+    to   { opacity: 1; transform: scale(1) rotate(0); }
+}
+@keyframes sirex-403-sacudida {
+    0%, 62%, 100% { transform: translateX(0) rotate(0); }
+    66% { transform: translateX(-5px) rotate(-5deg); }
+    70% { transform: translateX(5px) rotate(5deg); }
+    74% { transform: translateX(-4px) rotate(-3deg); }
+    78% { transform: translateX(4px) rotate(3deg); }
+    82% { transform: translateX(0) rotate(0); }
+}
+.sirex-403-arco {
+    transform-box: fill-box;
+    transform-origin: 85% 100%;
+    animation: sirex-403-arco 4.5s 1.4s ease-in-out infinite;
+}
+@keyframes sirex-403-arco {
+    0%, 28%, 62%, 100% { transform: translateY(0) rotate(0); }
+    40%, 55% { transform: translateY(-3px) rotate(-14deg); }
+}
+.sirex-403-led { animation: sirex-403-led 1.4s ease-in-out infinite; }
+@keyframes sirex-403-led {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.25; }
+}
+
+/* Textos y botones aparecen de a uno. */
+.sirex-403-item { animation: sirex-403-subir 600ms cubic-bezier(0.2, 0.8, 0.2, 1) backwards; animation-delay: var(--retraso, 0ms); }
+@keyframes sirex-403-subir {
+    from { opacity: 0; transform: translateY(14px); }
+}
+
+/* Motas que suben despacio por el fondo. */
+.sirex-403-mota {
+    position: absolute;
+    bottom: -10px;
+    left: var(--x);
+    width: var(--t);
+    height: var(--t);
+    border-radius: 9999px;
+    background: var(--color-ipv-magenta);
+    opacity: 0;
+    animation: sirex-403-flotar var(--d) var(--r) linear infinite;
+    z-index: -1;
+}
+@keyframes sirex-403-flotar {
+    0%   { transform: translateY(0) translateX(0); opacity: 0; }
+    15%  { opacity: 0.35; }
+    85%  { opacity: 0.2; }
+    100% { transform: translateY(-62vh) translateX(var(--v)); opacity: 0; }
+}
+
+/* Botón principal con un brillo que lo recorre. */
+.sirex-403-boton { position: relative; overflow: hidden; transition: transform 160ms ease, box-shadow 160ms ease; }
+.sirex-403-boton:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(0, 81, 158, 0.28); }
+.sirex-403-boton:active { transform: translateY(0); }
+.sirex-403-boton::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(110deg, transparent 30%, rgba(255, 255, 255, 0.35) 50%, transparent 70%);
+    transform: translateX(-120%);
+    animation: sirex-403-brillo 3.6s 2.4s ease-in-out infinite;
+}
+@keyframes sirex-403-brillo {
+    0%, 55% { transform: translateX(-120%); }
+    80%, 100% { transform: translateX(120%); }
+}
+
+/* ── Login (pantalla de entrada) ────────────────────────────────────────────
+   Todo es transform/opacity. Con prefers-reduced-motion el bloque global de
+   arriba apaga las animaciones y la pantalla queda quieta. */
+.sirex-login-fondo {
+    position: fixed;
+    inset: 0;
+    overflow: hidden;
+    pointer-events: none;
+}
+.sirex-login-mancha {
+    position: absolute;
+    width: 42rem;
+    height: 42rem;
+    border-radius: 9999px;
+    filter: blur(70px);
+    opacity: 0.5;
+    animation: sirex-login-deriva 18s ease-in-out infinite alternate;
+}
+.sirex-login-mancha-1 { top: -14rem; left: -12rem; background: rgba(0, 81, 158, 0.45); }
+.sirex-login-mancha-2 { bottom: -16rem; right: -10rem; background: rgba(255, 184, 26, 0.35); animation-duration: 22s; animation-delay: -6s; }
+.sirex-login-mancha-3 { top: 35%; left: 55%; width: 26rem; height: 26rem; background: rgba(207, 41, 114, 0.22); animation-duration: 26s; animation-delay: -12s; }
+.dark .sirex-login-mancha { opacity: 0.35; }
+
+.sirex-login-mota {
+    position: absolute;
+    bottom: -20px;
+    left: var(--x);
+    width: var(--t);
+    height: var(--t);
+    border-radius: 9999px;
+    background: var(--color-ipv-blue);
+    opacity: 0;
+    animation: sirex-login-sube var(--d) linear var(--r) infinite;
+}
+.dark .sirex-login-mota { background: var(--color-ipv-blue-light); }
+
+.sirex-login-logo {
+    position: relative;
+    display: flex;
+    width: 3.5rem;
+    height: 3.5rem;
+    align-items: center;
+    justify-content: center;
+}
+.sirex-login-sello {
+    position: relative;
+    animation: sirex-login-logo-entra 800ms cubic-bezier(0.2, 1.4, 0.4, 1) backwards,
+        sirex-login-flota 4s ease-in-out 800ms infinite;
+}
+.sirex-login-halo {
+    position: absolute;
+    inset: 0;
+    border-radius: 1rem;
+    border: 2px solid var(--color-ipv-gold);
+    opacity: 0;
+    animation: sirex-login-halo 3s ease-out infinite;
+}
+.sirex-login-halo:nth-child(2) { animation-delay: 1.5s; }
+
+.sirex-login-tarjeta {
+    animation: sirex-login-tarjeta-entra 700ms cubic-bezier(0.2, 0.8, 0.2, 1) 250ms backwards;
+}
+/* Cada hijo del formulario entra escalonado */
+.sirex-login-form > *,
+.sirex-login-form form > * {
+    animation: sirex-login-sube-campo 550ms cubic-bezier(0.2, 0.8, 0.2, 1) backwards;
+}
+.sirex-login-form form > :nth-child(1) { animation-delay: 550ms; }
+.sirex-login-form form > :nth-child(2) { animation-delay: 680ms; }
+.sirex-login-form form > :nth-child(3) { animation-delay: 810ms; }
+.sirex-login-form form > :nth-child(4) { animation-delay: 940ms; }
+.sirex-login-form button[type='submit'] {
+    position: relative;
+    overflow: hidden;
+}
+.sirex-login-form button[type='submit']::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(105deg, transparent 35%, rgba(255, 255, 255, 0.35) 50%, transparent 65%);
+    transform: translateX(-120%);
+    animation: sirex-login-brillo 3.6s ease-in-out 1.6s infinite;
+}
+.sirex-login-form input:focus { transition: box-shadow 200ms ease, transform 200ms ease; transform: translateY(-1px); }
+
+@keyframes sirex-login-deriva {
+    from { transform: translate3d(0, 0, 0) scale(1); }
+    to { transform: translate3d(8rem, 5rem, 0) scale(1.18); }
+}
+@keyframes sirex-login-sube {
+    0% { transform: translateY(0) scale(0.6); opacity: 0; }
+    12% { opacity: 0.55; }
+    100% { transform: translateY(-105vh) scale(1.3); opacity: 0; }
+}
+@keyframes sirex-login-logo-entra {
+    from { transform: scale(0) rotate(-200deg); opacity: 0; }
+    to { transform: scale(1) rotate(0); opacity: 1; }
+}
+@keyframes sirex-login-flota {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-6px); }
+}
+@keyframes sirex-login-halo {
+    0% { transform: scale(1); opacity: 0.7; }
+    100% { transform: scale(2.4); opacity: 0; }
+}
+@keyframes sirex-login-tarjeta-entra {
+    from { transform: translateY(32px) scale(0.96); opacity: 0; }
+    to { transform: translateY(0) scale(1); opacity: 1; }
+}
+@keyframes sirex-login-sube-campo {
+    from { transform: translateY(16px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}
+@keyframes sirex-login-brillo {
+    0%, 55% { transform: translateX(-120%); }
+    100% { transform: translateX(120%); }
+}
+
+/* ── Panel Admin ───────────────────────────────────────────────────────────── */
+.sirex-admin-tab {
+    border-radius: 9999px;
+    padding: 0.375rem 1rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--color-ipv-ink);
+    border: 1px solid rgba(0, 81, 158, 0.2);
+    transition: background-color 150ms ease, color 150ms ease, transform 150ms ease;
+}
+.sirex-admin-tab:hover { transform: translateY(-1px); background: rgba(0, 81, 158, 0.08); }
+.sirex-admin-tab.is-on { background: var(--color-ipv-blue); border-color: var(--color-ipv-blue); color: #fff; }
+.dark .sirex-admin-tab { color: var(--color-ipv-ink-dark); border-color: rgba(255, 255, 255, 0.15); }
+.dark .sirex-admin-tab:hover { background: rgba(255, 255, 255, 0.08); }
+.dark .sirex-admin-tab.is-on { background: var(--color-ipv-blue-light); border-color: var(--color-ipv-blue-light); color: #0f1720; }
+
+.sirex-admin-dato { animation: sirex-admin-entra 450ms cubic-bezier(0.2, 0.8, 0.2, 1) calc(var(--i, 0) * 60ms) backwards; }
+.sirex-admin-barra { transform-origin: bottom; animation: sirex-admin-crece 600ms cubic-bezier(0.2, 0.8, 0.2, 1) calc(var(--i, 0) * 35ms) backwards; }
+.sirex-admin-fila { animation: sirex-admin-entra 250ms ease-out backwards; }
+.sirex-admin-chip {
+    display: inline-block;
+    border-radius: 9999px;
+    padding: 0.125rem 0.625rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    background: rgba(0, 81, 158, 0.12);
+    color: var(--color-ipv-blue);
+}
+.dark .sirex-admin-chip { background: rgba(143, 193, 238, 0.18); color: var(--color-ipv-blue-light); }
+.sirex-admin-chip[data-evento='deleted'],
+.sirex-admin-chip[data-evento='login_fallido'],
+.sirex-admin-chip[data-evento='clave_restablecida'] { background: rgba(207, 41, 114, 0.12); color: var(--color-ipv-magenta); }
+.dark .sirex-admin-chip[data-evento='deleted'],
+.dark .sirex-admin-chip[data-evento='login_fallido'],
+.dark .sirex-admin-chip[data-evento='clave_restablecida'] { background: rgba(255, 157, 192, 0.16); color: var(--color-ipv-magenta-light); }
+.sirex-admin-chip[data-evento='login'],
+.sirex-admin-chip[data-evento='created'],
+.sirex-admin-chip[data-evento='usuario_creado'] { background: rgba(255, 184, 26, 0.2); color: var(--color-ipv-gold-ink); }
+.dark .sirex-admin-chip[data-evento='login'],
+.dark .sirex-admin-chip[data-evento='created'],
+.dark .sirex-admin-chip[data-evento='usuario_creado'] { color: var(--color-ipv-gold-light); }
+
+@keyframes sirex-admin-entra { from { transform: translateY(10px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+@keyframes sirex-admin-crece { from { transform: scaleY(0); } to { transform: scaleY(1); } }
+
+/* ── Quitar artículos de la vista previa de una resolución ───────────────────── */
+.sirex-art-con-x { position: relative; padding-right: 2rem; }
+.sirex-art-quitar {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 1.5rem;
+    height: 1.5rem;
+    border: 1px solid rgba(207, 41, 114, 0.35);
+    border-radius: 9999px;
+    background: #fff;
+    color: var(--color-ipv-magenta);
+    font-size: 1rem;
+    line-height: 1;
+    cursor: pointer;
+    opacity: 0.6;
+    transition: opacity 150ms ease, background-color 150ms ease, color 150ms ease, transform 150ms ease;
+}
+.sirex-art-con-x:hover .sirex-art-quitar,
+.sirex-art-quitar:focus-visible { opacity: 1; }
+.sirex-art-quitar:hover { background: var(--color-ipv-magenta); color: #fff; transform: scale(1.1); }
+.sirex-art-aviso {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 0.75rem;
+    padding: 0.4rem 0.75rem;
+    border-radius: 0.5rem;
+    background: rgba(255, 184, 26, 0.2);
+    color: var(--color-ipv-gold-ink);
+    font-size: 0.8rem;
+}
+.sirex-art-aviso button { font-weight: 600; text-decoration: underline; color: var(--color-ipv-blue); cursor: pointer; }
+.dark .sirex-art-aviso { color: var(--color-ipv-gold-light); }
+.dark .sirex-art-aviso button { color: var(--color-ipv-blue-light); }

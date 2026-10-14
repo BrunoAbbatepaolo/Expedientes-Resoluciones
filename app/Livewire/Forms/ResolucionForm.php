@@ -3,6 +3,8 @@
 namespace App\Livewire\Forms;
 
 use App\Models\Resolucion;
+use App\Services\ExpedientesIpv;
+use Illuminate\Validation\ValidationException;
 use Livewire\Attributes\Validate;
 use Livewire\Form;
 
@@ -57,6 +59,23 @@ class ResolucionForm extends Form
     public function update()
     {
         $this->validate();
+
+        // Una resolución siempre va vinculada a un expediente real. Si no se cambió el número no se vuelve a
+        // exigir (hay resoluciones viejas cargadas antes de esta regla que igual se tienen que poder editar).
+        $numero = trim((string) $this->numero_exp);
+        if ($numero !== $this->resolucion->numero_exp) {
+            try {
+                $existe = app(ExpedientesIpv::class)->resumenPorNumero($numero) !== null;
+            } catch (\Throwable $e) {
+                report($e);
+
+                throw ValidationException::withMessages(['resolucionForm.numero_exp' => 'No se pudo verificar el expediente en este momento. Probá de nuevo en unos minutos.']);
+            }
+
+            if (! $existe) {
+                throw ValidationException::withMessages(['resolucionForm.numero_exp' => "El expediente {$numero} no existe. Una resolución tiene que estar vinculada a un expediente cargado."]);
+            }
+        }
 
         $datos = collect($this->only($this->editables))
             ->map(fn ($valor) => $valor === '' ? null : $valor)

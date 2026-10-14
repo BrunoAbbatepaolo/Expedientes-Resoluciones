@@ -1,18 +1,22 @@
 <?php
 
 use App\Http\Controllers\ImprimirExpedienteIpvController;
+use App\Http\Controllers\IngresosOficinaCsvController;
 use App\Http\Controllers\ResolucionArchivoController;
 use App\Http\Controllers\Rrhh\AdjuntoPedidoController;
 use App\Http\Controllers\Rrhh\ArchivoEmpleadoController;
 use App\Http\Controllers\Rrhh\ReporteController;
+use App\Livewire\Admin;
 use App\Livewire\ConsultaIpv;
 use App\Livewire\FichaIpv;
+use App\Livewire\IngresosOficina;
 use App\Livewire\Rrhh;
 use Illuminate\Support\Facades\Route;
 use Livewire\Volt\Volt;
 
+// La entrada es el login (sin página de presentación): con sesión va directo al panel.
 Route::get('/', function () {
-    return view('welcome');
+    return auth()->check() ? redirect()->route('dashboard') : redirect()->route('login');
 })->name('home');
 
 Route::view('dashboard', 'dashboard')
@@ -40,6 +44,8 @@ Route::middleware(['auth', 'password.change'])->group(function () {
 
     // Consulta de todo el IPV (solo lectura sobre el sistema viejo).
     Route::livewire('expedientes/ipv', ConsultaIpv::class)->name('expedientes.ipv');
+    Route::livewire('expedientes/ipv/ingresos', IngresosOficina::class)->name('expedientes.ipv.ingresos');
+    Route::get('expedientes/ipv/ingresos/csv', IngresosOficinaCsvController::class)->name('expedientes.ipv.ingresos.csv');
     Route::livewire('expedientes/ipv/{id}', FichaIpv::class)->whereNumber('id')->name('expedientes.ipv.ficha');
     Route::get('expedientes/ipv/{id}/imprimir', ImprimirExpedienteIpvController::class)->whereNumber('id')->name('expedientes.ipv.imprimir');
     // RRHH (fase 1: consulta de solo lectura del sistema viejo). Ver docs/spec-modulo-rrhh.md.
@@ -60,6 +66,7 @@ Route::middleware(['auth', 'password.change'])->group(function () {
             ->name('archivo');
     });
 
+    Route::livewire('admin', Admin\PanelAdmin::class)->name('admin');
     Volt::route('oficinas', 'oficinas')->middleware('auth')->name('oficinas');
     Volt::route('usuarios', 'ListaUsuario')->middleware('auth')->name('listausuarios');
     Volt::route('/resoluciones/elegir', 'ElegirResolucion')

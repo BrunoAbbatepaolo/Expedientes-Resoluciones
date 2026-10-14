@@ -86,6 +86,7 @@
                                             <label class="text-sm font-medium text-ipv-ink/75 dark:text-ipv-ink-dark/80">Número de Expediente</label>
                                             <input type="text" wire:model.live="datos.num_exp"
                                                 class="w-full rounded-lg border border-ipv-blue/20 bg-white/80 px-3 py-2 text-sm text-ipv-ink focus:outline-none focus:ring-2 focus:ring-ipv-blue/40 dark:border-white/15 dark:bg-white/[0.06] dark:text-ipv-ink-dark" />
+                                            @include('livewire.partials.aviso-expediente')
                                         </div>
                                         <div class="space-y-1.5">
                                             <label class="text-sm font-medium text-ipv-ink/75 dark:text-ipv-ink-dark/80">Número de Resolución</label>
@@ -226,6 +227,7 @@
                                             <label class="text-sm font-medium text-ipv-ink/75 dark:text-ipv-ink-dark/80">Número de Expediente</label>
                                             <input type="text" wire:model.live="datos.num_exp"
                                                 class="w-full rounded-lg border border-ipv-blue/20 bg-white/80 px-3 py-2 text-sm text-ipv-ink focus:outline-none focus:ring-2 focus:ring-ipv-blue/40 dark:border-white/15 dark:bg-white/[0.06] dark:text-ipv-ink-dark" />
+                                            @include('livewire.partials.aviso-expediente')
                                         </div>
                                         <div class="space-y-1.5">
                                             <label class="text-sm font-medium text-ipv-ink/75 dark:text-ipv-ink-dark/80">Número de Resolución</label>
@@ -369,6 +371,7 @@
                                             <label class="text-sm font-medium text-ipv-ink/75 dark:text-ipv-ink-dark/80">Número de Expediente</label>
                                             <input type="text" wire:model.live="datos.num_exp"
                                                 class="w-full rounded-lg border border-ipv-blue/20 bg-white/80 px-3 py-2 text-sm text-ipv-ink focus:outline-none focus:ring-2 focus:ring-ipv-blue/40 dark:border-white/15 dark:bg-white/[0.06] dark:text-ipv-ink-dark" />
+                                            @include('livewire.partials.aviso-expediente')
                                         </div>
                                         <div class="space-y-1.5">
                                             <label class="text-sm font-medium text-ipv-ink/75 dark:text-ipv-ink-dark/80">Número de Resolución</label>
@@ -588,6 +591,7 @@
                                             <label class="text-sm font-medium text-ipv-ink/75 dark:text-ipv-ink-dark/80">Número de Expediente</label>
                                             <input type="text" wire:model.live="datos.num_exp"
                                                 class="w-full rounded-lg border border-ipv-blue/20 bg-white/80 px-3 py-2 text-sm text-ipv-ink focus:outline-none focus:ring-2 focus:ring-ipv-blue/40 dark:border-white/15 dark:bg-white/[0.06] dark:text-ipv-ink-dark" />
+                                            @include('livewire.partials.aviso-expediente')
                                         </div>
                                         <div class="space-y-1.5">
                                             <label class="text-sm font-medium text-ipv-ink/75 dark:text-ipv-ink-dark/80">Número de Resolución</label>
@@ -800,6 +804,7 @@
                                             <label class="text-sm font-medium text-ipv-ink/75 dark:text-ipv-ink-dark/80">Número de Expediente</label>
                                             <input type="text" wire:model.live="datos.num_exp"
                                                 class="w-full rounded-lg border border-ipv-blue/20 bg-white/80 px-3 py-2 text-sm text-ipv-ink focus:outline-none focus:ring-2 focus:ring-ipv-blue/40 dark:border-white/15 dark:bg-white/[0.06] dark:text-ipv-ink-dark" />
+                                            @include('livewire.partials.aviso-expediente')
                                         </div>
                                         <div class="space-y-1.5">
                                             <label class="text-sm font-medium text-ipv-ink/75 dark:text-ipv-ink-dark/80">Número de Resolución</label>
@@ -969,6 +974,7 @@
                                             <label class="text-sm font-medium text-ipv-ink/75 dark:text-ipv-ink-dark/80">Número de Expediente</label>
                                             <input type="text" wire:model.live="datos.num_exp"
                                                 class="w-full rounded-lg border border-ipv-blue/20 bg-white/80 px-3 py-2 text-sm text-ipv-ink focus:outline-none focus:ring-2 focus:ring-ipv-blue/40 dark:border-white/15 dark:bg-white/[0.06] dark:text-ipv-ink-dark" />
+                                            @include('livewire.partials.aviso-expediente')
                                         </div>
                                         <div class="space-y-1.5">
                                             <label class="text-sm font-medium text-ipv-ink/75 dark:text-ipv-ink-dark/80">Número de Resolución</label>
@@ -1123,6 +1129,7 @@
                                             <label class="text-sm font-medium text-ipv-ink/75 dark:text-ipv-ink-dark/80">Número de Expediente</label>
                                             <input type="text" wire:model.live="datos.num_exp"
                                                 class="w-full rounded-lg border border-ipv-blue/20 bg-white/80 px-3 py-2 text-sm text-ipv-ink focus:outline-none focus:ring-2 focus:ring-ipv-blue/40 dark:border-white/15 dark:bg-white/[0.06] dark:text-ipv-ink-dark" />
+                                            @include('livewire.partials.aviso-expediente')
                                         </div>
                                         <div class="space-y-1.5">
                                             <label class="text-sm font-medium text-ipv-ink/75 dark:text-ipv-ink-dark/80">Número de Resolución</label>
@@ -1277,6 +1284,7 @@
                                             <label class="text-sm font-medium text-ipv-ink/75 dark:text-ipv-ink-dark/80">Número de Expediente</label>
                                             <input type="text" wire:model.live="datos.num_exp"
                                                 class="w-full rounded-lg border border-ipv-blue/20 bg-white/80 px-3 py-2 text-sm text-ipv-ink focus:outline-none focus:ring-2 focus:ring-ipv-blue/40 dark:border-white/15 dark:bg-white/[0.06] dark:text-ipv-ink-dark" />
+                                            @include('livewire.partials.aviso-expediente')
                                         </div>
                                         <div class="space-y-1.5">
                                             <label class="text-sm font-medium text-ipv-ink/75 dark:text-ipv-ink-dark/80">Número de Resolución</label>
@@ -1436,6 +1444,7 @@
                         Editá el documento como si fuera un Word
                     </span>
                 </div>
+                @include('livewire.partials.campo-expediente-barra')
                 <button type="button" wire:click="guardarPersonalizado"
                     class="sirex-btn rounded-lg bg-ipv-blue px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-ipv-blue-dark">
                     Guardar resolución
@@ -1466,6 +1475,7 @@
                         Editá el documento haciendo clic en el texto
                     </span>
                 </div>
+                @include('livewire.partials.campo-expediente-barra')
                 <button type="button" onclick="@this.guardarPlantilla()"
                     class="sirex-btn rounded-lg bg-ipv-blue px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-ipv-blue-dark">
                     Guardar resolución

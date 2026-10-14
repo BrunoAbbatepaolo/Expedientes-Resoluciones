@@ -210,6 +210,24 @@ class ExpedientesIpv
         ];
     }
 
+    /**
+     * Datos mínimos de un expediente por su número exacto, o null si no existe en mitivdb.
+     * Lo usa Resoluciones para exigir que cada resolución esté vinculada a un expediente real.
+     */
+    public function resumenPorNumero(string $numero): ?\stdClass
+    {
+        $numero = trim($numero);
+        if ($numero === '') {
+            return null;
+        }
+
+        return $this->db()->table('expedientes as e')
+            ->leftJoin('causantes as c', 'c.id', '=', 'e.causante_id')
+            ->where('e.numero', $numero)
+            ->where('e.habilitado', true)
+            ->first(['e.id', 'e.numero', 'e.asunto', 'c.nombre as causante']);
+    }
+
     public function idPorNumero(string $numero): ?int
     {
         return $this->db()->table('expedientes')->where('numero', trim($numero))->value('id');
@@ -341,6 +359,76 @@ class ExpedientesIpv
             ->get()
             ->unique('id')
             ->values();
+    }
+
+    /** Tope de pases que se leen por consulta de ingresos (una oficina grande en un año ronda unos pocos miles). */
+    public const MAX_PASES_INGRESOS = 20000;
+
+    /**
+     * Expedientes que ENTRARON a una oficina entre dos fechas (inclusive), sin importar dónde estén hoy.
+     * Un expediente cuenta una sola vez: se muestra su primera entrada del período y cuántas veces entró.
+     *
+     * @return array{filas: Collection<int, \stdClass>, truncado: bool}
+     */
+    public function ingresosAOficina(int $oficinaId, string $desde, string $hasta): array
+    {
+        $anterior = $this->db()->table('expediente_pases as pa')
+            ->join('expediente_oficinas as oa', 'oa.id', '=', 'pa.oficina_id')
+            ->select('oa.nombre')
+            ->whereColumn('pa.expediente_id', 'p.expediente_id')
+            ->where('pa.habilitado', true)
+            ->where(function ($w) {
+                $w->whereColumn('pa.fecha_hora', '<', 'p.fecha_hora')
+                    ->orWhere(fn ($x) => $x->whereColumn('pa.fecha_hora', 'p.fecha_hora')->whereColumn('pa.id', '<', 'p.id'));
+            })
+            ->orderByDesc('pa.fecha_hora')->orderByDesc('pa.id')
+            ->limit(1);
+
+        $pases = $this->db()->table('expediente_pases as p')
+            ->join('expedientes as e', 'e.id', '=', 'p.expediente_id')
+            ->join('causantes as c', 'c.id', '=', 'e.causante_id')
+            ->select('e.id', 'e.numero', 'e.asunto', 'c.nombre as causante', 'p.fecha_hora')
+            ->selectSub($anterior, 'viene_de')
+            ->where('p.oficina_id', $oficinaId)
+            ->where('p.habilitado', true)
+            ->where('e.habilitado', true)
+            ->whereBetween('p.fecha_hora', [$desde.' 00:00:00', $hasta.' 23:59:59'])
+            ->orderBy('p.fecha_hora')->orderBy('p.id')
+            ->limit(self::MAX_PASES_INGRESOS + 1)
+            ->get();
+
+        $truncado = $pases->count() > self::MAX_PASES_INGRESOS;
+
+        $filas = $pases->take(self::MAX_PASES_INGRESOS)->groupBy('id')->map(function ($entradas) {
+            /** @var \stdClass $primera */
+            $primera = $entradas->first();
+            $primera->veces = $entradas->count();
+
+            return $primera;
+        })->values();
+
+        return ['filas' => $filas, 'truncado' => $truncado];
+    }
+
+    /**
+     * Valida el período de un informe de ingresos: fechas Y-m-d, desde <= hasta y no más de un año.
+     * Devuelve el motivo del rechazo, o null si está bien.
+     */
+    public static function errorDePeriodo(?string $desde, ?string $hasta): ?string
+    {
+        $valida = fn (?string $f) => $f && preg_match('/^\d{4}-\d{2}-\d{2}$/', $f) && Carbon::hasFormat($f, 'Y-m-d') && Carbon::createFromFormat('Y-m-d', $f)->format('Y-m-d') === $f;
+
+        if (! $valida($desde) || ! $valida($hasta)) {
+            return 'Elegí las dos fechas.';
+        }
+        if ($desde > $hasta) {
+            return 'La fecha "desde" no puede ser posterior a "hasta".';
+        }
+        if (Carbon::parse($desde)->diffInDays(Carbon::parse($hasta)) > 366) {
+            return 'El período no puede superar un año.';
+        }
+
+        return null;
     }
 
     /** Oficinas del IPV (destinos de pase) habilitadas, para filtros y selects. */

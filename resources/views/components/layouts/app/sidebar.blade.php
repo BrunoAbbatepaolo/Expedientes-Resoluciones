@@ -17,6 +17,7 @@
         'rrhh' => '<circle cx="9" cy="8" r="3.5" /><path d="M2.5 20a6.5 6.5 0 0 1 13 0" /><path d="M16 4.5a3.5 3.5 0 0 1 0 7M18 14.5a6.5 6.5 0 0 1 3.5 5.5" />',
         'oficinas' => '<rect x="4" y="3" width="16" height="18" rx="1" /><path d="M9 8h1M14 8h1M9 12h1M14 12h1M9 16h1M14 16h1" />',
         'usuarios' => '<circle cx="12" cy="8" r="3.5" /><path d="M5 20a7 7 0 0 1 14 0" />',
+        'admin' => '<path d="M12 3 4 6v5c0 5 3.4 8.4 8 10 4.6-1.6 8-5 8-10V6l-8-3Z" /><path d="m9 12 2 2 4-4" />',
         'entrantes' => '<path d="M22 12h-6l-2 3h-4l-2-3H2" /><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11Z" />',
     ];
 
@@ -121,7 +122,7 @@
                     </button>
 
                     <div x-show="open" x-cloak x-collapse.duration.220ms class="sirex-subnav">
-                        @foreach (['expedientes' => ['Mi oficina', ['expedientes', 'expedientes.ingresados', 'expedientes.egresados', 'expedientes.detalle']], 'expedientes.ipv' => ['Expedientes IPV', ['expedientes.ipv*']]] as $ruta => [$etiqueta, $activas])
+                        @foreach (['expedientes' => ['Mi oficina', ['expedientes', 'expedientes.ingresados', 'expedientes.egresados', 'expedientes.detalle']], 'expedientes.ipv' => ['Expedientes IPV', ['expedientes.ipv', 'expedientes.ipv.ficha']], 'expedientes.ipv.ingresos' => ['Ingresos a oficina', ['expedientes.ipv.ingresos*']]] as $ruta => [$etiqueta, $activas])
                             <a href="{{ route($ruta) }}" wire:navigate.hover
                                 @if (request()->routeIs(...$activas)) aria-current="page" @endif
                                 class="sirex-subitem">{{ $etiqueta }}</a>
@@ -184,12 +185,23 @@
                 <span class="sirex-nav-texto">{{ __('Oficinas') }}</span>
             </a>
 
+            @if ($usuario?->permiso('lista_usuario_ver'))
             <a href="{{ route('listausuarios') }}" wire:navigate.hover title="{{ __('Usuarios') }}"
                 @if (request()->routeIs('listausuarios')) aria-current="page" @endif
                 class="sirex-nav-item {{ request()->routeIs('listausuarios') ? 'is-active' : '' }}">
                 <span class="sirex-nav-icono"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">{!! $iconos['usuarios'] !!}</svg></span>
                 <span class="sirex-nav-texto">{{ __('Usuarios') }}</span>
             </a>
+            @endif
+
+            @if ($usuario?->permiso('admin_ver'))
+            <a href="{{ route('admin') }}" wire:navigate.hover title="{{ __('Administración') }}"
+                @if (request()->routeIs('admin')) aria-current="page" @endif
+                class="sirex-nav-item {{ request()->routeIs('admin') ? 'is-active' : '' }}">
+                <span class="sirex-nav-icono"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">{!! $iconos['admin'] !!}</svg></span>
+                <span class="sirex-nav-texto">{{ __('Administración') }}</span>
+            </a>
+            @endif
         </nav>
 
         <!-- Pie: contraer menú (solo escritorio) y modo oscuro -->

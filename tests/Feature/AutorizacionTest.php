@@ -170,3 +170,30 @@ test('la lista de usuarios ofrece solo acciones que funcionan: sin botón Editar
         ->assertDontSeeHtml('>Acciones</th>')
         ->assertDontSeeHtml('>Editar</button>');
 });
+
+test('el panel no muestra expedientes ni sus métricas a quien no puede verlos', function () {
+    $oficina = Oficina::factory()->create();
+    Expediente::factory()->create(['oficina_id' => $oficina->id, 'num_exp' => '777/440-2026']);
+    $sinPermiso = usuarioConPermisos($oficina, []);
+
+    Livewire::actingAs($sinPermiso)->test(DashboardPanel::class)
+        ->assertDontSee('Expedientes recientes')
+        ->assertDontSee('777/440-2026')
+        ->assertDontSee('Activos en oficina')
+        ->assertDontSee('Resoluciones emitidas')
+        ->assertViewHas('recientes', fn ($recientes) => $recientes->isEmpty())
+        // Tampoco se ofrecen accesos a pantallas que le darían 403.
+        ->assertDontSee('Usuarios');
+});
+
+test('el panel muestra expedientes recientes a quien tiene permiso de ver expedientes', function () {
+    $oficina = Oficina::factory()->create();
+    Expediente::factory()->create(['oficina_id' => $oficina->id, 'num_exp' => '777/440-2026']);
+    $conPermiso = usuarioConPermisos($oficina, ['expediente_ver']);
+
+    Livewire::actingAs($conPermiso)->test(DashboardPanel::class)
+        ->assertSee('Expedientes recientes')
+        ->assertSee('777/440-2026')
+        ->assertSee('Activos en oficina')
+        ->assertDontSee('Resoluciones emitidas');
+});

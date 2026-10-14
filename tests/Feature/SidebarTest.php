@@ -38,10 +38,14 @@ test('el menú marca la pantalla actual y muestra solo lo que el usuario puede v
     $this->actingAs(usuarioDelMenu(['resolucion_ver']))->get(route('dashboard'))
         ->assertSee('title="Resoluciones"', false)
         ->assertDontSee('title="Expedientes"', false);
+
+    // "Usuarios" solo para quien puede ver la lista de usuarios (si no, el enlace llevaría a un 403).
+    $this->actingAs(usuarioDelMenu())->get(route('dashboard'))
+        ->assertDontSee('title="Usuarios"', false);
 });
 
 test('cada ítem del menú lleva título para la barra de íconos', function () {
-    $this->actingAs(usuarioDelMenu())->get(route('dashboard'))
+    $this->actingAs(usuarioDelMenu(['lista_usuario_ver']))->get(route('dashboard'))
         ->assertSee('title="'.__('Dashboard').'"', false)
         ->assertSee('title="Oficinas"', false)
         ->assertSee('title="Usuarios"', false)

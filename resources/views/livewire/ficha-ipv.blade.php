@@ -171,14 +171,40 @@
                     @empty
                         <li class="text-ipv-ink/55 dark:text-ipv-ink-dark/55">Ninguna oficina lo registró en SiRex.</li>
                     @endforelse
-                    @foreach ($resoluciones as $res)
-                        <li wire:key="res-{{ $res->id }}" class="flex items-center justify-between gap-2">
-                            <span class="text-ipv-ink/80 dark:text-ipv-ink-dark/80">Resolución {{ $res->numero_resolucion ?? 's/n' }}</span>
-                            <span class="text-xs text-ipv-ink/50 dark:text-ipv-ink-dark/50">{{ $res->fecha ? \Carbon\Carbon::parse($res->fecha)->format('d/m/Y') : '' }}</span>
-                        </li>
-                    @endforeach
                 </ul>
             </section>
+
+            {{-- Resoluciones vinculadas a este expediente (se enlazan por su número) --}}
+            @if (auth()->user()->permiso('resolucion_ver'))
+                @php
+                    $oficinaPropia = auth()->user()->oficinaAsignadaId();
+                @endphp
+                <section class="sirex-glass-card rounded-[14px] p-5" aria-labelledby="resoluciones-vinculadas">
+                    <h2 id="resoluciones-vinculadas" class="mb-3 text-sm font-semibold uppercase tracking-wide text-ipv-ink/50 dark:text-ipv-ink-dark/50">Resoluciones</h2>
+                    <ul class="space-y-2 text-sm">
+                        @forelse ($resoluciones as $res)
+                            @php
+                                // Los archivos se sirven solo a la oficina que cargó la resolución (o si es una resolución vieja sin oficina).
+                                $accesible = $res->oficina_id === null || (int) $res->oficina_id === (int) $oficinaPropia;
+                                $urlPdf = $res->archivos->isNotEmpty()
+                                    ? route('resoluciones.archivo', $res->archivos->first())
+                                    : ($res->pdf ? route('resoluciones.pdf', $res) : null);
+                            @endphp
+                            <li wire:key="res-{{ $res->id }}" class="flex items-center justify-between gap-2">
+                                <span class="text-ipv-ink/80 dark:text-ipv-ink-dark/80">
+                                    Resolución {{ $res->numero_resolucion ?: 's/n' }}
+                                    <span class="text-xs text-ipv-ink/50 dark:text-ipv-ink-dark/50">· {{ $res->fecha ? \Carbon\Carbon::parse($res->fecha)->format('d/m/Y') : 'sin fecha' }}</span>
+                                </span>
+                                @if ($accesible && $urlPdf)
+                                    <a href="{{ $urlPdf }}" target="_blank" rel="noopener" class="text-xs font-semibold text-ipv-blue hover:underline dark:text-ipv-blue-light">Ver PDF</a>
+                                @endif
+                            </li>
+                        @empty
+                            <li class="text-ipv-ink/55 dark:text-ipv-ink-dark/55">Todavía no tiene resoluciones.</li>
+                        @endforelse
+                    </ul>
+                </section>
+            @endif
         </div>
     @endif
 </div>

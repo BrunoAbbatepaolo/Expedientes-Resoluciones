@@ -423,7 +423,7 @@
         <div class="seccion-debe-decir mt-4">
             <p class="font-bold mb-2" contenteditable="true">DEBE DECIR:</p>
 
-            <div class="articulo">
+            <div class="articulo" data-art-fijo>
                 <p contenteditable="true">
                     <span class="font-bold underline">Art. 1º.- </span><span contenteditable="true">ADJUDICAR</span>:
                     @if(!empty($cantidad_viviendas))

@@ -5,7 +5,16 @@ use App\Models\Oficina;
 use App\Models\Permiso;
 use App\Models\Resolucion;
 use App\Models\User;
+use App\Services\Resoluciones\Articulos;
 use Livewire\Livewire;
+use Tests\Support\MitivFalso;
+
+// Toda resolución se vincula a un expediente real de mitivdb: estos números existen.
+beforeEach(function () {
+    MitivFalso::crear();
+    MitivFalso::expediente('1234/440-2026', 'GARCIA, ANA');
+    MitivFalso::expediente('1235/440-2026', 'LOPEZ, PEDRO');
+});
 
 function editorDeResoluciones(): User
 {
@@ -41,6 +50,7 @@ test('modo personalizado: no guarda una resolución vacía', function () {
 test('modo personalizado: guarda con datos reales y avisa con un cartel de éxito', function () {
     Livewire::actingAs(editorDeResoluciones())->test(CrearResolucion::class, ['tipo' => 'Cancelaciones'])
         ->set('modo', 'personalizado')
+        ->set('datos.num_exp', '1234/440-2026')
         ->set('plantilla', '<p>Resolución Nº 123/2026. Se resuelve cancelar el plan del titular Juan Pérez.</p>')
         ->call('guardarPersonalizado')
         ->assertHasNoErrors()
@@ -195,4 +205,96 @@ test('en el modelo completo se puede adjuntar un PDF a la resolución', function
         ->assertHasNoErrors()
         ->assertCount('archivosPDF', 1)
         ->assertSee('dni.pdf');
+});
+
+
+test('no se guarda una resolución de un expediente que no existe (formulario y modo personalizado)', function () {
+    Livewire::actingAs(editorDeResoluciones())->test(CrearResolucion::class, ['tipo' => 'Rectificacion'])
+        ->set('modo', 'completo')
+        ->set('datos.num_exp', '9999/440-2026')
+        ->set('datos.num_res', '55/2026')
+        ->call('guardar')
+        ->assertHasErrors('datos.num_exp')
+        ->assertSee('no existe');
+
+    Livewire::actingAs(editorDeResoluciones())->test(CrearResolucion::class, ['tipo' => 'Cancelaciones'])
+        ->set('modo', 'personalizado')
+        ->set('datos.num_exp', '9999/440-2026')
+        ->set('plantilla', '<p>Resolución Nº 123/2026. Se resuelve cancelar el plan del titular Juan Pérez.</p>')
+        ->call('guardarPersonalizado')
+        ->assertHasErrors('datos.num_exp');
+
+    Livewire::actingAs(editorDeResoluciones())->test(CrearResolucion::class, ['tipo' => 'Cancelaciones'])
+        ->set('modo', 'personalizado')
+        ->set('plantilla', '<p>Resolución Nº 123/2026. Se resuelve cancelar el plan del titular Juan Pérez.</p>')
+        ->call('guardarPersonalizado')
+        ->assertHasErrors('datos.num_exp');
+
+    expect(Resolucion::count())->toBe(0);
+});
+
+test('un expediente puede tener más de una resolución', function () {
+    foreach (['55/2026', '56/2026'] as $numero) {
+        Livewire::actingAs(editorDeResoluciones())->test(CrearResolucion::class, ['tipo' => 'Rectificacion'])
+            ->set('modo', 'completo')
+            ->set('datos.num_exp', '1234/440-2026')
+            ->set('datos.num_res', $numero)
+            ->call('guardar')
+            ->assertHasNoErrors();
+    }
+
+    expect(Resolucion::where('numero_exp', '1234/440-2026')->count())->toBe(2);
+});
+
+test('el campo de expediente confirma que existe y avisa si no', function () {
+    Livewire::actingAs(editorDeResoluciones())->test(CrearResolucion::class, ['tipo' => 'Cancelaciones'])
+        ->set('modo', 'completo')
+        ->set('datos.num_exp', '1234/440-2026')
+        ->assertSee('Expediente encontrado: GARCIA, ANA')
+        ->set('datos.num_exp', '1/1-1')
+        ->assertSee('No existe ese expediente');
+});
+
+test('quitar un artículo en la vista previa renumera los siguientes y también lo guardado', function () {
+    $componente = Livewire::actingAs(editorDeResoluciones())->test(CrearResolucion::class, ['tipo' => 'Cancelaciones'])
+        ->set('modo', 'completo')
+        ->assertSee('Art. 4º.-', false)
+        ->call('quitarArticulo', 2)
+        ->assertSet('articulosQuitados', [2])
+        ->assertDontSee('DISPONER el Levantamiento')
+        ->assertDontSee('Art. 4º.-', false)
+        ->assertSee('Quitaste 1 artículo');
+
+    $componente->set('datos.num_exp', '1234/440-2026')->set('datos.num_res', '938/2026')
+        ->set('datos.nombre_titular', 'ANA GARCIA')->set('datos.dni_titular', '1')
+        ->call('guardar')->assertHasNoErrors();
+
+    $html = Resolucion::first()->plantilla;
+    expect($html)->not->toContain('DISPONER el Levantamiento')
+        ->and($html)->toContain('Art. 3º.- ')->not->toContain('Art. 4º.-')
+        ->and($html)->not->toContain('sirex-art-quitar');
+});
+
+test('se pueden restaurar los artículos y no se puede quitar el último', function () {
+    $c = Livewire::actingAs(editorDeResoluciones())->test(CrearResolucion::class, ['tipo' => 'Cancelaciones'])
+        ->set('modo', 'completo')
+        ->call('quitarArticulo', 1)->call('quitarArticulo', 2)->call('quitarArticulo', 3)
+        ->call('quitarArticulo', 4)
+        ->assertSet('articulosQuitados', [1, 2, 3])
+        ->call('quitarArticulo', 99)->call('quitarArticulo', 0)
+        ->assertSet('articulosQuitados', [1, 2, 3])
+        ->call('restaurarArticulos')
+        ->assertSet('articulosQuitados', []);
+});
+
+test('Articulos renumera de corrido y respeta los artículos citados (data-art-fijo)', function () {
+    $html = '<div class="articulo"><p><span>Art. 1º.- </span>A</p></div><div class="articulo" data-art-fijo><p><span>Art. 1º.- </span>CITADO</p></div>'
+        .'<div class="articulo"><p><span>Art. 2º.- </span>B</p></div><div class="articulo"><p><span>Art. 3º.- </span>C</p></div>';
+
+    expect(Articulos::contar($html))->toBe(3);
+
+    $r = Articulos::procesar($html, [2], false);
+
+    expect($r)->toContain('Art. 1º.- </span>A')->toContain('Art. 1º.- </span>CITADO')->toContain('Art. 2º.- </span>C')
+        ->not->toContain('>B<')->not->toContain('Art. 3º');
 });

@@ -49,7 +49,7 @@ Spec: `docs/spec-agente-relojes.md` (sección 5 = puesta en marcha paso a paso).
 ## Seguridad (2026-10-09)
 - Cabeceras en todas las respuestas web: `App\Http\Middleware\CabecerasDeSeguridad` (X-Frame-Options, nosniff, Referrer-Policy, Permissions-Policy, COOP, CSP solo con frame-ancestors/base-uri/form-action/object-src; HSTS solo con HTTPS). Sin `script-src` a propósito: Livewire/Alpine usan inline.
 - Tope general de pedidos: RateLimiter `global` (AppServiceProvider), `SIREX_LIMITE_PETICIONES` (300/min por usuario; 1/3 por IP sin sesión). Recuperar clave: 5 por hora por correo+IP.
-- Contraseñas: `Password::defaults()` = 10 caracteres, mayúsculas, minúsculas y números (símbolo recomendado, no exigido).
+- Contraseñas: `Password::defaults()` = 8 caracteres, mayúsculas, minúsculas y números (símbolo recomendado, no exigido).
 - Auditoría en `audits` (`Audit::registrar`): `permisos` (agregados/quitados), `usuario_creado`, `oficina`, `clave_cambiada`, `clave_inicial_cambiada`. Todavía no hay pantalla para verla.
 - `concurrently` pasó a devDependencies; `npm audit fix` aplicado (queda 1 aviso bajo de Quill que no aplica: no se usa su exportación HTML).
 - Pendiente en producción: `APP_DEBUG=false`, HTTPS + `SESSION_SECURE_COOKIE=true`, `SESSION_ENCRYPT=true`, rotar claves expuestas, usuario PostgreSQL acotado, `storage:link` no debe exponer PDFs viejos. Sin 2FA.
@@ -58,3 +58,18 @@ Spec: `docs/spec-agente-relojes.md` (sección 5 = puesta en marcha paso a paso).
 - Hoy `audits` ya guarda: `permisos`, `usuario_creado`, `oficina`, `clave_cambiada`, `clave_inicial_cambiada` (vía `Audit::registrar`) y, por el trait `Auditable`, created/updated/deleted de Expediente, RrhhHorarioEspecial y RrhhPedidoLicencia. Falta la pantalla para verlos.
 - Ideas a validar con Bruno antes de armarla: quién puede verla (¿`lista_usuario_editar` o un permiso nuevo?), filtros (usuario, evento, fechas, texto), detalle legible del antes/después (permisos agregados/quitados con nombres del catálogo), paginación, exportar, y no mostrar nunca claves. Evaluar auditar también inicios de sesión fallidos y cambios de permisos hechos por consola.
 - Usar el diseño actual (sirex-glass-card, x-rrhh.estado/chips, x-vacio, filas con `divide-y`) y agregar test de autorización y de consultas (RendimientoTest).
+
+## Panel Admin (2026-10-14)
+- `/admin` (`App\Livewire\Admin\PanelAdmin`), permiso nuevo `admin_ver` (módulo "Administración" del catálogo; también en `ListaUsuario::$permisos`). Plan en `docs/plan-admin.md`.
+- Pestañas: Resumen, Auditoría, Accesos, Sistema. `App\Listeners\RegistrarAcceso` guarda `login` / `login_fallido` en `audits` (descubierto solo por Laravel: no registrarlo a mano, duplica).
+- `/` ahora redirige a `/login` (se borró `welcome`); el layout de auth tiene fondo y entrada animados.
+- Pendiente: los `Pase` de expedientes no se auditan (verificar el modelo); commits sin hacer.
+
+- Ingresos a oficina: `/expedientes/ipv/ingresos` (+ `/csv`), `ExpedientesIpv::ingresosAOficina()`, lee pases de mitivdb (solo lectura). Cuenta cada expediente una vez; tope 20 mil pases; período máx. 1 año.
+
+## Resoluciones ↔ expedientes (2026-10-14)
+- Toda resolución exige un expediente que exista en mitivdb (`ExpedientesIpv::resumenPorNumero`): al crear (formulario y modo personalizado/plantilla, que ahora tienen campo de expediente) y al editar si se cambia el número. Aviso en vivo bajo el campo.
+- Migración `permitir_varias_resoluciones_por_expediente`: `numero_exp` deja de ser único (antes el modo personalizado inventaba un número al azar). Hay que correr `migrate` en producción.
+- Vista previa: "×" por artículo de RESUELVE; los siguientes se renumeran (`Services/Resoluciones/Articulos`, estado `articulosQuitados`). También afecta lo que se guarda. Rectificación: el artículo citado lleva `data-art-fijo` y no cuenta.
+- Ficha IPV: sección "Resoluciones" con PDF (solo oficina dueña). Listado de resoluciones enlaza al expediente.
+- Pendiente: reporte de resoluciones viejas cuyo `numero_exp` no existe en mitivdb.

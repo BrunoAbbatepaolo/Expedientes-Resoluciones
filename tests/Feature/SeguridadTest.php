@@ -78,11 +78,12 @@ test('la recuperación de contraseña se frena después de 5 pedidos por hora', 
     $componente->call('sendPasswordResetLink')->assertHasErrors('email');
 });
 
-test('la política de contraseñas exige 10 caracteres con mayúsculas, minúsculas y números', function () {
+test('la política de contraseñas exige 8 caracteres con mayúsculas, minúsculas y números', function () {
     $regla = Password::default();
     $valida = fn (string $clave) => validator(['p' => $clave], ['p' => [$regla]])->passes();
 
     expect($valida('corta1A'))->toBeFalse()
+        ->and($valida('Corta1Ab'))->toBeTrue()
         ->and($valida('todominusculas123'))->toBeFalse()
         ->and($valida('SinNumerosAquiAbc'))->toBeFalse()
         ->and($valida('new-password'))->toBeFalse()

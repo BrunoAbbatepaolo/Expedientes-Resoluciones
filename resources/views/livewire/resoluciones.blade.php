@@ -41,7 +41,10 @@
                     @forelse ($resolucionesConExpediente as $resolucion)
                         <tr wire:key="res-{{ $resolucion->id }}" class="hover:bg-black/[0.02] dark:hover:bg-white/[0.03]">
                             <td class="truncate px-4 py-2.5 text-center text-sm text-ipv-ink dark:text-ipv-ink-dark">
-                                @if ($resolucion->expediente)
+                                @if ($resolucion->expediente && auth()->user()->permiso('expediente_ver'))
+                                    <a href="{{ route('expedientes.ipv.ficha', $resolucion->expediente->id) }}" wire:navigate.hover
+                                        class="font-mono font-semibold text-ipv-blue hover:underline dark:text-ipv-blue-light" title="Ver el expediente">{{ $resolucion->expediente->numero }}</a>
+                                @elseif ($resolucion->expediente)
                                     {{ $resolucion->expediente->numero }}
                                 @else
                                     <span class="italic text-ipv-ink/40 dark:text-ipv-ink-dark/40">Sin expediente</span>
@@ -152,6 +155,7 @@
                     <div>
                         <label class="sirex-etiqueta">Nº de expediente</label>
                         <input wire:model="resolucionForm.numero_exp" placeholder="Ingrese el número de expediente" class="sirex-campo">
+                        @error('resolucionForm.numero_exp') <p class="sirex-error">{{ $message }}</p> @enderror
                     </div>
 
                     <div>

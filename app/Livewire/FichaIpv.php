@@ -53,7 +53,7 @@ class FichaIpv extends Component
             'error' => false,
             'registros' => ExpedienteOficina::with('oficinaById')->where('num_exp', $numero)->get(),
             'resoluciones' => auth()->user()->permiso('resolucion_ver')
-                ? Resolucion::where('numero_exp', $numero)->latest('fecha')->get()
+                ? Resolucion::with('archivos')->where('numero_exp', $numero)->latest('fecha')->get()
                 : collect(),
         ])->title('Expediente '.$numero);
     }

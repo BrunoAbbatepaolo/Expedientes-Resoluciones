@@ -4,7 +4,9 @@ namespace App\Livewire;
 
 use App\Models\Resolucion;
 use App\Models\ResolucionArchivo;
+use App\Services\ExpedientesIpv;
 use App\Services\Resoluciones\AnalizadorResolucion;
+use App\Services\Resoluciones\Articulos;
 use App\Services\Resoluciones\LectorDocumento;
 use App\Traits\AuthorizesOficina;
 use App\Traits\NotificaUi;
@@ -12,6 +14,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\View;
 use Illuminate\Validation\ValidationException;
+use Livewire\Attributes\Computed;
 use Livewire\Attributes\Locked;
 use Livewire\Component;
 use Livewire\WithFileUploads;
@@ -28,6 +31,10 @@ class CrearResolucion extends Component
     public string $tipo;
 
     public string $modo = ''; // 'completo' o 'personalizado'
+
+    /** Posiciones (1..n) de los artículos de RESUELVE que se quitaron de la vista previa; ver Articulos. */
+    #[Locked]
+    public array $articulosQuitados = [];
 
     // Archivos temporales para PDFs
     public $archivosPDF = [];
@@ -329,17 +336,6 @@ class CrearResolucion extends Component
         $this->guardarPersonalizado();
     }
 
-    private function siguienteNumeroTramite(): string
-    {
-        $numeroTramite = $this->datos['numero_tramite'] ?? $this->generarNumeroTramite();
-
-        while (\App\Models\Resolucion::where('numero_exp', $numeroTramite)->exists()) {
-            $numeroTramite = $this->generarNumeroTramite();
-        }
-
-        return $numeroTramite;
-    }
-
     private function persistirResolucion(
         string $numeroExp,
         ?string $numeroResolucion,
@@ -586,12 +582,12 @@ class CrearResolucion extends Component
         $this->validarConAviso($this->rules(), $this->messages());
 
         try {
-            $html = View::make("prototipos.{$this->tipo}", array_merge($this->datos, [
+            $html = Articulos::procesar(View::make("prototipos.{$this->tipo}", array_merge($this->datos, [
                 'formatearFecha' => 'formatearFecha',
                 'formatearFechaLarga' => 'formatearFechaLarga',
                 'formatearMoneda' => 'formatearMoneda',
                 'num2letras' => 'num2letras',
-            ]))->render();
+            ]))->render(), $this->articulosQuitados, false);
 
             $cantidadArchivos = count($this->archivosPDF);
 
@@ -614,6 +610,7 @@ class CrearResolucion extends Component
     public function guardarPersonalizado()
     {
         $this->validarConAviso([
+            'datos.num_exp' => ['required', 'string', 'max:50', $this->reglaExpedienteExiste()],
             'plantilla' => [
                 'required',
                 function (string $atributo, mixed $valor, \Closure $fallar) {
@@ -634,11 +631,10 @@ class CrearResolucion extends Component
         ]);
 
         try {
-            $numeroTramite = $this->siguienteNumeroTramite();
             $cantidadArchivos = count($this->archivosPDF);
 
             $this->persistirResolucion(
-                numeroExp: $numeroTramite,
+                numeroExp: trim($this->datos['num_exp']),
                 numeroResolucion: $this->datos['num_res'] ?? null,
                 fecha: $this->datos['fecha_res'] ?? now()->toDateString(),
                 codBarrio: $this->datos['manzana'] ?? null,
@@ -680,6 +676,43 @@ class CrearResolucion extends Component
         }
     }
 
+    /** Saca un artículo de la vista previa (y de lo que se guarda); los siguientes se renumeran solos. */
+    public function quitarArticulo(int $posicion): void
+    {
+        try {
+            $total = Articulos::contar(View::make("prototipos.{$this->tipo}", array_merge($this->datos, [
+                'formatearFecha' => 'formatearFecha',
+                'formatearFechaLarga' => 'formatearFechaLarga',
+                'formatearMoneda' => 'formatearMoneda',
+                'num2letras' => 'num2letras',
+                'numero_tramite' => '',
+            ]))->render());
+        } catch (\Throwable $e) {
+            report($e);
+
+            return;
+        }
+
+        if ($posicion < 1 || $posicion > $total || in_array($posicion, $this->articulosQuitados, true)) {
+            return;
+        }
+
+        if (count($this->articulosQuitados) + 1 >= $total) {
+            $this->toast('error', 'La resolución tiene que conservar al menos un artículo.');
+
+            return;
+        }
+
+        $this->articulosQuitados[] = $posicion;
+        $this->resetearVistaPrevia();
+    }
+
+    public function restaurarArticulos(): void
+    {
+        $this->articulosQuitados = [];
+        $this->resetearVistaPrevia();
+    }
+
     public function getVistaPrevia(): string
     {
         if ($this->vistaPrevia === null) {
@@ -700,7 +733,7 @@ class CrearResolucion extends Component
                 'numero_tramite' => $this->generarNumeroTramite(),
             ]);
 
-            return View::make("prototipos.{$this->tipo}", $datos)->render();
+            return Articulos::procesar(View::make("prototipos.{$this->tipo}", $datos)->render(), $this->articulosQuitados, true);
         } catch (\Exception $e) {
             report($e);
 
@@ -718,6 +751,7 @@ class CrearResolucion extends Component
         $this->datos = array_fill_keys(array_keys($this->datos), '');
         // Restaurar el valor por defecto de la fecha, manteniéndolo en Y-m-d
         $this->datos['fecha_res'] = date('Y-m-d');
+        $this->articulosQuitados = [];
         $this->resetearVistaPrevia();
     }
 
@@ -783,7 +817,7 @@ class CrearResolucion extends Component
     {
         return [
             'datos.fecha_res' => 'required|date',
-            'datos.num_exp' => 'required|string|max:50',
+            'datos.num_exp' => ['required', 'string', 'max:50', $this->reglaExpedienteExiste()],
             'datos.num_res' => 'required|string|max:50',
             // Se guardan en cod_barrio/cod_casa, columnas integer.
             'datos.manzana' => 'nullable|integer|min:0',
@@ -863,6 +897,48 @@ class CrearResolucion extends Component
     private function tipoConTitular(): bool
     {
         return ! $this->tipoConTitularNuevo() && $this->tipo !== 'Rectificacion';
+    }
+
+    /** Toda resolución va vinculada a un expediente real: se comprueba en mitivdb (sistema viejo). */
+    private function reglaExpedienteExiste(): \Closure
+    {
+        return function (string $atributo, mixed $valor, \Closure $fallar) {
+            try {
+                if (app(ExpedientesIpv::class)->resumenPorNumero((string) $valor) === null) {
+                    $fallar('El expediente '.trim((string) $valor).' no existe. Una resolución tiene que estar vinculada a un expediente cargado.');
+                }
+            } catch (\Throwable $e) {
+                report($e);
+                $fallar('No se pudo verificar el expediente en este momento. Probá de nuevo en unos minutos.');
+            }
+        };
+    }
+
+    /**
+     * Estado del número de expediente tipeado, para el aviso debajo del campo:
+     * ['estado' => 'vacio'|'ok'|'no'|'error', 'detalle' => ?string].
+     *
+     * @return array{estado: string, detalle: ?string}
+     */
+    #[Computed]
+    public function expedienteVinculado(): array
+    {
+        $numero = trim((string) ($this->datos['num_exp'] ?? ''));
+        if (mb_strlen($numero) < 3) {
+            return ['estado' => 'vacio', 'detalle' => null];
+        }
+
+        try {
+            $exp = app(ExpedientesIpv::class)->resumenPorNumero($numero);
+        } catch (\Throwable $e) {
+            report($e);
+
+            return ['estado' => 'error', 'detalle' => null];
+        }
+
+        return $exp
+            ? ['estado' => 'ok', 'detalle' => trim(($exp->causante ?? '').' — '.($exp->asunto ?? ''), ' —')]
+            : ['estado' => 'no', 'detalle' => null];
     }
 
     protected function messages(): array
