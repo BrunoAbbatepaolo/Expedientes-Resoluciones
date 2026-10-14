@@ -1,4 +1,4 @@
-<x-rrhh.impresion :titulo="$titulo" :subtitulo="$subtitulo">
+<x-rrhh.impresion :titulo="$titulo" :subtitulo="$subtitulo" :orientacion="count($columnas) > 6 ? 'landscape' : 'portrait'">
     <table>
         <thead>
             <tr>

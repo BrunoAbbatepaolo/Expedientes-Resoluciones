@@ -1,4 +1,4 @@
-<x-rrhh.impresion titulo="Ficha personal" :subtitulo="$empleado->apellido.', '.$empleado->nombre.' · Legajo '.$empleado->legajo">
+<x-rrhh.impresion titulo="Ficha personal" :firmas="true" :subtitulo="$empleado->apellido.', '.$empleado->nombre.' · Legajo '.$empleado->legajo">
     @foreach (\App\Services\Rrhh\CamposLegajo::grupos($empleado, $nivel) as $grupo)
         <h2>{{ $grupo['titulo'] }}{{ $grupo['sensible'] ? ' (confidencial)' : '' }}</h2>
         <dl>
