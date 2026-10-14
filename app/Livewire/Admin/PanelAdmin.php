@@ -181,6 +181,16 @@ class PanelAdmin extends Component
             }
         };
 
+        $sinExpediente = function (): string {
+            try {
+                $n = app(\App\Services\Resoluciones\SinExpediente::class)->buscar()->count();
+
+                return $n === 0 ? 'Ninguna' : $n.' (ver con: php artisan resoluciones:sin-expediente)';
+            } catch (\Throwable) {
+                return 'No se pudo verificar';
+            }
+        };
+
         $libre = @disk_free_space(storage_path());
         $total = @disk_total_space(storage_path());
 
@@ -193,6 +203,7 @@ class PanelAdmin extends Component
             'Sesiones' => (string) config('session.driver'),
             'Base principal' => $conexion(config('database.default')),
             'Base de usuarios' => $conexion('mysql_admin'),
+            'Resoluciones con expediente inexistente' => $sinExpediente(),
             'Disco libre' => $libre && $total ? round($libre / 1073741824, 1).' GB de '.round($total / 1073741824, 1).' GB' : 'No disponible',
             'Hora del servidor' => now()->format('d/m/Y H:i:s').' ('.config('app.timezone').')',
         ];

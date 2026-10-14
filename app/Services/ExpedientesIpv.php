@@ -284,6 +284,22 @@ class ExpedientesIpv
             ->first(['e.id', 'e.numero', 'e.asunto', 'c.nombre as causante']);
     }
 
+    /**
+     * Cuáles de estos números existen (habilitados) en mitivdb.
+     *
+     * @param  list<string>  $numeros
+     * @return list<string>
+     */
+    public function numerosExistentes(array $numeros): array
+    {
+        $numeros = array_values(array_filter(array_unique($numeros), fn ($n) => $n !== ''));
+        if ($numeros === []) {
+            return [];
+        }
+
+        return $this->db()->table('expedientes')->whereIn('numero', $numeros)->where('habilitado', true)->pluck('numero')->map(fn ($n) => trim((string) $n))->all();
+    }
+
     public function idPorNumero(string $numero): ?int
     {
         return $this->db()->table('expedientes')->where('numero', trim($numero))->value('id');
