@@ -367,6 +367,16 @@ class ListaUsuario extends Component
             $permisosUI = CatalogoPermisos::claves();
             $activos = CatalogoPermisos::normalizar(array_keys(array_filter($this->permisos)));
 
+            // Solo quien ya tiene admin_ver puede otorgarlo o quitarlo: si no, queda como estaba
+            // (lista_usuario_editar solo no alcanza para darse el panel de Administración).
+            if (! auth()->user()?->permiso('admin_ver')) {
+                $teniaAdmin = Permiso::query()->where('user_id', $userId)->where('nombre', 'admin_ver')->exists();
+                $activos = array_values(array_diff($activos, ['admin_ver']));
+                if ($teniaAdmin) {
+                    $activos[] = 'admin_ver';
+                }
+            }
+
             $antes = [];
 
             DB::connection((new Permiso)->getConnectionName())->transaction(function () use ($userId, $permisosUI, $activos, &$antes) {

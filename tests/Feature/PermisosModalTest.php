@@ -103,3 +103,42 @@ test('la ventana de permisos muestra los módulos, las plantillas y el resumen',
         ->assertSee('Sin cambios por guardar.')
         ->assertSee('modalPermisos(', false);
 });
+
+test('lista_usuario_editar solo no alcanza para darse ni dar admin_ver', function () {
+    $admin = administradorDePermisos();
+    $otro = User::factory()->create();
+
+    Livewire::actingAs($admin)->test(ListaUsuario::class)
+        ->call('seleccionarUsuario', $admin->id)
+        ->set('permisos.admin_ver', true)
+        ->call('guardarPermisos');
+    Livewire::actingAs($admin)->test(ListaUsuario::class)
+        ->call('seleccionarUsuario', $otro->id)
+        ->set('permisos.admin_ver', true)
+        ->call('guardarPermisos');
+
+    expect(Permiso::where('nombre', 'admin_ver')->count())->toBe(0);
+});
+
+test('quien tiene admin_ver puede otorgarlo, y quien no lo tiene no se lo puede quitar a otro', function () {
+    $superadmin = administradorDePermisos();
+    Permiso::create(['user_id' => $superadmin->id, 'nombre' => 'admin_ver']);
+    $otro = User::factory()->create();
+
+    Livewire::actingAs($superadmin)->test(ListaUsuario::class)
+        ->call('seleccionarUsuario', $otro->id)
+        ->set('permisos.admin_ver', true)
+        ->call('guardarPermisos');
+    expect(Permiso::where('user_id', $otro->id)->where('nombre', 'admin_ver')->exists())->toBeTrue();
+
+    // Un editor sin admin_ver guarda otros permisos del mismo usuario: admin_ver se conserva.
+    $editor = administradorDePermisos();
+    Livewire::actingAs($editor)->test(ListaUsuario::class)
+        ->call('seleccionarUsuario', $otro->id)
+        ->set('permisos.admin_ver', false)
+        ->set('permisos.resolucion_ver', true)
+        ->call('guardarPermisos');
+
+    expect(Permiso::where('user_id', $otro->id)->where('nombre', 'admin_ver')->exists())->toBeTrue()
+        ->and(Permiso::where('user_id', $otro->id)->where('nombre', 'resolucion_ver')->exists())->toBeTrue();
+});

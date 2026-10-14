@@ -44,3 +44,18 @@ test('el panel Admin oculta claves aunque ya estén guardadas en un registro vie
         ->call('alternar', $viejo->id)
         ->assertDontSee('HASH-EXPUESTO');
 });
+
+test('crear, cambiar y borrar un pase de SiRex queda en la auditoría', function () {
+    $pase = \App\Models\Pase::factory()->create();
+    $pase->update(['observacion' => 'cambiada']);
+    $id = $pase->id;
+    $pase->delete();
+
+    $eventos = Audit::where('auditable_type', \App\Models\Pase::class)->where('auditable_id', $id)->pluck('event')->all();
+
+    expect($eventos)->toContain('created', 'updated', 'deleted');
+});
+
+test('la página 404 tiene el diseño animado y vuelve al login para invitados', function () {
+    $this->get('/esta-ruta-no-existe')->assertNotFound()->assertSee('Página no encontrada')->assertSee('sirex-403-candado', false);
+});
