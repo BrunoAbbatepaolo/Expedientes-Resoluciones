@@ -12,7 +12,10 @@ final class CatalogoPermisos
      * Permisos agrupados por módulo. 'requiere' = permiso que hace falta para que este sirva de algo
      * (editar sin ver no deja entrar a la pantalla; los de RRHH se apoyan en "ver personal").
      *
-     * @return list<array{clave: string, titulo: string, icono: string, permisos: list<array{clave: string, titulo: string, descripcion: string, requiere: ?string}>}>
+     * Cada módulo se muestra como una fila con un selector de nivel ('niveles': de menor a mayor, cada uno incluye
+     * al anterior) y, si tiene, interruptores sueltos ('extras': permisos que se apoyan en el primer nivel).
+     *
+     * @return list<array{clave: string, titulo: string, icono: string, niveles: list<array{clave: string, titulo: string}>, extras: list<string>, permisos: list<array{clave: string, titulo: string, descripcion: string, requiere: ?string}>}>
      */
     public static function modulos(): array
     {
@@ -21,6 +24,8 @@ final class CatalogoPermisos
                 'clave' => 'expedientes',
                 'titulo' => 'Expedientes',
                 'icono' => 'M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7Z',
+                'niveles' => [['clave' => 'expediente_ver', 'titulo' => 'Ver'], ['clave' => 'expediente_editar', 'titulo' => 'Editar']],
+                'extras' => [],
                 'permisos' => [
                     ['clave' => 'expediente_ver', 'titulo' => 'Ver expedientes', 'descripcion' => 'Acceso de lectura a expedientes.', 'requiere' => null],
                     ['clave' => 'expediente_editar', 'titulo' => 'Editar expedientes', 'descripcion' => 'Crear, modificar y eliminar expedientes.', 'requiere' => 'expediente_ver'],
@@ -30,6 +35,8 @@ final class CatalogoPermisos
                 'clave' => 'resoluciones',
                 'titulo' => 'Resoluciones',
                 'icono' => 'M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z',
+                'niveles' => [['clave' => 'resolucion_ver', 'titulo' => 'Ver'], ['clave' => 'resolucion_editar', 'titulo' => 'Editar']],
+                'extras' => [],
                 'permisos' => [
                     ['clave' => 'resolucion_ver', 'titulo' => 'Ver resoluciones', 'descripcion' => 'Acceso de lectura a resoluciones.', 'requiere' => null],
                     ['clave' => 'resolucion_editar', 'titulo' => 'Editar resoluciones', 'descripcion' => 'Crear, modificar y eliminar resoluciones.', 'requiere' => 'resolucion_ver'],
@@ -39,6 +46,8 @@ final class CatalogoPermisos
                 'clave' => 'usuarios',
                 'titulo' => 'Usuarios y oficinas',
                 'icono' => 'M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8ZM22 21v-2a4 4 0 0 0-3-3.87',
+                'niveles' => [['clave' => 'lista_usuario_ver', 'titulo' => 'Ver'], ['clave' => 'lista_usuario_editar', 'titulo' => 'Editar']],
+                'extras' => [],
                 'permisos' => [
                     ['clave' => 'lista_usuario_ver', 'titulo' => 'Ver lista de usuarios', 'descripcion' => 'Acceso de lectura a usuarios.', 'requiere' => null],
                     ['clave' => 'lista_usuario_editar', 'titulo' => 'Editar lista de usuarios', 'descripcion' => 'Crear usuarios, asignar oficinas y permisos.', 'requiere' => 'lista_usuario_ver'],
@@ -48,6 +57,8 @@ final class CatalogoPermisos
                 'clave' => 'administracion',
                 'titulo' => 'Administración',
                 'icono' => 'M12 3 4 6v5c0 5 3.4 8.4 8 10 4.6-1.6 8-5 8-10V6l-8-3Z',
+                'niveles' => [['clave' => 'admin_ver', 'titulo' => 'Sí']],
+                'extras' => [],
                 'permisos' => [
                     ['clave' => 'admin_ver', 'titulo' => 'Panel de administración', 'descripcion' => 'Auditoría, métricas, accesos y estado del sistema de toda la institución.', 'requiere' => null],
                 ],
@@ -56,6 +67,8 @@ final class CatalogoPermisos
                 'clave' => 'rrhh',
                 'titulo' => 'Recursos Humanos',
                 'icono' => 'M17 20h5v-2a3 3 0 0 0-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 0 1 5.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 0 1 9.288 0M15 7a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z',
+                'niveles' => [['clave' => 'rrhh_ver', 'titulo' => 'Ver']],
+                'extras' => ['rrhh_sensibles', 'rrhh_horarios', 'rrhh_confirmar_pedidos'],
                 'permisos' => [
                     ['clave' => 'rrhh_ver', 'titulo' => 'Ver personal', 'descripcion' => 'Legajos (datos personales), asistencia, licencias y reportes de todo el personal.', 'requiere' => null],
                     ['clave' => 'rrhh_sensibles', 'titulo' => 'Datos sensibles', 'descripcion' => 'Salud, discapacidad, datos judiciales y cuenta bancaria. Solo jefatura de RRHH.', 'requiere' => 'rrhh_ver'],
@@ -105,6 +118,35 @@ final class CatalogoPermisos
                 'permisos' => ['rrhh_ver', 'rrhh_sensibles', 'rrhh_horarios', 'rrhh_confirmar_pedidos'],
             ],
         ];
+    }
+
+    /**
+     * Nivel de acceso de cada módulo para un conjunto de permisos (0 = sin acceso), para el resumen de la lista de usuarios.
+     *
+     * @param  list<string>  $activos
+     * @return list<array{clave: string, titulo: string, icono: string, nivel: int, etiqueta: string, extras: int}>
+     */
+    public static function resumen(array $activos): array
+    {
+        $activos = array_flip($activos);
+
+        return array_map(function (array $m) use ($activos) {
+            $nivel = 0;
+            foreach ($m['niveles'] as $i => $n) {
+                if (isset($activos[$n['clave']])) {
+                    $nivel = $i + 1;
+                }
+            }
+
+            return [
+                'clave' => $m['clave'],
+                'titulo' => $m['titulo'],
+                'icono' => $m['icono'],
+                'nivel' => $nivel,
+                'etiqueta' => $nivel > 0 ? $m['niveles'][$nivel - 1]['titulo'] : 'Sin acceso',
+                'extras' => count(array_filter($m['extras'], fn (string $c) => isset($activos[$c]))),
+            ];
+        }, self::modulos());
     }
 
     /** @return list<string> */

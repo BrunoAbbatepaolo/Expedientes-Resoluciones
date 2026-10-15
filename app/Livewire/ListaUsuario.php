@@ -174,6 +174,9 @@ class ListaUsuario extends Component
         }
 
         $this->permisosOriginales = $this->permisos;
+
+        // Se abre recién con los permisos de este usuario cargados (no los del anterior).
+        $this->dispatch('open-modal', 'modal-permisos');
     }
 
     public function editarOficina(int $userId): void
@@ -631,7 +634,22 @@ class ListaUsuario extends Component
             ->map(fn ($l) => (string) $l)
             ->all(), null);
 
+        // Resumen de accesos por módulo (una sola consulta para toda la página); solo lo ve quien edita usuarios.
+        $accesos = [];
+        if (auth()->user()?->permiso('lista_usuario_editar')) {
+            $porUsuario = Permiso::query()
+                ->whereIn('user_id', $userIds)
+                ->whereIn('nombre', CatalogoPermisos::claves())
+                ->get(['user_id', 'nombre'])
+                ->groupBy('user_id');
+
+            foreach ($userIds as $id) {
+                $accesos[$id] = CatalogoPermisos::resumen($porUsuario->get($id, collect())->pluck('nombre')->all());
+            }
+        }
+
         return view('livewire.lista-usuario', [
+            'accesos' => $accesos,
             'legajosActivos' => $legajosActivos,
             'usuarios' => $usuarios,
             'oficinaPorUsuario' => $oficinaPorUsuario,

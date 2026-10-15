@@ -165,7 +165,7 @@ test('la lista de usuarios ofrece solo acciones que funcionan: sin botón Editar
 
     Livewire::actingAs($admin)
         ->test(ListaUsuario::class)
-        ->assertSee('Asignar Permisos')
+        ->assertSee('Asignar permisos')
         ->assertSee('Editar oficina')
         ->assertDontSeeHtml('>Acciones</th>')
         ->assertDontSeeHtml('>Editar</button>');

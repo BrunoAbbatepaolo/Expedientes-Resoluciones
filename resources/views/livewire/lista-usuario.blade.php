@@ -38,76 +38,95 @@
             </div>
         @endif
 
-        <div class="sirex-glass-card overflow-x-auto rounded-[14px] transition-opacity duration-150" wire:loading.delay.class="opacity-50 pointer-events-none" aria-live="polite">
-            <table class="w-full table-fixed">
-                <thead>
-                    <tr>
-                        <th class="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-ipv-ink/50 dark:text-ipv-ink-dark/50">Nombre</th>
-                        <th class="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-ipv-ink/50 dark:text-ipv-ink-dark/50">Apellido</th>
-                        <th class="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-ipv-ink/50 dark:text-ipv-ink-dark/50">Email</th>
-                        <th class="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-ipv-ink/50 dark:text-ipv-ink-dark/50">Oficina</th>
-                        @if (auth()->user()->permiso('lista_usuario_editar'))
-                            <th class="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-ipv-ink/50 dark:text-ipv-ink-dark/50">Permisos</th>
-                        @endif
-                    </tr>
-                </thead>
+        @php($puedeEditar = auth()->user()->permiso('lista_usuario_editar'))
+        @php($columnas = $puedeEditar ? 'lg:grid-cols-[minmax(0,1.6fr)_minmax(0,1.2fr)_12rem_14rem]' : 'lg:grid-cols-[minmax(0,1.6fr)_minmax(0,1.2fr)]')
 
-                <tbody class="divide-y divide-ipv-blue/10 dark:divide-white/10">
-                    @forelse ($usuarios as $usuario)
-                        <tr wire:key="usr-{{ $usuario->id }}" class="hover:bg-black/[0.02] dark:hover:bg-white/[0.03]">
-                            <td class="truncate px-4 py-2.5 text-sm text-ipv-ink dark:text-ipv-ink-dark">{{ $usuario->nombre }}</td>
-                            <td class="truncate px-4 py-2.5 text-sm text-ipv-ink dark:text-ipv-ink-dark">
-                                {{ $usuario->apellido }}
-                                @if ($legajosActivos !== null && ! in_array((string) $usuario->legajo, $legajosActivos, true))
-                                    <span class="ml-1 rounded-full bg-ipv-magenta/12 px-2 py-0.5 text-[11px] font-semibold text-ipv-magenta dark:text-ipv-magenta-light"
-                                        title="El legajo {{ $usuario->legajo ?: '(vacío)' }} no figura como empleado activo del IPV (baja, pasivo o error de carga). Revisar si debe seguir teniendo acceso.">
-                                        No activo en IPV
-                                    </span>
-                                @endif
-                            </td>
-                            <td class="truncate px-4 py-2.5 text-sm text-ipv-ink dark:text-ipv-ink-dark">{{ $usuario->email }}</td>
+        <div class="sirex-glass-card overflow-hidden rounded-[14px] transition-opacity duration-150" wire:loading.delay.class="opacity-50 pointer-events-none" aria-live="polite">
+            <div class="hidden gap-4 px-4 py-2.5 text-xs font-semibold uppercase tracking-wide text-ipv-ink/50 dark:text-ipv-ink-dark/50 lg:grid {{ $columnas }}">
+                <span>Usuario</span>
+                <span>Oficina</span>
+                @if ($puedeEditar)
+                    <span>Accesos</span>
+                    <span></span>
+                @endif
+            </div>
 
-                            {{-- Columna Oficina --}}
-                            <td class="px-4 py-2.5">
-                                <div class="flex items-center gap-2">
-                                    <span class="inline-flex items-center rounded-full bg-ipv-blue/12 px-2.5 py-0.5 text-xs font-semibold text-ipv-blue dark:bg-ipv-blue-light/20 dark:text-ipv-blue-light">
-                                        {{ $oficinaPorUsuario[$usuario->id] ?? 'Sin asignar' }}
-                                    </span>
-
-                                    @if (auth()->user()->permiso('lista_usuario_editar'))
-                                        <button type="button" wire:click="editarOficina({{ $usuario->id }})"
-                                            class="inline-flex items-center gap-1 rounded-md bg-ipv-blue px-3 py-1 text-xs text-white hover:bg-ipv-blue-dark focus:outline-none focus:ring-2 focus:ring-ipv-blue/40">
-                                            Editar oficina
-                                        </button>
+            <ul class="divide-y divide-ipv-blue/10 dark:divide-white/10">
+                @forelse ($usuarios as $usuario)
+                    <li wire:key="usr-{{ $usuario->id }}" class="grid items-center gap-x-4 gap-y-3 px-4 py-3 hover:bg-black/[0.02] dark:hover:bg-white/[0.03] {{ $columnas }}">
+                        {{-- Usuario --}}
+                        <div class="flex min-w-0 items-center gap-3">
+                            <span class="grid size-10 shrink-0 place-items-center rounded-full bg-ipv-blue/12 text-sm font-bold text-ipv-blue dark:bg-ipv-blue-light/20 dark:text-ipv-blue-light" aria-hidden="true">
+                                {{ mb_strtoupper(mb_substr((string) $usuario->nombre, 0, 1).mb_substr((string) $usuario->apellido, 0, 1)) }}
+                            </span>
+                            <div class="min-w-0">
+                                <p class="truncate text-sm font-semibold text-ipv-ink dark:text-ipv-ink-dark">
+                                    {{ $usuario->apellido }}, {{ $usuario->nombre }}
+                                    @if ($legajosActivos !== null && ! in_array((string) $usuario->legajo, $legajosActivos, true))
+                                        <span class="ml-1 rounded-full bg-ipv-magenta/12 px-2 py-0.5 align-middle text-[11px] font-semibold text-ipv-magenta dark:text-ipv-magenta-light"
+                                            title="El legajo {{ $usuario->legajo ?: '(vacío)' }} no figura como empleado activo del IPV (baja, pasivo o error de carga). Revisar si debe seguir teniendo acceso.">
+                                            No activo en IPV
+                                        </span>
                                     @endif
-                                </div>
-                            </td>
+                                </p>
+                                <p class="truncate text-xs text-ipv-ink/55 dark:text-ipv-ink-dark/55">{{ $usuario->email }}</p>
+                            </div>
+                        </div>
 
-                            @if (auth()->user()->permiso('lista_usuario_editar'))
-                                {{-- Columna Permisos --}}
-                                <td class="px-4 py-2.5">
-                                    <div class="flex flex-wrap gap-2">
-                                        <button type="button" wire:click="seleccionarUsuario({{ $usuario->id }})" @click="$dispatch('open-modal', ['modal-permisos'])"
-                                            class="rounded bg-ipv-blue px-3 py-1 text-xs text-white hover:bg-ipv-blue-dark">
-                                            Asignar Permisos
-                                        </button>
-                                        <button type="button" wire:click="abrirCuenta({{ $usuario->id }})"
-                                            class="rounded border border-ipv-blue/40 px-3 py-1 text-xs font-medium text-ipv-blue hover:bg-ipv-blue/10 dark:border-ipv-blue-light/40 dark:text-ipv-blue-light">
-                                            Cuenta
-                                        </button>
-                                    </div>
-                                </td>
+                        {{-- Oficina --}}
+                        <div class="min-w-0">
+                            @if ($puedeEditar)
+                                <button type="button" wire:click="editarOficina({{ $usuario->id }})" title="Editar oficina" aria-label="Editar oficina de {{ $usuario->nombre }} {{ $usuario->apellido }}"
+                                    class="group inline-flex max-w-full items-center gap-1.5 rounded-full bg-ipv-blue/12 px-2.5 py-1 text-xs font-semibold text-ipv-blue transition hover:bg-ipv-blue/20 focus:outline-none focus:ring-2 focus:ring-ipv-blue/40 dark:bg-ipv-blue-light/20 dark:text-ipv-blue-light">
+                                    <svg class="size-3.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 21V5a2 2 0 0 0-2-2H7a2 2 0 0 0-2 2v16m14 0H5m14 0h2M5 21H3m6-14h2m-2 4h2m2-4h2m-2 4h2m-4 10v-4h4v4" /></svg>
+                                    <span class="truncate">{{ $oficinaPorUsuario[$usuario->id] ?? 'Sin asignar' }}</span>
+                                    <svg class="size-3 shrink-0 opacity-50 transition group-hover:opacity-100" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z" /></svg>
+                                </button>
+                            @else
+                                <span class="inline-flex max-w-full items-center rounded-full bg-ipv-blue/12 px-2.5 py-1 text-xs font-semibold text-ipv-blue dark:bg-ipv-blue-light/20 dark:text-ipv-blue-light">
+                                    <span class="truncate">{{ $oficinaPorUsuario[$usuario->id] ?? 'Sin asignar' }}</span>
+                                </span>
                             @endif
-                        </tr>
-                    @empty
-                        <tr>
-                            <td colspan="{{ auth()->user()->permiso('lista_usuario_editar') ? 5 : 4 }}">
-                                <x-vacio icono="persona">No se encontraron usuarios.</x-vacio>
-                            </td>
-                        </tr>
-                    @endforelse
-                </tbody>
-            </table>
+                        </div>
+
+                        @if ($puedeEditar)
+                            {{-- Accesos: un ícono por módulo (apagado = sin acceso, contorno = ver, relleno = editar) --}}
+                            <div class="flex items-center gap-1.5" role="list" aria-label="Accesos">
+                                @foreach ($accesos[$usuario->id] ?? [] as $acceso)
+                                    <span role="listitem" title="{{ $acceso['titulo'] }}: {{ $acceso['etiqueta'] }}{{ $acceso['extras'] > 0 ? ' (+'.$acceso['extras'].' más)' : '' }}"
+                                        @class([
+                                            'grid size-8 place-items-center rounded-lg border transition',
+                                            'border-transparent bg-black/[0.04] text-ipv-ink/25 dark:bg-white/[0.05] dark:text-ipv-ink-dark/25' => $acceso['nivel'] === 0,
+                                            'border-ipv-blue/30 bg-ipv-blue/10 text-ipv-blue dark:border-ipv-blue-light/40 dark:bg-ipv-blue-light/15 dark:text-ipv-blue-light' => $acceso['nivel'] === 1,
+                                            'border-ipv-blue bg-ipv-blue text-white dark:border-[#1a6fc4] dark:bg-[#1a6fc4]' => $acceso['nivel'] >= 2 || ($acceso['nivel'] === 1 && $acceso['clave'] === 'administracion'),
+                                        ])>
+                                        <svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="{{ $acceso['icono'] }}" /></svg>
+                                        <span class="sr-only">{{ $acceso['titulo'] }}: {{ $acceso['etiqueta'] }}</span>
+                                    </span>
+                                @endforeach
+                            </div>
+
+                            {{-- Acciones --}}
+                            <div class="flex gap-2 lg:justify-end">
+                                <button type="button" wire:click="seleccionarUsuario({{ $usuario->id }})" aria-label="Asignar permisos a {{ $usuario->nombre }} {{ $usuario->apellido }}"
+                                    class="sirex-boton sirex-boton-primario sirex-boton-chico">
+                                    <svg class="size-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3 4 6v5c0 5 3.4 8.4 8 10 4.6-1.6 8-5 8-10V6l-8-3Z" /></svg>
+                                    Permisos
+                                </button>
+                                <button type="button" wire:click="abrirCuenta({{ $usuario->id }})" aria-label="Cuenta de {{ $usuario->nombre }} {{ $usuario->apellido }}"
+                                    class="sirex-boton sirex-boton-secundario sirex-boton-chico">
+                                    <svg class="size-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 7a4 4 0 1 1-8 0 4 4 0 0 1 8 0ZM12 14a7 7 0 0 0-7 7h14a7 7 0 0 0-7-7Z" /></svg>
+                                    Cuenta
+                                </button>
+                            </div>
+                        @endif
+                    </li>
+                @empty
+                    <li>
+                        <x-vacio icono="persona">No se encontraron usuarios.</x-vacio>
+                    </li>
+                @endforelse
+            </ul>
         </div>
 
         {{-- Modal para crear usuario --}}
@@ -311,6 +330,8 @@
         <div class="mt-4">
             {{ $usuarios->links() }}
         </div>
-        @include('livewire.modal-permisos')
+        @if (auth()->user()->permiso('lista_usuario_editar'))
+            @include('livewire.modal-permisos')
+        @endif
     @endif
 </div>

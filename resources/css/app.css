@@ -368,32 +368,23 @@
     .sirex-boton-chico { padding: 0.375rem 0.75rem; font-size: 0.75rem; }
 
     /* ---------- Ventana de permisos ---------- */
-    .sirex-permisos-modulo { border: 1px solid rgba(0, 81, 158, 0.12); border-radius: 0.875rem; overflow: hidden; background: rgba(255, 255, 255, 0.4); }
-    .dark .sirex-permisos-modulo { border-color: rgba(255, 255, 255, 0.09); background: rgba(255, 255, 255, 0.025); }
-    .sirex-permisos-modulo-cabeza { display: flex; align-items: center; gap: 0.5rem; padding: 0.375rem 0.625rem 0.375rem 0.375rem; background: rgba(0, 81, 158, 0.04); }
-    .dark .sirex-permisos-modulo-cabeza { background: rgba(255, 255, 255, 0.04); }
-    .sirex-permisos-modulo-titulo { display: flex; min-width: 0; flex: 1; align-items: center; gap: 0.625rem; padding: 0.25rem 0.375rem; border-radius: 0.625rem; font-size: 0.875rem; text-align: left; }
-    .sirex-permisos-modulo-titulo:hover { background: rgba(0, 81, 158, 0.06); }
-    .dark .sirex-permisos-modulo-titulo:hover { background: rgba(255, 255, 255, 0.06); }
-    .sirex-contador-modulo { border-radius: 999px; padding: 0.0625rem 0.5rem; font-size: 0.6875rem; font-weight: 700; font-variant-numeric: tabular-nums; background: rgba(0, 0, 0, 0.06); color: rgba(31, 41, 55, 0.55); transition: background-color 200ms, color 200ms; }
-    .dark .sirex-contador-modulo { background: rgba(255, 255, 255, 0.08); color: rgba(229, 233, 238, 0.55); }
-    .sirex-contador-modulo.is-on { background: rgba(0, 81, 158, 0.14); color: var(--color-ipv-blue); }
-    .dark .sirex-contador-modulo.is-on { background: rgba(143, 193, 238, 0.2); color: var(--color-ipv-blue-light); }
-
-    .sirex-permiso-fila { display: flex; width: 100%; align-items: center; gap: 1rem; padding: 0.625rem 0.875rem; border-top: 1px solid rgba(0, 81, 158, 0.08); text-align: left; transition: background-color 200ms; }
-    .dark .sirex-permiso-fila { border-top-color: rgba(255, 255, 255, 0.07); }
-    .sirex-permiso-fila:hover { background: rgba(0, 81, 158, 0.04); }
-    .dark .sirex-permiso-fila:hover { background: rgba(255, 255, 255, 0.04); }
-    .sirex-permiso-fila.is-on { background: rgba(0, 81, 158, 0.05); }
-    .dark .sirex-permiso-fila.is-on { background: rgba(143, 193, 238, 0.07); }
+    .sirex-modulo { display: flex; flex-wrap: wrap; align-items: center; gap: 0.625rem 0.875rem; padding: 0.75rem 0.875rem; border: 1px solid rgba(0, 81, 158, 0.12); border-radius: 0.875rem; background: rgba(255, 255, 255, 0.4); transition: background-color 200ms, border-color 200ms; }
+    .dark .sirex-modulo { border-color: rgba(255, 255, 255, 0.09); background: rgba(255, 255, 255, 0.025); }
+    .sirex-modulo.is-on { border-color: rgba(0, 81, 158, 0.28); background: rgba(0, 81, 158, 0.05); }
+    .dark .sirex-modulo.is-on { border-color: rgba(143, 193, 238, 0.3); background: rgba(143, 193, 238, 0.07); }
     .sirex-resalte { animation: sirex-resalte 1.3s ease-out; }
 
-    .sirex-switch { position: relative; flex: none; width: 2.5rem; height: 1.4375rem; border-radius: 999px; background: rgba(31, 41, 55, 0.22); transition: background-color 220ms; }
-    .dark .sirex-switch { background: rgba(255, 255, 255, 0.2); }
-    .sirex-permiso-fila.is-on .sirex-switch { background: var(--color-ipv-blue); }
-    .dark .sirex-permiso-fila.is-on .sirex-switch { background: #1a6fc4; }
-    .sirex-switch-perilla { position: absolute; top: 0.1875rem; left: 0.1875rem; width: 1.0625rem; height: 1.0625rem; border-radius: 999px; background: #fff; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3); transition: transform 240ms cubic-bezier(0.3, 1.5, 0.5, 1); }
-    .sirex-permiso-fila.is-on .sirex-switch-perilla { transform: translateX(1.0625rem); }
+    .sirex-segmentos { display: inline-flex; flex: none; gap: 0.125rem; padding: 0.1875rem; border-radius: 0.75rem; background: rgba(31, 41, 55, 0.07); }
+    .dark .sirex-segmentos { background: rgba(255, 255, 255, 0.07); }
+    .sirex-segmento { display: inline-flex; flex: 1; align-items: center; justify-content: center; gap: 0.3125rem; padding: 0.375rem 0.75rem; border-radius: 0.5625rem; font-size: 0.75rem; font-weight: 600; white-space: nowrap; color: rgba(31, 41, 55, 0.6); transition: background-color 160ms, color 160ms, box-shadow 160ms; }
+    .dark .sirex-segmento { color: rgba(229, 233, 238, 0.6); }
+    .sirex-segmento:hover:not(:disabled) { color: rgba(31, 41, 55, 0.95); }
+    .dark .sirex-segmento:hover:not(:disabled) { color: #fff; }
+    .sirex-segmento.is-on { background: #fff; color: var(--color-ipv-blue); box-shadow: 0 1px 3px rgba(0, 0, 0, 0.16); }
+    .dark .sirex-segmento.is-on { background: #1a6fc4; color: #fff; }
+    .sirex-segmento.is-off { background: #fff; color: rgba(31, 41, 55, 0.7); box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12); }
+    .dark .sirex-segmento.is-off { background: rgba(255, 255, 255, 0.14); color: rgba(229, 233, 238, 0.85); }
+    .sirex-segmento:disabled { cursor: not-allowed; opacity: 0.5; }
 
     .sirex-rol { display: inline-flex; flex: none; align-items: center; gap: 0.3125rem; padding: 0.3125rem 0.75rem; border-radius: 999px; border: 1px solid rgba(0, 81, 158, 0.2); font-size: 0.75rem; font-weight: 600; white-space: nowrap; color: rgba(31, 41, 55, 0.78); transition: background-color 160ms, border-color 160ms, color 160ms, transform 150ms; }
     .dark .sirex-rol { border-color: rgba(255, 255, 255, 0.16); color: rgba(229, 233, 238, 0.82); }

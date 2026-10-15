@@ -87,7 +87,7 @@ test('al elegir un usuario se guarda lo que ya tenía para mostrar el resumen de
     expect($componente->get('permisosOriginales')['resolucion_ver'])->toBeFalse();
 });
 
-test('la ventana de permisos muestra los módulos, las plantillas y el resumen', function () {
+test('la ventana de permisos muestra una fila por módulo, los perfiles rápidos y el resumen', function () {
     $admin = administradorDePermisos();
 
     Livewire::actingAs($admin)->test(ListaUsuario::class)
@@ -95,13 +95,64 @@ test('la ventana de permisos muestra los módulos, las plantillas y el resumen',
         ->assertSee('Resoluciones')
         ->assertSee('Usuarios y oficinas')
         ->assertSee('Recursos Humanos')
-        ->assertSee('Ver expedientes')
-        ->assertSee('Requiere «Ver expedientes»', false)
-        ->assertSee('Plantillas de rol')
-        ->assertSee('Buscar permiso')
-        ->assertSee('Solo activos')
+        ->assertSee('Sin acceso')
+        ->assertSee('Perfil rápido')
         ->assertSee('Sin cambios por guardar.')
         ->assertSee('modalPermisos(', false);
+});
+
+test('cada módulo tiene niveles y extras que existen en el catálogo y respetan las dependencias', function () {
+    $claves = CatalogoPermisos::claves();
+    $dependencias = CatalogoPermisos::dependencias();
+
+    foreach (CatalogoPermisos::modulos() as $modulo) {
+        $propios = array_column($modulo['permisos'], 'clave');
+        $enFila = [...array_column($modulo['niveles'], 'clave'), ...$modulo['extras']];
+
+        expect($enFila)->toEqualCanonicalizing($propios, "{$modulo['clave']}: todo permiso debe estar en un nivel o ser extra")
+            ->and(array_diff($enFila, $claves))->toBeEmpty();
+
+        // Cada nivel necesita al anterior; los extras necesitan el primer nivel.
+        foreach ($modulo['niveles'] as $i => $nivel) {
+            expect($dependencias[$nivel['clave']] ?? null)->toBe($i === 0 ? null : $modulo['niveles'][$i - 1]['clave']);
+        }
+        foreach ($modulo['extras'] as $extra) {
+            expect($dependencias[$extra])->toBe($modulo['niveles'][0]['clave']);
+        }
+    }
+});
+
+test('el resumen de accesos indica el nivel de cada módulo', function () {
+    $resumen = collect(CatalogoPermisos::resumen(['expediente_ver', 'expediente_editar', 'resolucion_ver', 'rrhh_ver', 'rrhh_horarios']))->keyBy('clave');
+
+    expect($resumen['expedientes']['nivel'])->toBe(2)->and($resumen['expedientes']['etiqueta'])->toBe('Editar')
+        ->and($resumen['resoluciones']['nivel'])->toBe(1)->and($resumen['resoluciones']['etiqueta'])->toBe('Ver')
+        ->and($resumen['usuarios']['nivel'])->toBe(0)->and($resumen['usuarios']['etiqueta'])->toBe('Sin acceso')
+        ->and($resumen['rrhh']['nivel'])->toBe(1)->and($resumen['rrhh']['extras'])->toBe(1);
+});
+
+test('la lista de usuarios muestra los accesos de cada uno y abre la ventana ya con sus permisos', function () {
+    $admin = administradorDePermisos();
+    $otro = User::factory()->create(['apellido' => 'PEREZ', 'nombre' => 'ANA']);
+    Permiso::create(['user_id' => $otro->id, 'nombre' => 'expediente_ver']);
+    Permiso::create(['user_id' => $otro->id, 'nombre' => 'expediente_editar']);
+
+    Livewire::actingAs($admin)->test(ListaUsuario::class)
+        ->assertSee('Expedientes: Editar')
+        ->assertSee('Resoluciones: Sin acceso')
+        ->call('seleccionarUsuario', $otro->id)
+        ->assertDispatched('open-modal');
+});
+
+test('quien solo puede ver usuarios no ve sus accesos', function () {
+    $oficina = Oficina::factory()->create();
+    $lector = User::factory()->create();
+    Permiso::setOficinaAsignada($lector->id, $oficina->id);
+    Permiso::create(['user_id' => $lector->id, 'nombre' => 'lista_usuario_ver']);
+
+    Livewire::actingAs($lector)->test(ListaUsuario::class)
+        ->assertDontSee('Sin acceso')
+        ->assertDontSee('Permisos');
 });
 
 test('lista_usuario_editar solo no alcanza para darse ni dar admin_ver', function () {

@@ -1,37 +1,18 @@
-// Ventana de permisos (Usuarios). El catálogo (módulos, dependencias y plantillas) viene del servidor
+// Ventana de permisos (Usuarios). El catálogo (módulos, niveles, dependencias y plantillas) viene del servidor
 // (App\Support\CatalogoPermisos); el estado vive en $wire.permisos y se guarda recién al apretar Guardar.
+// Cada módulo es una fila con un selector de nivel (Sin acceso / Ver / Editar); RRHH suma interruptores sueltos.
 // Las dependencias acá son solo comodidad: el servidor las vuelve a aplicar al guardar.
 
-const sinTildes = (texto) => texto.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase()
-
-export function modalPermisos(catalogo) {
+export function modalPermisos(catalogo, puedeAdmin = true) {
     const todasLasClaves = catalogo.modulos.flatMap((m) => m.permisos.map((p) => p.clave))
     const permisosPorClave = Object.fromEntries(catalogo.modulos.flatMap((m) => m.permisos.map((p) => [p.clave, p])))
 
     return {
         catalogo,
+        puedeAdmin,
         show: false,
-        busqueda: '',
-        soloActivos: false,
-        abiertas: [],
         resaltadas: [],
         temporizador: null,
-
-        init() {
-            this.abrirSegunPantalla()
-            this.$watch('show', (visible) => {
-                if (visible) {
-                    this.busqueda = ''
-                    this.soloActivos = false
-                    this.abrirSegunPantalla()
-                }
-            })
-        },
-
-        // En celulares los módulos arrancan cerrados (con su contador); en pantallas grandes, abiertos.
-        abrirSegunPantalla() {
-            this.abiertas = window.innerWidth < 640 ? [] : catalogo.modulos.map((m) => m.clave)
-        },
 
         activo(clave) {
             return !!this.$wire.permisos[clave]
@@ -39,12 +20,14 @@ export function modalPermisos(catalogo) {
         titulo(clave) {
             return permisosPorClave[clave]?.titulo ?? clave
         },
-        requiere(clave) {
-            return catalogo.dependencias[clave] ?? null
+        // El servidor ignora los cambios de admin_ver si quien edita no lo tiene: acá se bloquea para no mentir en el resumen.
+        bloqueado(clave) {
+            return clave === 'admin_ver' && !this.puedeAdmin
         },
 
         // ---- Cambios ----
         alternar(clave) {
+            if (this.bloqueado(clave)) return
             this.fijar([clave], !this.activo(clave))
         },
 
@@ -92,40 +75,29 @@ export function modalPermisos(catalogo) {
             this.temporizador = setTimeout(() => { this.resaltadas = [] }, 1400)
         },
 
-        // ---- Módulos ----
-        clavesDe(modulo) {
-            return modulo.permisos.map((p) => p.clave)
+        // ---- Módulos y niveles ----
+        // 0 = sin acceso; k = tiene los primeros k niveles.
+        nivelDe(modulo) {
+            let nivel = 0
+            modulo.niveles.forEach((n, i) => { if (this.activo(n.clave)) nivel = i + 1 })
+            return nivel
+        },
+        fijarNivel(modulo, nivel) {
+            if (modulo.niveles.some((n) => this.bloqueado(n.clave))) return
+            const claves = modulo.niveles.map((n) => n.clave)
+            if (nivel > 0) this.fijar(claves.slice(0, nivel), true)
+            if (claves.slice(nivel).some((c) => this.activo(c))) this.fijar(claves.slice(nivel), false)
+        },
+        // Una línea con lo que el nivel actual permite hacer.
+        detalle(modulo) {
+            const nivel = this.nivelDe(modulo)
+            return nivel === 0 ? 'Sin acceso.' : permisosPorClave[modulo.niveles[nivel - 1].clave].descripcion
+        },
+        extrasDe(modulo) {
+            return modulo.extras.map((c) => permisosPorClave[c])
         },
         cuantosActivos(modulo) {
-            return this.clavesDe(modulo).filter((c) => this.activo(c)).length
-        },
-        moduloCompleto(modulo) {
-            return this.cuantosActivos(modulo) === modulo.permisos.length
-        },
-        alternarModulo(modulo) {
-            this.fijar(this.clavesDe(modulo), !this.moduloCompleto(modulo))
-        },
-        estaAbierto(modulo) {
-            return this.busqueda.trim() !== '' || this.abiertas.includes(modulo.clave)
-        },
-        alternarAbierto(modulo) {
-            this.abiertas = this.abiertas.includes(modulo.clave)
-                ? this.abiertas.filter((c) => c !== modulo.clave)
-                : [...this.abiertas, modulo.clave]
-        },
-
-        // ---- Búsqueda y filtro ----
-        visible(permiso) {
-            if (this.soloActivos && !this.activo(permiso.clave)) return false
-            const q = sinTildes(this.busqueda.trim())
-            if (!q) return true
-            return sinTildes(`${permiso.titulo} ${permiso.descripcion}`).includes(q)
-        },
-        moduloVisible(modulo) {
-            return modulo.permisos.some((p) => this.visible(p))
-        },
-        get hayResultados() {
-            return catalogo.modulos.some((m) => this.moduloVisible(m))
+            return modulo.permisos.filter((p) => this.activo(p.clave)).length
         },
 
         // ---- Plantillas de rol ----
@@ -142,12 +114,14 @@ export function modalPermisos(catalogo) {
         aplicarRol(rol) {
             const p = { ...this.$wire.permisos }
             const antes = { ...p }
-            this.modulosDeRol(rol).forEach((m) => m.permisos.forEach((permiso) => { p[permiso.clave] = rol.permisos.includes(permiso.clave) }))
+            this.modulosDeRol(rol).forEach((m) => m.permisos.forEach((permiso) => {
+                if (!this.bloqueado(permiso.clave)) p[permiso.clave] = rol.permisos.includes(permiso.clave)
+            }))
             this.$wire.permisos = p
             this.resaltar(todasLasClaves.filter((c) => antes[c] !== p[c]))
         },
         quitarTodo() {
-            this.fijar(todasLasClaves.filter((c) => this.activo(c)), false)
+            this.fijar(todasLasClaves.filter((c) => this.activo(c) && !this.bloqueado(c)), false)
         },
 
         // ---- Resumen de cambios ----
