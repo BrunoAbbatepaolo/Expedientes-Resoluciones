@@ -203,23 +203,34 @@
                 @endphp
                 <section class="sirex-glass-card rounded-[14px] p-5" aria-labelledby="resoluciones-vinculadas">
                     <h2 id="resoluciones-vinculadas" class="mb-3 text-sm font-semibold uppercase tracking-wide text-ipv-ink/50 dark:text-ipv-ink-dark/50">Resoluciones</h2>
-                    <ul class="space-y-2 text-sm">
+                    <ul class="-mx-2 space-y-1 text-sm">
                         @forelse ($resoluciones as $res)
                             @php
-                                // Los archivos se sirven solo a la oficina que cargó la resolución (o si es una resolución vieja sin oficina).
+                                // Los PDF se sirven solo a la oficina que cargó la resolución (o si es una resolución vieja sin oficina).
                                 $accesible = $res->oficina_id === null || (int) $res->oficina_id === (int) $oficinaPropia;
-                                $urlPdf = $res->archivos->isNotEmpty()
-                                    ? route('resoluciones.archivo', $res->archivos->first())
-                                    : ($res->pdf ? route('resoluciones.pdf', $res) : null);
+                                $urlPdf = $accesible ? $res->urlPdf() : null;
+                                $tipoRes = $res->tipo ? \App\Livewire\CrearResolucion::nombreDeTipo($res->tipo) : null;
                             @endphp
-                            <li wire:key="res-{{ $res->id }}" class="flex items-center justify-between gap-2">
-                                <span class="text-ipv-ink/80 dark:text-ipv-ink-dark/80">
-                                    Resolución {{ $res->numero_resolucion ?: 's/n' }}
-                                    <span class="text-xs text-ipv-ink/50 dark:text-ipv-ink-dark/50">· {{ $res->fecha ? \Carbon\Carbon::parse($res->fecha)->format('d/m/Y') : 'sin fecha' }}</span>
-                                </span>
-                                @if ($accesible && $urlPdf)
-                                    <a href="{{ $urlPdf }}" target="_blank" rel="noopener" class="text-xs font-semibold text-ipv-blue hover:underline dark:text-ipv-blue-light">Ver PDF</a>
-                                @endif
+                            <li wire:key="res-{{ $res->id }}">
+                                {{-- Toda la fila abre el PDF en otra pestaña. --}}
+                                <a @if ($urlPdf) href="{{ $urlPdf }}" target="_blank" rel="noopener" title="Abrir el PDF en otra pestaña" @endif
+                                    class="group flex items-center gap-3 rounded-lg px-2 py-2 {{ $urlPdf ? 'transition-colors hover:bg-ipv-blue/[0.07] dark:hover:bg-white/[0.06]' : 'cursor-default' }}">
+                                    <span class="grid size-8 shrink-0 place-items-center rounded-lg bg-ipv-magenta/10 text-ipv-magenta dark:bg-ipv-magenta/20 dark:text-ipv-magenta-light" aria-hidden="true">
+                                        <svg class="size-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" /></svg>
+                                    </span>
+                                    <span class="min-w-0 flex-1">
+                                        <span class="block truncate font-medium text-ipv-ink dark:text-ipv-ink-dark">Resolución {{ $res->numero_resolucion ?: 's/n' }}</span>
+                                        <span class="block truncate text-xs text-ipv-ink/55 dark:text-ipv-ink-dark/55">{{ $res->fecha ? \Carbon\Carbon::parse($res->fecha)->format('d/m/Y') : 'Sin fecha' }}{{ $tipoRes ? ' · '.$tipoRes : '' }}</span>
+                                    </span>
+                                    @if ($urlPdf)
+                                        <span class="flex shrink-0 items-center gap-1 text-xs font-semibold text-ipv-blue dark:text-ipv-blue-light">
+                                            Ver PDF
+                                            <svg class="size-3.5 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M7 17L17 7M9 7h8v8" /></svg>
+                                        </span>
+                                    @else
+                                        <span class="shrink-0 text-xs text-ipv-ink/45 dark:text-ipv-ink-dark/45">{{ $accesible ? 'Sin PDF' : 'De otra oficina' }}</span>
+                                    @endif
+                                </a>
                             </li>
                         @empty
                             <li class="text-ipv-ink/55 dark:text-ipv-ink-dark/55">Todavía no tiene resoluciones.</li>

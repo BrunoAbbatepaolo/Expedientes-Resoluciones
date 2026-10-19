@@ -1160,3 +1160,37 @@
 .sirex-art-aviso button { font-weight: 600; text-decoration: underline; color: var(--color-ipv-blue); cursor: pointer; }
 .dark .sirex-art-aviso { color: var(--color-ipv-gold-light); }
 .dark .sirex-art-aviso button { color: var(--color-ipv-blue-light); }
+
+/* ── Lista de resoluciones ── */
+.sirex-resoluciones [data-acento="azul"] { --acento: 0 81 158; }
+.sirex-resoluciones [data-acento="cielo"] { --acento: 2 132 199; }
+.sirex-resoluciones [data-acento="magenta"] { --acento: 190 24 93; }
+.sirex-resoluciones [data-acento="oro"] { --acento: 180 120 0; }
+.sirex-resoluciones [data-acento="verde"] { --acento: 5 150 105; }
+.sirex-resoluciones [data-acento="gris"] { --acento: 100 116 139; }
+.sirex-res-fila { animation: sirex-fila-entra 320ms cubic-bezier(.2, .8, .2, 1) backwards; animation-delay: calc(var(--i, 0) * 28ms); transition: background-color 160ms; }
+.sirex-res-fila::before { content: ""; position: absolute; inset: 10px auto 10px 0; width: 3px; border-radius: 0 3px 3px 0; background: rgb(var(--acento)); transform: scaleY(0); transition: transform 200ms ease; }
+.sirex-res-fila:hover { background: rgb(var(--acento) / 0.045); }
+.sirex-res-fila:hover::before, .sirex-res-fila:focus-within::before { transform: scaleY(1); }
+.sirex-res-fila > a:focus-visible { outline: 2px solid rgb(var(--acento)); outline-offset: -2px; border-radius: 6px; }
+.sirex-res-icono { background: rgb(var(--acento) / 0.1); color: rgb(var(--acento)); transition: transform 200ms ease; }
+.sirex-res-fila:hover .sirex-res-icono { transform: scale(1.06) rotate(-3deg); }
+.dark .sirex-res-icono { background: rgb(var(--acento) / 0.22); color: rgb(var(--acento) / 1); filter: brightness(1.5); }
+.sirex-res-pdf { background: rgb(var(--acento) / 0.1); color: rgb(var(--acento)); transition: background-color 160ms; }
+.dark .sirex-res-pdf { background: rgb(var(--acento) / 0.22); filter: brightness(1.5); }
+.sirex-res-pdf svg { transition: transform 200ms ease; }
+.sirex-res-fila:hover .sirex-res-pdf { background: rgb(var(--acento) / 0.18); }
+.sirex-res-fila:hover .sirex-res-pdf svg { transform: translate(2px, -2px); }
+.sirex-res-chip { display: inline-flex; align-items: center; gap: .4rem; white-space: nowrap; border-radius: 9999px; padding: .375rem .8rem; font-size: .8125rem; font-weight: 500; border: 1px solid rgb(0 81 158 / 0.15); background: rgb(255 255 255 / 0.7); color: rgb(31 41 55 / 0.8); transition: all 160ms; }
+.sirex-res-chip:hover { border-color: rgb(0 81 158 / 0.35); }
+.sirex-res-chip.is-on { background: #00519e; border-color: #00519e; color: #fff; }
+.dark .sirex-res-chip { background: rgb(255 255 255 / 0.05); border-color: rgb(255 255 255 / 0.12); color: rgb(255 255 255 / 0.8); }
+.dark .sirex-res-chip.is-on { background: #3b82f6; border-color: #3b82f6; color: #fff; }
+.sirex-res-punto { width: .5rem; height: .5rem; border-radius: 9999px; background: rgb(var(--acento, 100 116 139)); }
+.sirex-res-chip.is-on .sirex-res-punto { background: #fff; }
+.sirex-res-aviso { animation: sirex-error-entra 300ms ease-out; }
+.sirex-trazo-anim { stroke-dasharray: 30; animation: sirex-trazo 500ms 150ms ease-out backwards; }
+@media (prefers-reduced-motion: reduce) {
+    .sirex-res-fila, .sirex-res-aviso, .sirex-trazo-anim { animation: none; }
+    .sirex-res-fila:hover .sirex-res-icono, .sirex-res-fila:hover .sirex-res-pdf svg { transform: none; }
+}

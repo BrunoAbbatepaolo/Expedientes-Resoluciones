@@ -21,7 +21,8 @@ class ResolucionForm extends Form
     #[Validate('required|date')]
     public $fecha;
 
-    #[Validate('required|date')]
+    // Opcional: el modal de edición no lo muestra (antes era obligatorio y "Guardar cambios" fallaba sin aviso).
+    #[Validate('nullable|date')]
     public $fecha_ingreso;
 
     // Columnas integer nullable: muchos tipos de resolución no tienen barrio/casa.
@@ -84,6 +85,17 @@ class ResolucionForm extends Form
         if ($this->pdf) {
             // Disco privado: se sirve por la ruta autorizada 'resoluciones.pdf'.
             $datos['pdf'] = $this->pdf->store('resoluciones', 'local');
+        }
+
+        // Las de "Plantilla completa" se imprimen desde datos.campos: se actualizan los mismos datos ahí.
+        if (is_array($this->resolucion->datos) && isset($this->resolucion->datos['campos'])) {
+            $guardados = $this->resolucion->datos;
+            $guardados['campos'] = array_merge($guardados['campos'], array_filter([
+                'num_exp' => $datos['numero_exp'] ?? null,
+                'num_res' => $datos['numero_resolucion'] ?? null,
+                'fecha_res' => $datos['fecha'] ?? null,
+            ], fn ($v) => $v !== null));
+            $datos['datos'] = $guardados;
         }
 
         $this->resolucion->update($datos);

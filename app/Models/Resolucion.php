@@ -50,6 +50,22 @@ class Resolucion extends Model
         return $this->belongsTo(Oficina::class, 'oficina_id');
     }
 
+    /**
+     * PDF principal: el documento armado en SiRex (imprimible) o, si no hay, el primer archivo adjunto
+     * o el PDF cargado desde "Editar". Null si no tiene ninguno. Requiere 'archivos' cargado para no hacer N consultas.
+     */
+    public function urlPdf(): ?string
+    {
+        if ($this->plantilla) {
+            return route('resoluciones.imprimir', $this);
+        }
+        if ($this->archivos->isNotEmpty()) {
+            return route('resoluciones.archivo', $this->archivos->first());
+        }
+
+        return $this->pdf ? route('resoluciones.pdf', $this) : null;
+    }
+
     public function archivos(): HasMany
     {
         return $this->hasMany(ResolucionArchivo::class);

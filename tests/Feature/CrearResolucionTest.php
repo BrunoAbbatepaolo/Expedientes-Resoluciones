@@ -490,3 +490,33 @@ test('Administración → Firmantes: agregar, editar, ordenar y desactivar', fun
 test('Administración → Firmantes requiere admin_ver', function () {
     Livewire::actingAs(editorDeResoluciones())->test(\App\Livewire\Admin\Firmantes::class)->assertForbidden();
 });
+
+test('lista: "Modificar datos" guarda sin fecha de ingreso y el PDF imprimible muestra el número nuevo', function () {
+    $user = editorDeResoluciones();
+    Permiso::create(['user_id' => $user->id, 'nombre' => 'resolucion_ver']);
+    aplicarPagosCompleto($user)->set('datos.num_res', '10/2026')->call('guardarPlantilla')->assertHasNoErrors();
+    $res = Resolucion::sole();
+
+    Livewire::actingAs($user)->test(\App\Livewire\Resoluciones::class)
+        ->call('cargarResolucion', $res->id)
+        ->set('resolucionForm.numero_resolucion', '999/2026')
+        ->call('guardarEdicion')->assertHasNoErrors();
+
+    expect($res->fresh()->numero_resolucion)->toBe('999/2026')
+        ->and($res->fresh()->datos['campos']['num_res'])->toBe('999/2026');
+});
+
+test('lista: busca por número y filtra por tipo; la fecha sale dd/mm/aaaa y la fila abre el PDF', function () {
+    $user = editorDeResoluciones();
+    Permiso::create(['user_id' => $user->id, 'nombre' => 'resolucion_ver']);
+    aplicarPagosCompleto($user)->set('datos.fecha_res', '2026-03-07')->call('guardarPlantilla');
+    $res = Resolucion::sole();
+
+    Livewire::actingAs($user)->test(\App\Livewire\Resoluciones::class)
+        ->assertSee('07/03/2026')->assertDontSee('2026-03-07')
+        ->assertSee(route('resoluciones.imprimir', $res), false)
+        ->set('buscar', '1234/440')->assertSee('Aplicar pagos')
+        ->set('buscar', 'no-existe')->assertSee('No hay resoluciones que coincidan')
+        ->call('limpiarFiltros')->set('tipo', 'Cancelaciones')->assertSee('No hay resoluciones que coincidan')
+        ->set('tipo', 'AplicarPagos')->assertDontSee('No hay resoluciones que coincidan');
+});
