@@ -202,6 +202,9 @@
             font-size: 12px;
             width: 200px;
         }
+        .documento-resolucion .firma-box.center img {
+            width: 130px;
+        }
         .documento-resolucion .firma-box .linea-firma {
             border-bottom: 1px solid #000;
             height: 60px;
