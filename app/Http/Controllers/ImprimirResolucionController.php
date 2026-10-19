@@ -20,13 +20,17 @@ class ImprimirResolucionController extends Controller
     {
         $this->autorizarResolucion($resolucion, 'resolucion_ver');
 
-        /** @var array{campos?: array<string, mixed>, articulos_quitados?: list<int>}|null $datos cast 'array' del modelo */
+        /** @var array{campos?: array<string, mixed>, articulos_quitados?: list<int>, personalizado?: bool}|null $datos cast 'array' del modelo */
         $datos = $resolucion->datos;
         $conPrototipo = $resolucion->tipo && is_array($datos) && Documento::existe($resolucion->tipo);
 
-        $html = $conPrototipo
-            ? Documento::html($resolucion->tipo, (array) ($datos['campos'] ?? []), array_map('intval', $datos['articulos_quitados'] ?? []))
-            : Purifier::clean((string) $resolucion->plantilla);
+        $html = match (true) {
+            // Personalizado sobre el documento: estilos del prototipo + el texto editado (saneado).
+            $conPrototipo && ! empty($datos['personalizado']) => Documento::estilos($resolucion->tipo)
+                .Purifier::clean((string) $resolucion->plantilla, 'resolucion'),
+            $conPrototipo => Documento::html($resolucion->tipo, (array) ($datos['campos'] ?? []), array_map('intval', $datos['articulos_quitados'] ?? [])),
+            default => Purifier::clean((string) $resolucion->plantilla),
+        };
 
         return view('resoluciones.imprimir', [
             'resolucion' => $resolucion,

@@ -4,7 +4,7 @@
     'predeterminado' se usa si el dato está vacío (y se precarga en el input). 'formato' y 'mayusculas' solo afectan
     cómo se ve (el dato queda como se tipeó).
 --}}
-@aware(['editable' => false, 'datos' => []])
+@aware(['editable' => false, 'datos' => [], 'marcadores' => false])
 @props([
     'campo',
     'placeholder' => '',
@@ -33,9 +33,9 @@
         aria-label="{{ $placeholder ?: $campo }}"
         autocomplete="off"
         {{ $attributes->class(['campo-plantilla', 'campo-mayusculas' => $mayusculas]) }} />{{-- sin salto antes de @else/@endif: sumaría un espacio en el texto ("(123 )") --}}@else
-    <span {{ $attributes }}>{{ match ($formato) {
+@if ($valor === '' && $marcadores)<span class="marcador-dato dato-{{ $campo }}">{{ $placeholder ?: '[FECHA]' }}</span>@else<span {{ $attributes->class([$marcadores ? 'dato-'.$campo : '']) }}>{{ match ($formato) {
         'fecha' => formatearFecha($valor),
         'fecha_larga' => formatearFechaLarga($valor),
         'moneda' => formatearMoneda($valor),
         default => $mayusculas ? mb_strtoupper($valor) : $valor,
-    } }}</span>@endif
+    } }}</span>@endif @endif

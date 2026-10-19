@@ -8,7 +8,7 @@
         $fechaLarga = '';
     }
 @endphp
-<x-resolucion.documento :editable="$editable" :datos="$datos">
+<x-resolucion.documento :editable="$editable" :datos="$datos" :marcadores="$marcadores ?? false">
 <div class="documento-resolucion">
     <style>
         @include('prototipos._estilos')

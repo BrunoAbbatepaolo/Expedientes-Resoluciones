@@ -232,102 +232,6 @@ class CrearResolucion extends Component
         return "Todavía no hay una plantilla completa para \"{$this->tipo}\". Podés escribir el contenido en el modo \"Personalizado\".";
     }
 
-    private function getDatosEjemplo(): array
-    {
-        return [
-            'fecha_res' => '[FECHA_RESOLUCIÓN]',
-            'num_exp' => '[NÚMERO_EXPEDIENTE]',
-            'num_res' => '[NÚMERO_RESOLUCIÓN]',
-            'numero_tramite' => '[NÚMERO_TRÁMITE]',
-            'manzana' => '[MANZANA]',
-            'lote' => '[LOTE]',
-            'nombre_barrio' => '[NOMBRE_BARRIO]',
-            'num_foja_solicitud' => '[FOJA_SOLICITUD]',
-            'num_foja_informe' => '[FOJA_INFORME]',
-            'fecha_cancelacion' => '[FECHA_CANCELACIÓN]',
-            'num_foja_darrd' => '[FOJA_DARRD]',
-            'num_foja_dictamen' => '[FOJA_DICTAMEN]',
-            'nombre_titular' => '[NOMBRE_TITULAR]',
-            'dni_titular' => '[DNI_TITULAR]',
-            'nombre_cotitular' => '[NOMBRE_COTITULAR]',
-            'dni_cotitular' => '[DNI_COTITULAR]',
-            'num_escritura' => '[NÚMERO_ESCRITURA]',
-            'fecha_escritura' => '[FECHA_ESCRITURA]',
-            'nombre_escribano' => '[NOMBRE_ESCRIBANO]',
-            // Campos específicos de Resciciones
-            'nombre_emprendimiento' => '[NOMBRE DEL EMPRENDIMIENTO]',
-            'departamento' => '[DEPARTAMENTO]',
-            'monto_deuda' => '[MONTO DE DEUDA]',
-            'fecha_deuda' => '[FECHA DEUDA]',
-            'fecha_dictamen' => '[FECHA DICTAMEN]',
-            'num_dictamen' => '[NÚMERO DICTAMEN]',
-            'num_res_adjudicacion' => '[NÚMERO RESOLUCIÓN ADJUDICACIÓN]',
-            // Campos específicos de Transferencia y Transferencia-Cancelacion
-            'nombre_plan' => '[NOMBRE DEL PLAN]',
-            'nombre_titular_anterior' => '[NOMBRE TITULAR ANTERIOR]',
-            'dni_titular_anterior' => '[DNI TITULAR ANTERIOR]',
-            'nombre_cotitular_anterior' => '[NOMBRE COTITULAR ANTERIOR]',
-            'dni_cotitular_anterior' => '[DNI COTITULAR ANTERIOR]',
-            'num_foja_boleto' => '[FOJA BOLETO]',
-            'nombre_titular_nuevo' => '[NOMBRE NUEVO TITULAR]',
-            'dni_titular_nuevo' => '[DNI NUEVO TITULAR]',
-            'fecha_nacimiento_titular' => '[FECHA NACIMIENTO TITULAR]',
-            'nombre_cotitular_nuevo' => '[NOMBRE NUEVO COTITULAR]',
-            'dni_cotitular_nuevo' => '[DNI NUEVO COTITULAR]',
-            'fecha_nacimiento_cotitular' => '[FECHA NACIMIENTO COTITULAR]',
-            'fecha_instrumento' => '[FECHA INSTRUMENTO]',
-            'num_foja_plan' => '[FOJA PLAN]',
-            'num_foja_recursos' => '[FOJA RECURSOS]',
-            'num_foja_promocion' => '[FOJA PROMOCIÓN]',
-            'num_foja_ratificacion' => '[FOJA RATIFICACIÓN]',
-            'num_foja_regularizacion' => '[FOJA REGULARIZACIÓN]',
-            'num_cuotas' => '[NÚMERO DE CUOTAS]',
-            'monto_cuota' => '[MONTO CUOTA]',
-            'tasa_interes' => '[TASA DE INTERÉS]',
-            'fecha_tasa' => '[FECHA TASA]',
-            'num_res_reglamentacion' => '[NÚMERO RESOLUCIÓN REGLAMENTACIÓN]',
-            'num_res_modificatoria' => '[NÚMERO RESOLUCIÓN MODIFICATORIA]',
-            'unidad' => '[UNIDAD]',
-            'sector' => '[SECTOR]',
-            'estado_civil_titular_nuevo' => '[ESTADO CIVIL]',
-            'estado_civil_cotitular_nuevo' => '[ESTADO CIVIL]',
-            // Campos específicos de Rectificación
-            'texto_rectificacion' => '',
-            'texto_adjudicacion' => '',
-            'texto_donde_dice' => '',
-            'tabla_datos' => '',
-            'res_reglamentacion' => '185/2017',
-            'res_modificatoria' => '779/2017',
-            'fecha_res_adjudicacion' => '[FECHA RESOLUCIÓN ADJUDICACIÓN]',
-            'orden' => '[ORDEN]',
-            'num_foja_dni' => '[FOJA DNI]',
-            'num_foja_resolucion' => '[FOJA RESOLUCIÓN]',
-            'num_foja_darrd_conf' => '[FOJA DARRD CONF]',
-            'cantidad_viviendas' => '[CANTIDAD]',
-            'cantidad_letras' => '[CANTIDAD EN LETRAS]',
-            // Campos específicos de ReconocimientoCuotaPagadaDosVeces
-            'quien_suscribe' => '[EL/QUE SUSCRIBE]',
-            'dni_suscribe' => '[DNI]',
-            'cuota_sin_gastos' => '[CUOTA S/GASTOS]',
-            'nro_ultima_cuota' => '[NRO ÚLTIMA CUOTA]',
-            'vencimiento_ultima_cuota' => now()->addMonth()->format('Y-m-d'),
-            'plazo_total_plan' => '[PLAZO TOTAL PLAN]',
-            // Campos específicos de AplicarPagos
-            'año_cuotas' => '[AÑO]',
-            'fecha_primer_pago' => '[FECHA PRIMER PAGO]',
-            'codigo_pago' => '[CÓDIGO PAGO]',
-            'causante' => 'DEPARTAMENTO RECURSOS FINANCIEROS',
-            'fecha_documento' => '[FECHA DOCUMENTO]',
-            'jefe_computos' => '[JEFE CÓMPUTOS]',
-            'monto' => '[MONTO]',
-            'cuotas_adeudadas' => '[CUOTAS ADEUDADAS]',
-            'firma_1_nombre' => '[FIRMA 1]',
-            'firma_1_cargo' => '[CARGO 1]',
-            'firma_2_nombre' => '[FIRMA 2]',
-            'firma_2_cargo' => '[CARGO 2]',
-        ];
-    }
-
     /**
      * "Guardar resolución" del modo 'plantilla'. El documento se arma en el servidor desde $datos (lo que se tipeó
      * en los campos del documento), no desde el DOM. Devuelve la URL para imprimirla, o null si no se guardó:
@@ -373,7 +277,8 @@ class CrearResolucion extends Component
     }
 
     /**
-     * @param  array{campos: array<string, mixed>, articulos_quitados: list<int>}|null  $datos
+     * @param  array<string, mixed>|null  $datos  ['campos' => ..., 'articulos_quitados' => ...] o ['personalizado' => true]
+     * @param  'default'|'resolucion'  $purificador  config de Purifier ('resolucion' conserva las clases del prototipo)
      */
     private function persistirResolucion(
         string $numeroExp,
@@ -384,6 +289,7 @@ class CrearResolucion extends Component
         string $plantilla,
         ?string $tipo = null,
         ?array $datos = null,
+        string $purificador = 'default',
     ): Resolucion {
         // Sin oficina la resolución quedaría visible y editable para todas las
         // oficinas (ver AuthorizesOficina::autorizarResolucion()).
@@ -395,7 +301,7 @@ class CrearResolucion extends Component
         $rutasGuardadas = [];
 
         try {
-            $resolucion = DB::transaction(function () use ($oficinaId, $numeroExp, $numeroResolucion, $fecha, $codBarrio, $codCasa, $plantilla, $tipo, $datos, &$rutasGuardadas) {
+            $resolucion = DB::transaction(function () use ($oficinaId, $numeroExp, $numeroResolucion, $fecha, $codBarrio, $codCasa, $plantilla, $tipo, $datos, $purificador, &$rutasGuardadas) {
                 $resolucion = Resolucion::create([
                     'oficina_id' => $oficinaId,
                     'numero_exp' => $numeroExp,
@@ -409,7 +315,7 @@ class CrearResolucion extends Component
                     // Sanitizado antes de guardar: 'plantilla' llega del editor Quill en modo
                     // personalizado (HTML libre del usuario) y podría contener HTML/JS
                     // malicioso si se muestra sin escapar a otros usuarios/oficinas.
-                    'plantilla' => Purifier::clean($plantilla),
+                    'plantilla' => Purifier::clean($plantilla, $purificador),
                     'tipo' => $tipo,
                     'datos' => $datos,
                 ]);
@@ -613,8 +519,13 @@ class CrearResolucion extends Component
         };
     }
 
-    public function guardarPersonalizado()
+    /** Devuelve la URL para imprimir la resolución guardada, o null si no se guardó. */
+    public function guardarPersonalizado(): ?string
     {
+        if ($this->resolucionGuardadaId) {
+            return route('resoluciones.imprimir', $this->resolucionGuardadaId);
+        }
+
         $this->validarConAviso([
             'datos.num_exp' => ['required', 'string', 'max:50', $this->reglaExpedienteExiste()],
             'plantilla' => [
@@ -628,7 +539,7 @@ class CrearResolucion extends Component
                     }
 
                     // Marcadores de la plantilla ([NÚMERO_EXPEDIENTE], [FECHA_RESOLUCIÓN]...) sin reemplazar.
-                    if (preg_match_all('/\[[A-ZÁÉÍÓÚÜÑ0-9]+(?:_[A-ZÁÉÍÓÚÜÑ0-9]+)*\]/u', $texto, $m)) {
+                    if (preg_match_all('/\[[A-ZÁÉÍÓÚÜÑ0-9][A-ZÁÉÍÓÚÜÑ0-9 _\/\.]*\]/u', $texto, $m)) {
                         $lista = implode(', ', array_slice(array_unique($m[0]), 0, 5));
                         $fallar("Todavía hay datos sin completar: {$lista}. Reemplazalos por los datos reales antes de guardar.");
                     }
@@ -636,25 +547,35 @@ class CrearResolucion extends Component
             ],
         ]);
 
-        try {
-            $cantidadArchivos = count($this->archivosPDF);
+        // Si viene del documento de la plantilla se guarda con el tipo, para imprimirlo con su diseño.
+        $conDiseno = Documento::existe($this->tipo) && str_contains($this->plantilla, 'documento-resolucion');
 
-            $this->persistirResolucion(
+        try {
+            $resolucion = $this->persistirResolucion(
                 numeroExp: trim($this->datos['num_exp']),
                 numeroResolucion: $this->datos['num_res'] ?? null,
-                fecha: $this->datos['fecha_res'] ?? now()->toDateString(),
+                fecha: ($this->datos['fecha_res'] ?? '') ?: now()->toDateString(),
                 codBarrio: $this->datos['manzana'] ?? null,
                 codCasa: $this->datos['lote'] ?? null,
                 plantilla: $this->plantilla,
+                tipo: $conDiseno ? $this->tipo : null,
+                datos: $conDiseno ? ['personalizado' => true] : null,
+                purificador: $conDiseno ? 'resolucion' : 'default',
             );
-
-            $this->toast('success', 'Resolución guardada exitosamente'.($cantidadArchivos ? " con {$cantidadArchivos} archivo(s)" : ''), 4000);
-            // Vuelve al selector: evita guardar la misma resolución dos veces con otro clic.
-            $this->plantilla = '';
-            $this->modo = '';
         } catch (\Exception $e) {
             $this->flashErrorGuardado($e);
+
+            return null;
         }
+
+        $this->resolucionGuardadaId = $resolucion->id;
+        session()->put('resolucion_guardada', ['id' => $resolucion->id, 'numero_exp' => $resolucion->numero_exp]);
+        $this->toast('success', 'Resolución guardada. Abriendo el PDF…', 4000);
+        // Vuelve al selector: evita guardar la misma resolución dos veces con otro clic.
+        $this->plantilla = '';
+        $this->modo = '';
+
+        return route('resoluciones.imprimir', $resolucion);
     }
 
     /**
@@ -708,40 +629,28 @@ class CrearResolucion extends Component
         $this->articulosQuitados = [];
     }
 
+    /**
+     * Personalizado: el mismo documento de la plantilla (con su diseño) y todo el texto editable. Arranca con los
+     * datos ya cargados y, donde falta uno, con su marcador ([NÚMERO DE DICTAMEN]...) resaltado.
+     */
     protected function cargarPlantillaEditable(): void
     {
         try {
-            // El prototipo con marcadores ([NÚMERO_EXPEDIENTE]...) pasado a texto para el editor libre.
-            $this->plantilla = $this->convertirHTMLaTexto(Documento::html($this->tipo, $this->getDatosEjemplo()));
-        } catch (\Exception $e) {
+            $this->plantilla = Documento::separarEstilos(
+                Documento::html($this->tipo, $this->datos, $this->articulosQuitados, marcadores: true)
+            )['cuerpo'];
+        } catch (\Throwable $e) {
+            report($e);
             // Sin plantilla base: se deja vacío para que la persona escriba desde cero
             // en vez de precargar un mensaje de error que podría guardarse por accidente.
             $this->plantilla = '';
         }
     }
 
-    private function convertirHTMLaTexto(string $html): string
+    /** Los <style> del prototipo, para mostrar el documento del modo Personalizado con su diseño. */
+    public function estilosPersonalizado(): string
     {
-        // Usar DOMDocument para un procesamiento más robusto
-        $dom = new \DOMDocument;
-        @$dom->loadHTML($html, LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD);
-
-        // Remover scripts y styles
-        $xpath = new \DOMXPath($dom);
-        foreach ($xpath->query('//script | //style') as $node) {
-            $node->parentNode->removeChild($node);
-        }
-
-        // Convertir a texto manteniendo estructura
-        $texto = $dom->textContent;
-
-        // Limpiar espacios extra
-        $texto = preg_replace('/\s+/', ' ', $texto);
-
-        // Agregar saltos de línea para mejor legibilidad
-        $texto = str_replace(['. ', ':', 'Resolución Nº'], [".\n\n", ":\n", "\nResolución Nº"], $texto);
-
-        return trim($texto);
+        return Documento::existe($this->tipo) ? Documento::estilos($this->tipo) : '';
     }
 
     protected function rules(): array

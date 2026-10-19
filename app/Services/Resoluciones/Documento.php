@@ -22,7 +22,7 @@ final class Documento
      * @param  array<string, mixed>  $datos
      * @param  list<int>  $articulosQuitados
      */
-    public static function html(string $tipo, array $datos, array $articulosQuitados = [], bool $editable = false): string
+    public static function html(string $tipo, array $datos, array $articulosQuitados = [], bool $editable = false, bool $marcadores = false): string
     {
         $html = View::make("prototipos.{$tipo}", array_merge($datos, [
             'formatearFecha' => 'formatearFecha',
@@ -30,9 +30,32 @@ final class Documento
             'formatearMoneda' => 'formatearMoneda',
             'num2letras' => 'num2letras',
             'editable' => $editable,
+            'marcadores' => $marcadores,
             'datos' => $datos,
         ]))->render();
 
         return Articulos::procesar($html, $articulosQuitados, $editable);
+    }
+
+    /**
+     * Separa los <style> del resto. El modo "Personalizado" edita solo el cuerpo (texto libre) y los estilos del
+     * prototipo se vuelven a poner al imprimir: lo que escribe la persona pasa por Purifier, que no deja <style>.
+     *
+     * @return array{estilos: string, cuerpo: string}
+     */
+    public static function separarEstilos(string $html): array
+    {
+        preg_match_all('#<style\b[^>]*>.*?</style>#is', $html, $m);
+
+        return [
+            'estilos' => implode("\n", $m[0]),
+            'cuerpo' => trim((string) preg_replace('#<style\b[^>]*>.*?</style>#is', '', $html)),
+        ];
+    }
+
+    /** Los <style> del prototipo de un tipo (para imprimir una resolución "Personalizada" con su diseño). */
+    public static function estilos(string $tipo): string
+    {
+        return self::separarEstilos(self::html($tipo, []))['estilos'];
     }
 }

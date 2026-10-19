@@ -35,6 +35,21 @@ return [
             'AutoFormat.AutoParagraph' => true,
             'AutoFormat.RemoveEmpty' => true,
         ],
+        // Modo "Personalizado": el documento del prototipo editado a mano. Conserva clases y la estructura
+        // (tablas, imágenes de los logos) para imprimirlo con el diseño del prototipo; sin scripts ni eventos.
+        'resolucion' => [
+            'HTML.Doctype' => 'HTML 4.01 Transitional',
+            'HTML.Allowed' => 'div[class|style],p[class|style],br,span[class|style],b,strong,i,em,u,s,sub,sup,'
+                .'h1[class|style],h2[class|style],h3[class|style],h4[class|style],'
+                .'table[class|style],thead,tbody,tr[class|style],th[class|style|colspan|rowspan],td[class|style|colspan|rowspan],'
+                .'ul[class],ol[class],li[class|style],img[src|alt|class|style|width|height]',
+            'CSS.AllowedProperties' => 'font,font-size,font-weight,font-style,font-family,text-decoration,text-align,text-transform,'
+                .'color,background,background-color,width,height,padding,padding-left,padding-right,padding-top,padding-bottom,'
+                .'margin,margin-left,margin-right,margin-top,margin-bottom,border,border-collapse,border-bottom,line-height,letter-spacing',
+            'URI.AllowedSchemes' => ['http' => true, 'https' => true],
+            'AutoFormat.AutoParagraph' => false,
+            'AutoFormat.RemoveEmpty' => false,
+        ],
         'test' => [
             'Attr.EnableID' => 'true',
         ],

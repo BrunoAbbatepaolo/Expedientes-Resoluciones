@@ -520,3 +520,40 @@ test('lista: busca por número y filtra por tipo; la fecha sale dd/mm/aaaa y la 
         ->call('limpiarFiltros')->set('tipo', 'Cancelaciones')->assertSee('No hay resoluciones que coincidan')
         ->set('tipo', 'AplicarPagos')->assertDontSee('No hay resoluciones que coincidan');
 });
+
+test('Personalizado: arranca con el documento de la plantilla (con diseño, acentos bien y marcadores en lo que falta)', function () {
+    $c = Livewire::actingAs(editorDeResoluciones())->test(CrearResolucion::class, ['tipo' => 'Cancelaciones'])
+        ->set('datos.nombre_titular', 'NUÑEZ JOSÉ')
+        ->call('usarPersonalizado');
+
+    $doc = $c->get('plantilla');
+    expect($doc)->toContain('class="documento-resolucion"')
+        ->toContain('Cancelación Definitiva')->toContain('NUÑEZ JOSÉ')
+        ->not->toContain('Ã')->not->toContain('<style')
+        ->toContain('<span class="marcador-dato dato-num_dictamen">[NÚMERO DE DICTAMEN]</span>')
+        ->and($c->instance()->estilosPersonalizado())->toContain('<style');
+});
+
+test('Personalizado: no guarda con marcadores pendientes; guardado conserva el diseño, sanea el HTML y se imprime', function () {
+    $user = editorDeResoluciones();
+    Permiso::create(['user_id' => $user->id, 'nombre' => 'resolucion_ver']);
+    $c = Livewire::actingAs($user)->test(CrearResolucion::class, ['tipo' => 'Cancelaciones'])->call('usarPersonalizado');
+
+    $c->set('datos.num_exp', '1234/440-2026')->call('guardarPersonalizado')->assertHasErrors('plantilla');
+    expect(Resolucion::count())->toBe(0);
+
+    // Lo que manda el navegador: el documento editado a mano, sin marcadores y con algo malicioso.
+    $editado = preg_replace('#<span class="marcador-dato[^"]*">\[[^\]]*\]</span>#u', 'XX', $c->get('plantilla'));
+    $editado = str_replace('Es por lo considerado que', 'TEXTO CAMBIADO A MANO<script>alert(1)</script><img src="x" onerror="alert(2)">', $editado);
+
+    $c->set('plantilla', $editado)->set('datos.num_res', '77/2026')->call('guardarPersonalizado')->assertHasNoErrors();
+
+    $res = Resolucion::sole();
+    expect($res->tipo)->toBe('Cancelaciones')->and($res->datos)->toBe(['personalizado' => true])
+        ->and($res->numero_resolucion)->toBe('77/2026')
+        ->and($res->plantilla)->toContain('TEXTO CAMBIADO A MANO')->toContain('class="documento-resolucion"')
+        ->not->toContain('<script')->not->toContain('onerror');
+
+    $this->actingAs($user)->get(route('resoluciones.imprimir', $res))
+        ->assertOk()->assertSee('TEXTO CAMBIADO A MANO')->assertSee('<style', false)->assertDontSee('alert(1)', false);
+});

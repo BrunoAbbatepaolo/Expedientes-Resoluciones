@@ -2,7 +2,7 @@
     Tabla con filas que se agregan y quitan, guardada en $datos[campo] como lista de filas.
     'columnas': ['clave' => 'Título'] o ['clave' => ['Título', '$']] (el segundo valor va delante del dato).
 --}}
-@aware(['editable' => false, 'datos' => []])
+@aware(['editable' => false, 'datos' => [], 'marcadores' => false])
 @props(['campo', 'columnas'])
 @php
     $columnas = array_map(fn ($c) => is_array($c) ? ['titulo' => $c[0], 'prefijo' => $c[1] ?? ''] : ['titulo' => $c, 'prefijo' => ''], $columnas);
@@ -12,6 +12,10 @@
         fn ($fila) => is_array($fila) && implode('', array_map(fn ($v) => trim((string) $v), $fila)) !== '',
     ));
     $lista = "\$wire.datos['{$campo}']";
+    // Personalizado: filas vacías para escribir encima.
+    if ($marcadores && $filas === []) {
+        $filas = [$vacia, $vacia, $vacia];
+    }
 @endphp
 <div @if ($editable) x-data x-init="if (! Array.isArray({{ $lista }}) || ! {{ $lista }}.length) {{ $lista }} = [@js($vacia)]" @endif>
     <table class="tabla-resolucion" style="width:100%; border-collapse:collapse; margin-bottom:20px; font-size:13px;">
@@ -35,7 +39,7 @@
                 @foreach ($filas as $fila)
                     <tr>
                         @foreach ($columnas as $clave => $columna)
-                            <td style="border:1px solid #ccc; padding:4px; text-align:center;">{{ ($fila[$clave] ?? '') !== '' ? $columna['prefijo'].$fila[$clave] : '' }}</td>
+                            <td style="border:1px solid #ccc; padding:4px; text-align:center;">{{ ($fila[$clave] ?? '') !== '' ? $columna['prefijo'].$fila[$clave] : '' }}@if ($marcadores && ($fila[$clave] ?? '') === '')&nbsp;@endif</td>
                         @endforeach
                     </tr>
                 @endforeach

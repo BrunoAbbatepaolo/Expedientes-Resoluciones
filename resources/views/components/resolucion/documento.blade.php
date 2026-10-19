@@ -2,7 +2,7 @@
     Envoltorio de un prototipo de resolución. Pasa 'editable' y 'datos' a los <x-resolucion.campo> de adentro (@aware).
     Editable: los campos son inputs ligados a $wire.datos; si no, texto plano (lo que se guarda e imprime).
 --}}
-@props(['editable' => false, 'datos' => []])
+@props(['editable' => false, 'datos' => [], 'marcadores' => false])
 @if ($editable)
     <style>
         .campo-plantilla {
