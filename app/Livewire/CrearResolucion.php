@@ -105,6 +105,8 @@ class CrearResolucion extends Component
         'firma_1_cargo' => '',
         'firma_2_nombre' => '',
         'firma_2_cargo' => '',
+        'firma_1_dependencia' => '',
+        'firma_2_dependencia' => '',
         // Campos específicos de Rectificación
         'texto_rectificacion' => '',
         'texto_adjudicacion' => '',
@@ -667,6 +669,11 @@ class CrearResolucion extends Component
             $cantidad = count($e->errors());
             $primero = collect($e->errors())->flatten()->first() ?: 'Revisá los datos.';
             $this->toast('error', $primero.($cantidad > 1 ? ' (y '.($cantidad - 1).' más)' : ''), 6000);
+            // El editor de la plantilla marca en rojo esos campos dentro del documento.
+            $this->dispatch('campos-con-error', campos: collect(array_keys($e->errors()))
+                ->filter(fn ($k) => str_starts_with($k, 'datos.'))
+                ->map(fn ($k) => explode('.', substr($k, strlen('datos.')))[0])
+                ->unique()->values()->all());
 
             throw $e;
         }
@@ -819,6 +826,10 @@ class CrearResolucion extends Component
             'datos.firma_1_cargo' => 'nullable|string|max:255',
             'datos.firma_2_nombre' => 'nullable|string|max:255',
             'datos.firma_2_cargo' => 'nullable|string|max:255',
+            'datos.firma_1_dependencia' => 'nullable|string|max:255',
+            'datos.firma_2_dependencia' => 'nullable|string|max:255',
+            // Cada resolución cita su propio dictamen (en los PDF reales nunca se repite entre expedientes).
+            'datos.num_dictamen' => [$this->tipoConDictamen() ? 'required' : 'nullable', 'string', 'max:50'],
             // Campos específicos de los Reconocimiento
             'datos.quien_suscribe' => 'nullable|string|max:255',
             'datos.dni_suscribe' => 'nullable|string|max:20',
@@ -868,6 +879,29 @@ class CrearResolucion extends Component
         }
 
         return $reglas;
+    }
+
+    private function tipoConDictamen(): bool
+    {
+        return in_array($this->tipo, ['Cancelaciones', 'Resciciones', 'Transferencias', 'Transferencia-Cancelacion', 'Rectificacion'], true);
+    }
+
+    /**
+     * Datos obligatorios de la plantilla de este tipo, para el aviso "Faltan N datos" del editor.
+     *
+     * @return list<string>
+     */
+    public function obligatorios(): array
+    {
+        $campos = [];
+        foreach ($this->reglasPlantilla() as $clave => $regla) {
+            $lista = is_array($regla) ? $regla : explode('|', $regla);
+            if (in_array('required', $lista, true) && ! str_contains($clave, '*')) {
+                $campos[] = substr($clave, strlen('datos.'));
+            }
+        }
+
+        return $campos;
     }
 
     private function tipoConTitularNuevo(): bool
@@ -932,6 +966,7 @@ class CrearResolucion extends Component
             'datos.num_res.required' => 'El número de resolución es obligatorio',
             'datos.nombre_titular.required' => 'El nombre del titular es obligatorio',
             'datos.dni_titular.required' => 'El DNI del titular es obligatorio',
+            'datos.num_dictamen.required' => 'El número de dictamen es obligatorio',
             'datos.codigo_pago.required' => 'El código de pago es obligatorio',
             'datos.monto.required' => 'El monto es obligatorio',
             'datos.cuotas_adeudadas.required' => 'La cantidad de cuotas adeudadas es obligatoria',

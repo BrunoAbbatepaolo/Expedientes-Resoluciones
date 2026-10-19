@@ -76,7 +76,7 @@ test('Rectificación y Transferencias no exigen un titular que su formulario no 
     $rectificacion = Livewire::actingAs(editorDeResoluciones())->test(CrearResolucion::class, ['tipo' => 'Rectificacion'])
         ->set('modo', 'plantilla')
         ->set('datos.num_exp', '1234/440-2026')
-        ->set('datos.num_res', '55/2026')
+        ->set('datos.num_res', '55/2026')->set('datos.num_dictamen', '1874/26')
         ->call('guardarPlantilla')
         ->assertHasNoErrors()
         ->assertDispatched('toast', type: 'success');
@@ -238,7 +238,7 @@ test('un expediente puede tener más de una resolución', function () {
         Livewire::actingAs(editorDeResoluciones())->test(CrearResolucion::class, ['tipo' => 'Rectificacion'])
             ->set('modo', 'plantilla')
             ->set('datos.num_exp', '1234/440-2026')
-            ->set('datos.num_res', $numero)
+            ->set('datos.num_res', $numero)->set('datos.num_dictamen', '1874/26')
             ->call('guardarPlantilla')
             ->assertHasNoErrors();
     }
@@ -265,7 +265,7 @@ test('quitar un artículo en el documento renumera los siguientes y también lo 
         ->assertDontSee('Art. 4º.-', false)
         ->assertSee('Quitaste 1 artículo');
 
-    $componente->set('datos.num_exp', '1234/440-2026')->set('datos.num_res', '938/2026')
+    $componente->set('datos.num_exp', '1234/440-2026')->set('datos.num_res', '938/2026')->set('datos.num_dictamen', '1874/26')
         ->set('datos.nombre_titular', 'ANA GARCIA')->set('datos.dni_titular', '1')
         ->call('guardarPlantilla')->assertHasNoErrors();
 
@@ -430,3 +430,63 @@ test('cada tipo: los datos obligatorios están en su plantilla y completándolos
         ->assertDontSee('<input', false)
         ->assertDontSee('x-model', false);
 })->with(CrearResolucion::TIPOS);
+
+test('firmantes: se eligen de la lista, la resolución guarda su copia y el PDF no cambia si después se edita el firmante', function () {
+    $user = editorDeResoluciones();
+    Permiso::create(['user_id' => $user->id, 'nombre' => 'resolucion_ver']);
+    $interventor = \App\Models\Firmante::where('nombre', 'Arq. HUGO CABRAL')->sole();
+
+    $c = Livewire::actingAs($user)->test(CrearResolucion::class, ['tipo' => 'Cancelaciones'])->call('usarPlantilla');
+    $html = html_entity_decode($c->instance()->documentoEditable(), ENT_QUOTES);
+    expect($html)->toContain('data-campo="firma_1_nombre"')->toContain('data-campo="firma_2_nombre"')
+        ->toContain('<option value="0">Arq. HUGO CABRAL</option>');
+
+    // Lo que hace la lista al elegir: copia nombre, cargo y dependencia.
+    $c->set('datos.firma_1_nombre', 'MARIA GABRIELA LAZARTE')->set('datos.firma_1_cargo', 'CONTADORA FISCAL')->set('datos.firma_1_dependencia', 'TRIBUNAL DE CUENTAS')
+        ->set('datos.firma_2_nombre', $interventor->nombre)->set('datos.firma_2_cargo', $interventor->cargo)->set('datos.firma_2_dependencia', $interventor->dependencia)
+        ->set('datos.num_exp', '1234/440-2026')->set('datos.num_res', '1/2026')->set('datos.num_dictamen', '2108/26')
+        ->set('datos.nombre_titular', 'ANA')->set('datos.dni_titular', '1')
+        ->call('guardarPlantilla')->assertHasNoErrors();
+
+    $interventor->update(['nombre' => 'OTRA PERSONA']);
+
+    $this->actingAs($user)->get(route('resoluciones.imprimir', Resolucion::sole()))
+        ->assertOk()->assertSee('Arq. HUGO CABRAL')->assertSee('INTERVENTOR')->assertDontSee('OTRA PERSONA')
+        ->assertSeeText('Dictamen Legal N° 2108/26');
+});
+
+test('el número de dictamen ya no viene fijo (3136/23) y es obligatorio en las resoluciones', function () {
+    $c = Livewire::actingAs(editorDeResoluciones())->test(CrearResolucion::class, ['tipo' => 'Cancelaciones'])->call('usarPlantilla');
+
+    expect($c->instance()->documentoEditable())->not->toContain('3136/23')
+        ->and($c->instance()->obligatorios())->toContain('num_dictamen', 'num_exp');
+
+    $c->call('guardarPlantilla')->assertHasErrors('datos.num_dictamen')
+        ->assertDispatched('campos-con-error', fn ($evento, $params) => in_array('num_dictamen', $params['campos'], true));
+});
+
+test('Administración → Firmantes: agregar, editar, ordenar y desactivar', function () {
+    $admin = User::factory()->create();
+    Permiso::create(['user_id' => $admin->id, 'nombre' => 'admin_ver']);
+
+    Livewire::actingAs($admin)->test(\App\Livewire\Admin\Firmantes::class)
+        ->call('guardar')->assertHasErrors(['nombre', 'cargo'])
+        ->set('nombre', 'Lic. NUEVA FIRMA')->set('cargo', 'DIRECTORA')->call('guardar')->assertHasNoErrors();
+
+    $nueva = \App\Models\Firmante::where('nombre', 'Lic. NUEVA FIRMA')->sole();
+    expect($nueva->activo)->toBeTrue()->and($nueva->orden)->toBe(\App\Models\Firmante::max('orden'));
+
+    Livewire::actingAs($admin)->test(\App\Livewire\Admin\Firmantes::class)
+        ->call('mover', $nueva->id, -1)
+        ->call('editar', $nueva->id)->set('cargo', 'DIRECTORA GENERAL')->call('guardar')
+        ->call('alternarActivo', $nueva->id);
+
+    $nueva->refresh();
+    expect($nueva->cargo)->toBe('DIRECTORA GENERAL')->and($nueva->activo)->toBeFalse()
+        ->and(\App\Models\Firmante::paraElegir()->pluck('nombre'))->not->toContain('Lic. NUEVA FIRMA')
+        ->and(\App\Models\Firmante::orderBy('orden')->pluck('nombre')->get(\App\Models\Firmante::count() - 2))->toBe('Lic. NUEVA FIRMA');
+});
+
+test('Administración → Firmantes requiere admin_ver', function () {
+    Livewire::actingAs(editorDeResoluciones())->test(\App\Livewire\Admin\Firmantes::class)->assertForbidden();
+});

@@ -20,7 +20,7 @@ class PanelAdmin extends Component
 {
     use WithPagination;
 
-    public const PESTANIAS = ['resumen' => 'Resumen', 'auditoria' => 'Auditoría', 'accesos' => 'Accesos', 'sistema' => 'Sistema'];
+    public const PESTANIAS = ['resumen' => 'Resumen', 'auditoria' => 'Auditoría', 'accesos' => 'Accesos', 'firmantes' => 'Firmantes', 'sistema' => 'Sistema'];
 
     private const ACCESOS = ['login', 'login_fallido'];
 
@@ -90,6 +90,7 @@ class PanelAdmin extends Component
             'auditoria' => $this->datosAuditoria(false),
             'accesos' => $this->datosAuditoria(true),
             'sistema' => ['sistema' => $this->sistema()],
+            'firmantes' => [], // componente propio: Admin\Firmantes
             default => $this->resumen(),
         };
 

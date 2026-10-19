@@ -13,7 +13,7 @@
 <div class="sirex-admin flex min-w-0 flex-1 flex-col gap-4">
     <div>
         <h1 class="text-2xl font-semibold text-ipv-ink dark:text-ipv-ink-dark">Administración</h1>
-        <p class="text-sm text-ipv-ink/55 dark:text-ipv-ink-dark/55">Auditoría, métricas, accesos y estado del sistema.</p>
+        <p class="text-sm text-ipv-ink/55 dark:text-ipv-ink-dark/55">Auditoría, métricas, accesos, firmantes de resoluciones y estado del sistema.</p>
     </div>
 
     <nav class="flex flex-wrap gap-1.5" aria-label="Secciones de administración">
@@ -151,6 +151,10 @@
         </div>
 
         {{ $registros->links() }}
+
+    {{-- ── Firmantes de resoluciones ── --}}
+    @elseif ($tab === 'firmantes')
+        <livewire:admin.firmantes />
 
     {{-- ── Sistema ── --}}
     @else

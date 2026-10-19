@@ -84,15 +84,11 @@
             <div class="firmas">
                 <div class="firma">
                     <div class="firma-linea"></div>
-                    <div class="firma-nombre"><x-resolucion.campo campo="firma_1_nombre" placeholder="[FIRMA 1]" predeterminado="MARTA DEL YAMESEN" /></div>
-                    <div class="firma-cargo"><x-resolucion.campo campo="firma_1_cargo" placeholder="[CARGO 1]" predeterminado="DPTO. REC. FINANCIEROS" /></div>
-                    <div class="firma-cargo">I.P.V. y D.U.</div>
+                    <x-resolucion.firmante numero="1" predeterminado="MARTA DEL YAMESEN" clase-nombre="firma-nombre" clase-cargo="firma-cargo" />
                 </div>
                 <div class="firma">
                     <div class="firma-linea"></div>
-                    <div class="firma-nombre"><x-resolucion.campo campo="firma_2_nombre" placeholder="[FIRMA 2]" predeterminado="C.P.N. FLAVIA PATRICIA CORVALAN" /></div>
-                    <div class="firma-cargo"><x-resolucion.campo campo="firma_2_cargo" placeholder="[CARGO 2]" predeterminado="JEFA (Int.) DEPTO. RECURSOS FINANC." /></div>
-                    <div class="firma-cargo">I.P.V. y D.U.</div>
+                    <x-resolucion.firmante numero="2" predeterminado="C.P.N. FLAVIA PATRICIA CORVALAN" clase-nombre="firma-nombre" clase-cargo="firma-cargo" />
                 </div>
             </div>
         </div>

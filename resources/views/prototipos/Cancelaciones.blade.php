@@ -175,7 +175,7 @@
         </p>
 
         <p>
-            Que, a fs. <x-resolucion.campo campo="num_foja_dictamen" placeholder="[FOJA]" /> glosa Dictamen Legal N° 3136/23, en el cual no se ofrecen objeciones legales para la procedencia del presente trámite.
+            Que, a fs. <x-resolucion.campo campo="num_foja_dictamen" placeholder="[FOJA]" /> glosa Dictamen Legal N° <x-resolucion.campo campo="num_dictamen" placeholder="[NÚMERO DE DICTAMEN]" />, en el cual no se ofrecen objeciones legales para la procedencia del presente trámite.
         </p>
 
         <p class="mt-3">Es por lo considerado que:</p>
@@ -224,18 +224,14 @@
     <div class="firmas">
         <div class="firma-box">
             <div class="linea-firma"></div>
-            <div class="font-bold">MARIA GABRIELA LAZARTE</div>
-            <div>CONTADORA FISCAL</div>
-            <div>TRIBUNAL DE CUENTAS</div>
+            <x-resolucion.firmante numero="1" predeterminado="MARIA GABRIELA LAZARTE" clase-nombre="font-bold" />
         </div>
         <div class="firma-box center">
             <img src="{{ asset('images/logo-provincia.png') }}" alt="Provincia" />
         </div>
         <div class="firma-box">
             <div class="linea-firma"></div>
-            <div class="font-bold">Arq. HUGO CABRAL</div>
-            <div>INTERVENTOR</div>
-            <div>I.P.V.y D.U.</div>
+            <x-resolucion.firmante numero="2" predeterminado="Arq. HUGO CABRAL" clase-nombre="font-bold" />
         </div>
     </div>
 </div>

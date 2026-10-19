@@ -217,18 +217,14 @@
     <div class="firmas">
         <div class="firma-box">
             <div class="linea-firma"></div>
-            <div class="font-bold">MARIA GABRIELA LAZARTE</div>
-            <div>CONTADORA FISCAL</div>
-            <div>TRIBUNAL DE CUENTAS</div>
+            <x-resolucion.firmante numero="1" predeterminado="MARIA GABRIELA LAZARTE" clase-nombre="font-bold" />
         </div>
         <div class="firma-box center">
             <img src="{{ asset('images/logo-provincia.png') }}" alt="Provincia" />
         </div>
         <div class="firma-box">
             <div class="linea-firma"></div>
-            <div class="font-bold">Arq. HUGO CABRAL</div>
-            <div>INTERVENTOR</div>
-            <div>I.P.V.y D.U.</div>
+            <x-resolucion.firmante numero="2" predeterminado="Arq. HUGO CABRAL" clase-nombre="font-bold" />
         </div>
     </div>
 </div>

@@ -65,9 +65,26 @@
                         </svg>
                         Volver
                     </button>
-                    <span class="text-sm text-ipv-ink/60 dark:text-ipv-ink-dark/60">
-                        Completá los datos resaltados en el documento
-                    </span>
+                    {{-- Guía: cuántos datos obligatorios faltan y, al tocar, lleva al siguiente. --}}
+                    <div x-data="{
+                            obligatorios: @js($this->obligatorios()),
+                            get faltan() { return this.obligatorios.filter((c) => String(this.$wire.datos[c] ?? '').trim() === ''); },
+                            irAlSiguiente() {
+                                const el = this.faltan.map((c) => document.querySelector(`[data-campo='${c}']`)).find(Boolean);
+                                if (! el) return;
+                                el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                                el.focus({ preventScroll: true });
+                            },
+                        }" class="text-sm">
+                        <button type="button" x-show="faltan.length" x-on:click="irAlSiguiente()"
+                            class="inline-flex items-center gap-1.5 rounded-full bg-amber-100 px-3 py-1 font-medium text-amber-900 hover:bg-amber-200 dark:bg-amber-400/15 dark:text-amber-200 dark:hover:bg-amber-400/25">
+                            Faltan <span x-text="faltan.length"></span> <span x-text="faltan.length === 1 ? 'dato obligatorio' : 'datos obligatorios'"></span>
+                            <span class="underline">Ir al siguiente</span>
+                        </button>
+                        <span x-show="! faltan.length" x-cloak class="inline-flex items-center gap-1.5 rounded-full bg-emerald-100 px-3 py-1 font-medium text-emerald-900 dark:bg-emerald-400/15 dark:text-emerald-200">
+                            ✓ Datos obligatorios completos
+                        </span>
+                    </div>
                 </div>
                 @include('livewire.partials.campo-expediente-barra')
                 {{-- La pestaña del PDF se abre al volver la respuesta; si el navegador la bloquea, se abre en esta. --}}
@@ -88,7 +105,17 @@
 
             {{-- wire:ignore: lo tipeado vive en $wire.datos y los re-renderizados no pisan el documento.
                  La key cambia al quitar/restaurar artículos para que ahí sí se vuelva a dibujar. --}}
-            <div class="sirex-glass-card mx-auto overflow-auto rounded-[14px]">
+            {{-- Si al guardar falta algo, esos campos se marcan en rojo y se va al primero. --}}
+            <div class="sirex-glass-card mx-auto overflow-auto rounded-[14px]"
+                x-data
+                x-on:campos-con-error.window="
+                    $el.querySelectorAll('.campo-con-error').forEach((e) => e.classList.remove('campo-con-error'));
+                    ($event.detail.campos ?? []).forEach((c) => $el.querySelectorAll(`[data-campo='${c}']`).forEach((e) => e.classList.add('campo-con-error')));
+                    const primero = $el.querySelector('.campo-con-error');
+                    if (primero) { primero.scrollIntoView({ behavior: 'smooth', block: 'center' }); primero.focus({ preventScroll: true }); }
+                "
+                x-on:input="$event.target.classList.remove('campo-con-error')"
+                x-on:change="$event.target.classList.remove('campo-con-error')">
                 <div class="p-2" wire:ignore wire:key="documento-{{ $tipo }}-{{ implode('-', $articulosQuitados) ?: 'todos' }}">
                     {!! $this->documentoEditable() !!}
                 </div>

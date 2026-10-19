@@ -18,6 +18,9 @@
         .campo-mayusculas::placeholder { text-transform: none; }
         .campo-derivado { color: #475569; border-bottom: 1px dotted #94a3b8; cursor: help; }
         .campo-opcional-vacio, .campo-opcional-vacio .campo-plantilla { opacity: .55; }
+        .campo-firmante { cursor: pointer; font-weight: inherit; text-align: center; max-width: 100%; }
+        .campo-plantilla.campo-con-error { background: #fee2e2; border-bottom-color: #dc2626; box-shadow: 0 0 0 2px rgba(220, 38, 38, .35); }
+        .campo-plantilla.campo-con-error::placeholder { color: #b91c1c; }
         /* El ancho sigue al contenido: nativo donde existe; si no, el estimado en ch del componente. */
         @supports (field-sizing: content) {
             .campo-plantilla:not([type="date"]) { field-sizing: content; width: auto !important; min-width: 4ch; }
