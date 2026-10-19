@@ -48,6 +48,13 @@ class AnalizadorResolucion
     public function detectarTipo(string $plano): ?string
     {
         $normalizado = Str::lower(Str::ascii($plano));
+
+        // "TOMAR RAZÓN" (oficio judicial, venta) no tiene plantilla: mencionan "cancelación y levantamiento"
+        // y se tomaban por Cancelaciones, precargando un modelo equivocado (visto en PDF reales).
+        if (preg_match('/r\s*e\s*s\s*u\s*e\s*l\s*v\s*e\W*art\W*1\W*[a-z]{0,3}\W*tomar razon/u', $normalizado)) {
+            return null;
+        }
+
         $mejor = null;
         $mejorPuntaje = 0;
 

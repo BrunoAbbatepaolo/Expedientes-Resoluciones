@@ -129,6 +129,11 @@
             x-data="{
                 marcadores: 0,
                 guardando: false,
+                cambios: false,
+                volver() {
+                    if (this.cambios && ! confirm('Si volvés se pierde lo que escribiste en el documento. ¿Volver igual?')) return;
+                    $wire.set('modo', '');
+                },
                 contar() { this.marcadores = [...this.$refs.doc.querySelectorAll('.marcador-dato')].filter((e) => /^\s*\[.*\]\s*$/.test(e.textContent)).length; },
                 irAlSiguiente() {
                     const m = [...this.$refs.doc.querySelectorAll('.marcador-dato')].find((e) => /^\s*\[.*\]\s*$/.test(e.textContent));
@@ -155,6 +160,7 @@
                     }).catch(() => { this.guardando = false; });
                 },
             }"
+            x-on:beforeunload.window="if (cambios && ! guardando) { $event.preventDefault(); $event.returnValue = ''; }"
             x-init="
                 $nextTick(() => contar());
                 // Lo que se escribe en la barra (expediente y N° de resolución) se completa solo en el documento.
@@ -166,7 +172,7 @@
             ">
             <div class="sirex-glass-card mb-4 -mx-6 flex flex-wrap items-center justify-between gap-3 rounded-lg px-6 py-3">
                 <div class="flex flex-wrap items-center gap-3">
-                    <button type="button" wire:click="$set('modo', '')"
+                    <button type="button" x-on:click="volver()"
                         class="inline-flex items-center gap-1.5 rounded-lg border border-ipv-blue/20 bg-white/70 px-3 py-1.5 text-sm font-medium text-ipv-ink/80 hover:bg-white dark:border-white/15 dark:bg-white/[0.06] dark:text-ipv-ink-dark/85 dark:hover:bg-white/[0.1]">
                         <svg class="size-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
@@ -235,6 +241,7 @@
                             x-on:input="
                                 const m = window.getSelection().anchorNode?.parentElement?.closest('.marcador-dato');
                                 if (m && ! /^\s*\[.*\]\s*$/.test(m.textContent)) m.classList.remove('marcador-dato');
+                                cambios = true;
                                 contar();
                             "
                             x-on:click="if ($event.target.classList.contains('marcador-dato')) seleccionar($event.target)">{!! \Mews\Purifier\Facades\Purifier::clean($plantilla, 'resolucion') !!}</div>

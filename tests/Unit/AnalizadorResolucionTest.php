@@ -96,3 +96,8 @@ test('lee una cancelación real: palabras cortadas, manzana con letra, Señora y
         ->and($r['datos']['dni_titular'])->toBe('21.745.752')
         ->and($r['datos'])->not->toHaveKey('num_res'); // el número del encabezado está en blanco: la 185/2017 es otra resolución
 });
+
+test('"TOMAR RAZÓN" (oficio judicial / venta) no se toma por Cancelación aunque mencione la cancelación', function () {
+    expect(analizar('VISTO, el oficio judicial ... Cancelación Definitiva y Levantamiento de Hipoteca ... R E S U E L V E : Art.1°.-TOMAR RAZON de la Resolución de fecha 29 de abril de 2026 recaída en el juicio caratulado ...')['tipo'])->toBeNull()
+        ->and(analizar('R E S U E L V E : Art.1°.-APROBAR la Cancelación Definitiva y Levantamiento de Hipoteca de la vivienda')['tipo'])->toBe('Cancelaciones');
+});

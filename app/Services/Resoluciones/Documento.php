@@ -53,6 +53,15 @@ final class Documento
         ];
     }
 
+    /**
+     * Las URL absolutas del propio sitio (logos con asset()) pasan a relativas: el Purifier de "Personalizado"
+     * no deja recursos externos y así los logos se conservan aunque se entre por otro nombre o IP del servidor.
+     */
+    public static function rutasRelativas(string $html): string
+    {
+        return (string) preg_replace('#(<img\b[^>]*\bsrc=")https?://[^/"]+/#i', '$1/', $html);
+    }
+
     /** Los <style> del prototipo de un tipo (para imprimir una resolución "Personalizada" con su diseño). */
     public static function estilos(string $tipo): string
     {

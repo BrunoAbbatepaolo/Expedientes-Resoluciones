@@ -51,19 +51,19 @@ class Resolucion extends Model
     }
 
     /**
-     * PDF principal: el documento armado en SiRex (imprimible) o, si no hay, el primer archivo adjunto
-     * o el PDF cargado desde "Editar". Null si no tiene ninguno. Requiere 'archivos' cargado para no hacer N consultas.
+     * PDF principal: el documento armado con la plantilla (con 'tipo'); si no, el archivo adjunto o el PDF cargado
+     * desde "Editar" (en las resoluciones viejas suele ser el firmado); si no, el texto guardado imprimible.
+     * Null si no tiene ninguno. Requiere 'archivos' cargado para no hacer N consultas.
      */
     public function urlPdf(): ?string
     {
-        if ($this->plantilla) {
-            return route('resoluciones.imprimir', $this);
-        }
-        if ($this->archivos->isNotEmpty()) {
-            return route('resoluciones.archivo', $this->archivos->first());
-        }
-
-        return $this->pdf ? route('resoluciones.pdf', $this) : null;
+        return match (true) {
+            (bool) $this->tipo => route('resoluciones.imprimir', $this),
+            $this->archivos->isNotEmpty() => route('resoluciones.archivo', $this->archivos->first()),
+            (bool) $this->pdf => route('resoluciones.pdf', $this),
+            (bool) $this->plantilla => route('resoluciones.imprimir', $this),
+            default => null,
+        };
     }
 
     public function archivos(): HasMany

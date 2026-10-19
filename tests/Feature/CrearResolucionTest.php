@@ -557,3 +557,32 @@ test('Personalizado: no guarda con marcadores pendientes; guardado conserva el d
     $this->actingAs($user)->get(route('resoluciones.imprimir', $res))
         ->assertOk()->assertSee('TEXTO CAMBIADO A MANO')->assertSee('<style', false)->assertDontSee('alert(1)', false);
 });
+
+test('resolución vieja (sin tipo, con texto guardado y PDF adjunto): la lista y la ficha abren el PDF adjunto', function () {
+    $user = editorDeResoluciones();
+    Permiso::create(['user_id' => $user->id, 'nombre' => 'resolucion_ver']);
+    $res = Resolucion::factory()->create([
+        'numero_exp' => '1234/440-2026', 'numero_resolucion' => '12/2025', 'fecha' => '2025-05-02',
+        'oficina_id' => $user->oficinaAsignadaId(), 'plantilla' => '<p>Texto viejo</p>', 'tipo' => null,
+    ]);
+    $archivo = \App\Models\ResolucionArchivo::create([
+        'resolucion_id' => $res->id, 'nombre_original' => 'firmada.pdf', 'nombre_archivo' => 'x.pdf',
+        'ruta' => 'resoluciones/x.pdf', 'tipo' => 'application/pdf', 'tamano' => 10,
+    ]);
+
+    expect($res->fresh('archivos')->urlPdf())->toBe(route('resoluciones.archivo', $archivo));
+
+    Livewire::actingAs($user)->test(\App\Livewire\Resoluciones::class)
+        ->assertSee(route('resoluciones.archivo', $archivo), false)
+        ->assertSee('Sin tipo')->assertSee('02/05/2025');
+});
+
+test('Personalizado conserva los logos (rutas relativas) y no deja imágenes externas', function () {
+    expect(\App\Services\Resoluciones\Documento::rutasRelativas('<img src="http://otro-host:8080/images/Logo-ipv.png" alt="IPV">'))
+        ->toBe('<img src="/images/Logo-ipv.png" alt="IPV">');
+
+    $c = Livewire::actingAs(editorDeResoluciones())->test(CrearResolucion::class, ['tipo' => 'Cancelaciones'])->call('usarPersonalizado');
+    $limpio = \Mews\Purifier\Facades\Purifier::clean($c->get('plantilla'), 'resolucion');
+    expect(substr_count($limpio, '<img'))->toBeGreaterThanOrEqual(3)
+        ->and(\Mews\Purifier\Facades\Purifier::clean('<img src="https://rastreo.example/x.gif">', 'resolucion'))->not->toContain('<img');
+});

@@ -37,6 +37,7 @@ return [
         ],
         // Modo "Personalizado": el documento del prototipo editado a mano. Conserva clases y la estructura
         // (tablas, imágenes de los logos) para imprimirlo con el diseño del prototipo; sin scripts ni eventos.
+        // Las clases quedan libres: este HTML solo se muestra en resoluciones/imprimir, que carga únicamente los estilos del prototipo.
         'resolucion' => [
             'HTML.Doctype' => 'HTML 4.01 Transitional',
             'HTML.Allowed' => 'div[class|style],p[class|style],br,span[class|style],b,strong,i,em,u,s,sub,sup,'
@@ -44,9 +45,11 @@ return [
                 .'table[class|style],thead,tbody,tr[class|style],th[class|style|colspan|rowspan],td[class|style|colspan|rowspan],'
                 .'ul[class],ol[class],li[class|style],img[src|alt|class|style|width|height]',
             'CSS.AllowedProperties' => 'font,font-size,font-weight,font-style,font-family,text-decoration,text-align,text-transform,'
-                .'color,background,background-color,width,height,padding,padding-left,padding-right,padding-top,padding-bottom,'
+                .'color,background-color,width,height,padding,padding-left,padding-right,padding-top,padding-bottom,'
                 .'margin,margin-left,margin-right,margin-top,margin-bottom,border,border-collapse,border-bottom,line-height,letter-spacing',
             'URI.AllowedSchemes' => ['http' => true, 'https' => true],
+            // Sin recursos externos (rastreo por imágenes): los logos van con ruta relativa (Documento::rutasRelativas).
+            'URI.DisableExternalResources' => true,
             'AutoFormat.AutoParagraph' => false,
             'AutoFormat.RemoveEmpty' => false,
         ],

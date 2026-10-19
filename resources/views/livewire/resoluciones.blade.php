@@ -7,7 +7,7 @@
         @php
             $puedeEditar = (bool) auth()->user()->permiso('resolucion_editar');
             $verExpediente = (bool) auth()->user()->permiso('expediente_ver');
-            $nombreTipo = fn (?string $t) => $t ? \App\Livewire\CrearResolucion::nombreDeTipo($t) : 'Cargada a mano';
+            $nombreTipo = fn (?string $t) => $t ? \App\Livewire\CrearResolucion::nombreDeTipo($t) : 'Sin tipo';
             // Color de acento por tipo (institucional: azul, oro y magenta del IPV).
             $acento = fn (?string $t) => match ($t) {
                 'Cancelaciones', 'Transferencia-Cancelacion' => 'azul',
@@ -64,7 +64,7 @@
                     <button type="button" wire:click="$set('tipo', '')" @class(['sirex-res-chip', 'is-on' => $tipo === ''])>Todas</button>
                     @foreach ($tiposPresentes as $t)
                         <button type="button" wire:click="$set('tipo', '{{ $t }}')" @class(['sirex-res-chip', 'is-on' => $tipo === $t]) data-acento="{{ $acento($t === 'otras' ? null : $t) }}">
-                            <span class="sirex-res-punto" aria-hidden="true"></span>{{ $t === 'otras' ? 'Cargadas a mano' : $nombreTipo($t) }}
+                            <span class="sirex-res-punto" aria-hidden="true"></span>{{ $t === 'otras' ? 'Sin tipo' : $nombreTipo($t) }}
                         </button>
                     @endforeach
                 </div>
@@ -145,14 +145,14 @@
                                 @else
                                     <span class="text-xs text-ipv-ink/40 dark:text-ipv-ink-dark/40">Sin PDF</span>
                                 @endif
-                                @if ($resolucion->plantilla && $adjuntos->isNotEmpty())
+                                @if ($resolucion->tipo && $adjuntos->isNotEmpty())
                                     <a href="{{ route('resoluciones.archivo', $adjuntos->first()) }}" target="_blank" rel="noopener"
                                         class="pointer-events-auto relative z-10 inline-flex items-center gap-1 rounded-full bg-black/[0.04] px-2.5 py-1 text-xs font-medium text-ipv-ink/70 hover:bg-black/[0.08] dark:bg-white/[0.06] dark:text-ipv-ink-dark/75"
                                         title="Archivos adjuntos">
                                         <svg class="size-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M15.2 7.8l-6.4 6.4a2 2 0 102.8 2.8l6.4-6.4a4 4 0 10-5.6-5.6l-6.4 6.4a6 6 0 108.5 8.5L19 15.4" /></svg>
                                         {{ $adjuntos->count() }} {{ $adjuntos->count() === 1 ? 'adjunto' : 'adjuntos' }}
                                     </a>
-                                @elseif (! $resolucion->plantilla && $adjuntos->count() > 1)
+                                @elseif (! $resolucion->tipo && $adjuntos->count() > 1)
                                     <span class="text-xs text-ipv-ink/50 dark:text-ipv-ink-dark/50">+{{ $adjuntos->count() - 1 }} {{ $adjuntos->count() - 1 === 1 ? 'archivo' : 'archivos' }}</span>
                                 @endif
                             </div>

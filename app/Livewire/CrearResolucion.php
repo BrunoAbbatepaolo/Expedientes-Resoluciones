@@ -557,7 +557,7 @@ class CrearResolucion extends Component
                 fecha: ($this->datos['fecha_res'] ?? '') ?: now()->toDateString(),
                 codBarrio: $this->datos['manzana'] ?? null,
                 codCasa: $this->datos['lote'] ?? null,
-                plantilla: $this->plantilla,
+                plantilla: $conDiseno ? Documento::rutasRelativas($this->plantilla) : $this->plantilla,
                 tipo: $conDiseno ? $this->tipo : null,
                 datos: $conDiseno ? ['personalizado' => true] : null,
                 purificador: $conDiseno ? 'resolucion' : 'default',
@@ -636,9 +636,9 @@ class CrearResolucion extends Component
     protected function cargarPlantillaEditable(): void
     {
         try {
-            $this->plantilla = Documento::separarEstilos(
+            $this->plantilla = Documento::rutasRelativas(Documento::separarEstilos(
                 Documento::html($this->tipo, $this->datos, $this->articulosQuitados, marcadores: true)
-            )['cuerpo'];
+            )['cuerpo']);
         } catch (\Throwable $e) {
             report($e);
             // Sin plantilla base: se deja vacío para que la persona escriba desde cero
@@ -792,7 +792,8 @@ class CrearResolucion extends Component
 
     private function tipoConDictamen(): bool
     {
-        return in_array($this->tipo, ['Cancelaciones', 'Resciciones', 'Transferencias', 'Transferencia-Cancelacion', 'Rectificacion'], true);
+        // En los PDF reales de estos tipos el dictamen está siempre (189 de 189). De Rescisiones no hay muestras: opcional.
+        return in_array($this->tipo, ['Cancelaciones', 'Transferencias', 'Transferencia-Cancelacion', 'Rectificacion'], true);
     }
 
     /**
