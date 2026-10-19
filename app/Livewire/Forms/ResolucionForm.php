@@ -88,8 +88,9 @@ class ResolucionForm extends Form
         }
 
         // Las de "Plantilla completa" se imprimen desde datos.campos: se actualizan los mismos datos ahí.
-        if (is_array($this->resolucion->datos) && isset($this->resolucion->datos['campos'])) {
-            $guardados = $this->resolucion->datos;
+        /** @var array{campos?: array<string, mixed>}|null $guardados cast 'array' del modelo */
+        $guardados = $this->resolucion->datos;
+        if (is_array($guardados) && isset($guardados['campos'])) {
             $guardados['campos'] = array_merge($guardados['campos'], array_filter([
                 'num_exp' => $datos['numero_exp'] ?? null,
                 'num_res' => $datos['numero_resolucion'] ?? null,
