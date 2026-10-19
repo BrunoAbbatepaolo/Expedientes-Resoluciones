@@ -16,6 +16,7 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Locked;
+use Livewire\Attributes\Renderless;
 use Livewire\Component;
 use Livewire\WithFileUploads;
 use Mews\Purifier\Facades\Purifier;
@@ -150,6 +151,9 @@ class CrearResolucion extends Component
         'nro_ultima_cuota' => '',
         'vencimiento_ultima_cuota' => '',
         'plazo_total_plan' => '',
+        // Tablas de los Reconocimiento (filas que se agregan en el documento; ver components/resolucion/tabla)
+        'tabla_cuotas_pagadas' => [],
+        'tabla_cuotas_a_reconocer' => [],
     ];
 
     // Plantilla para el modo personalizado
@@ -189,6 +193,15 @@ class CrearResolucion extends Component
     {
         // Sin resetear: si se llegó desde "Autocompletar", los datos del documento ya están cargados.
         $this->modo = 'plantilla';
+    }
+
+    /** Para x-resolucion.derivado: el número en letras tal como saldrá al guardar. Sin re-render. */
+    #[Renderless]
+    public function enLetras(mixed $valor): string
+    {
+        $valor = trim((string) $valor);
+
+        return is_numeric(str_replace(['$', ',', ' '], '', $valor)) ? num2letras($valor) : '';
     }
 
     public function usarPersonalizado()
@@ -806,12 +819,23 @@ class CrearResolucion extends Component
             'datos.firma_1_cargo' => 'nullable|string|max:255',
             'datos.firma_2_nombre' => 'nullable|string|max:255',
             'datos.firma_2_cargo' => 'nullable|string|max:255',
+            // Campos específicos de los Reconocimiento
+            'datos.quien_suscribe' => 'nullable|string|max:255',
+            'datos.dni_suscribe' => 'nullable|string|max:20',
+            'datos.cuota_sin_gastos' => 'nullable|string|max:30',
+            'datos.nro_ultima_cuota' => 'nullable|string|max:10',
+            'datos.vencimiento_ultima_cuota' => 'nullable|date',
+            'datos.plazo_total_plan' => 'nullable|string|max:30',
+            'datos.tabla_cuotas_pagadas' => 'nullable|array|max:50',
+            'datos.tabla_cuotas_pagadas.*.*' => 'nullable|string|max:100',
+            'datos.tabla_cuotas_a_reconocer' => 'nullable|array|max:50',
+            'datos.tabla_cuotas_a_reconocer.*.*' => 'nullable|string|max:100',
         ];
     }
 
     /**
-     * Datos obligatorios de los tipos cuya plantilla no tiene todos los de rules() (p. ej. una nota de
-     * Aplicar pagos no lleva número de resolución ni titular): sin esto no se podría guardar nunca,
+     * Datos obligatorios de los tipos cuya plantilla no tiene todos los de rules() (p. ej. las notas de
+     * Aplicar pagos y Reconocimiento no llevan número de resolución ni titular): sin esto no se podría guardar nunca,
      * porque el dato exigido no aparece en el documento. null = se usan las reglas de rules() tal cual.
      *
      * @return list<string>|null
@@ -820,6 +844,7 @@ class CrearResolucion extends Component
     {
         return match ($this->tipo) {
             'AplicarPagos' => ['fecha_res', 'num_exp', 'codigo_pago', 'monto', 'cuotas_adeudadas'],
+            'ReconocimientoCuotaPagadaDosVeces', 'ReconocimientoCuotaPagadaNoCargada' => ['fecha_res', 'num_exp', 'codigo_pago', 'quien_suscribe', 'dni_suscribe'],
             default => null,
         };
     }
@@ -910,6 +935,8 @@ class CrearResolucion extends Component
             'datos.codigo_pago.required' => 'El código de pago es obligatorio',
             'datos.monto.required' => 'El monto es obligatorio',
             'datos.cuotas_adeudadas.required' => 'La cantidad de cuotas adeudadas es obligatoria',
+            'datos.quien_suscribe.required' => 'El nombre de quien suscribe es obligatorio',
+            'datos.dni_suscribe.required' => 'El DNI de quien suscribe es obligatorio',
             'datos.*.max' => 'El campo excede la longitud máxima permitida',
             'datos.*.date' => 'El campo debe ser una fecha válida',
         ];

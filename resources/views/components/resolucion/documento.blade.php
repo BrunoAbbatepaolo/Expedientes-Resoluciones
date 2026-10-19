@@ -14,6 +14,10 @@
         .campo-plantilla:focus { background: #fff8e1; border-bottom-color: #ffb81a; box-shadow: 0 0 0 2px rgba(255, 184, 26, .35); }
         .campo-plantilla::placeholder { color: #b45309; opacity: .85; }
         .campo-plantilla[type="date"] { width: 11.5em; }
+        .campo-mayusculas { text-transform: uppercase; }
+        .campo-mayusculas::placeholder { text-transform: none; }
+        .campo-derivado { color: #475569; border-bottom: 1px dotted #94a3b8; cursor: help; }
+        .campo-opcional-vacio, .campo-opcional-vacio .campo-plantilla { opacity: .55; }
         /* El ancho sigue al contenido: nativo donde existe; si no, el estimado en ch del componente. */
         @supports (field-sizing: content) {
             .campo-plantilla:not([type="date"]) { field-sizing: content; width: auto !important; min-width: 4ch; }

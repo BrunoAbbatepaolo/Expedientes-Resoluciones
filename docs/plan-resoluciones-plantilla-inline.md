@@ -40,6 +40,17 @@ No es falta de `preventDefault` (el botón es `type="button"`, sin form).
 2. Replicar a los otros 7 prototipos.
 3. Limpiar código muerto del modo `completo` en `crear-resolucion.blade.php` (~1400 líneas de formularios duplicados).
 
+## Estado (2026-10-19)
+
+- [x] Fase 1: AplicarPagos de punta a punta (commit e514ad2).
+- [x] Fase 2: los otros 7 prototipos con los mismos componentes.
+- [x] Fase 3: borrado el modo `completo` (~1400 líneas) y CSS muerto de `contenteditable`.
+
+Componentes en `resources/views/components/resolucion/`: `documento` (envoltorio + CSS del editor), `campo`
+(input ⇄ texto, `mayusculas`, `formato`, `predeterminado`), `derivado` (número en letras vía
+`CrearResolucion::enLetras`), `opcional` (cotitular; `vacio` = texto estándar), `segun` ("los Señores"/"el/la Señor/a"),
+`tabla` (filas dinámicas de los Reconocimiento en `datos.tabla_*`).
+
 ## Decisiones (usuario, 2026-10-19)
 
 1. PDF: vista imprimible (`/resoluciones/{id}/imprimir`, hoja A4 + `window.print()`), sin dompdf.

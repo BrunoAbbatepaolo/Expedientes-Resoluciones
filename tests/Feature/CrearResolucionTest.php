@@ -319,7 +319,7 @@ test('plantilla completa: cada dato del documento es un input ligado a datos (lo
     expect(substr_count($html, 'x-model="$wire.datos[\'codigo_pago\']"'))->toBe(3)
         ->and($html)->toContain('x-model="$wire.datos[\'num_exp\']"')
         ->and($html)->toContain('x-model="$wire.datos[\'monto\']"')
-        ->and($html)->not->toMatch('/<[a-z][^>]*contenteditable/');
+        ->and($html)->not->toContain('contenteditable="true"');
 });
 
 test('Aplicar pagos: guarda con los datos del documento, sin pedir número de resolución ni titular', function () {
@@ -396,3 +396,37 @@ test('subir la nota de Aplicar pagos en PDF completa el código, el monto y las 
         ->assertSet('datos.monto', '15000.50')
         ->assertSet('datos.cuotas_adeudadas', '3');
 });
+
+test('cada tipo: los datos obligatorios están en su plantilla y completándolos se guarda e imprime', function (string $tipo) {
+    $user = editorDeResoluciones();
+    Permiso::create(['user_id' => $user->id, 'nombre' => 'resolucion_ver']);
+
+    $c = Livewire::actingAs($user)->test(CrearResolucion::class, ['tipo' => $tipo])->call('usarPlantilla');
+    $html = html_entity_decode($c->instance()->documentoEditable(), ENT_QUOTES);
+    expect($html)->not->toContain('No se pudo mostrar')
+        ->and($html)->not->toContain('contenteditable="true"');
+
+    $c->set('datos.fecha_res', '')->call('guardarPlantilla');
+    $faltantes = array_map(fn ($k) => substr($k, strlen('datos.')), array_keys($c->errors()->toArray()));
+    expect($faltantes)->toContain('num_exp', 'fecha_res');
+
+    foreach ($faltantes as $campo) {
+        // Sin input para un dato obligatorio la resolución no se podría guardar nunca.
+        expect($html)->toContain("x-model=\"\$wire.datos['{$campo}']\"");
+        $c->set("datos.{$campo}", match ($campo) {
+            'num_exp' => '1234/440-2026',
+            'fecha_res' => '2026-10-19',
+            default => 'A1',
+        });
+    }
+    $c->call('guardarPlantilla')->assertHasNoErrors();
+
+    $resolucion = Resolucion::sole();
+    expect($resolucion->tipo)->toBe($tipo)->and($resolucion->plantilla)->not->toContain('<input');
+
+    $this->actingAs($user)->get(route('resoluciones.imprimir', $resolucion))
+        ->assertOk()
+        ->assertSee('1234/440-2026')
+        ->assertDontSee('<input', false)
+        ->assertDontSee('x-model', false);
+})->with(CrearResolucion::TIPOS);

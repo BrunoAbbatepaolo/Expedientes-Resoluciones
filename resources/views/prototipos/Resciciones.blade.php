@@ -1,4 +1,9 @@
-{{-- resources/views/prototipos/resicion.blade.php --}}
+{{-- resources/views/prototipos/Resciciones.blade.php — los datos se editan en el documento (ver components/resolucion/campo). --}}
+@php
+    $editable = $editable ?? false;
+    $datos = $datos ?? [];
+@endphp
+<x-resolucion.documento :editable="$editable" :datos="$datos">
 <div class="documento-resolucion">
     <style>
         .documento-resolucion {
@@ -121,20 +126,6 @@
             color: #999;
             font-style: italic;
         }
-        .documento-resolucion [contenteditable="true"] {
-            outline: 1px dashed #ccc;
-            padding: 2px 4px;
-            border-radius: 2px;
-            transition: outline 0.2s;
-        }
-        .documento-resolucion [contenteditable="true"]:hover {
-            outline: 1px dashed #999;
-            background-color: rgba(255, 255, 255, 0.5);
-        }
-        .documento-resolucion [contenteditable="true"]:focus {
-            outline: 2px solid #3b82f6;
-            background-color: rgba(59, 130, 246, 0.05);
-        }
     </style>
 
     <div class="header-container">
@@ -149,144 +140,106 @@
 
     <div class="header-fecha">
         <div>
-            <div contenteditable="true">S.M. de Tucumán</div>
-            <div contenteditable="true">{{ !empty($fecha_res) ? formatearFecha($fecha_res) : 'dd MMM YYYY' }}</div>
+            <div>S.M. de Tucumán</div>
+            <div><x-resolucion.campo campo="fecha_res" tipo="date" formato="fecha" /></div>
         </div>
     </div>
 
     <div class="expediente">
-        <span class="underline" contenteditable="true">Expte. N° {{ !empty($num_exp) ? $num_exp : '[NÚMERO]' }}</span>
+        <span class="underline">Expte. N° <x-resolucion.campo campo="num_exp" placeholder="[NÚMERO]" /></span>
     </div>
 
     <div class="numero-resolucion">
-        <h1><span class="underline" contenteditable="true">RESOLUCION N° {{ !empty($num_res) ? $num_res : '[NÚMERO]' }}</span></h1>
+        <h1><span class="underline">RESOLUCION N° <x-resolucion.campo campo="num_res" placeholder="[NÚMERO]" /></span></h1>
     </div>
 
     <div class="seccion-visto pl-8">
-        <span class="font-bold" contenteditable="true">VISTO, </span>
-        <span contenteditable="true">estas actuaciones relacionadas con la vivienda identificada como </span>
-        <span class="font-bold" contenteditable="true">
-            MANZANA {{ !empty($manzana) ? $manzana : '[MANZANA]' }} - CASA {{ !empty($lote) ? $lote : '[CASA]' }}
-            DEL EMPRENDIMIENTO "{{ !empty($nombre_emprendimiento) ? strtoupper($nombre_emprendimiento) : '[NOMBRE DEL EMPRENDIMIENTO]' }}"
-            @if(!empty($departamento))
-                - {{ strtoupper($departamento) }}
-            @endif
+        <span class="font-bold">VISTO, </span>
+        <span>estas actuaciones relacionadas con la vivienda identificada como </span>
+        <span class="font-bold">
+            MANZANA <x-resolucion.campo campo="manzana" placeholder="[MANZANA]" /> - CASA <x-resolucion.campo campo="lote" placeholder="[CASA]" />
+            DEL EMPRENDIMIENTO "<x-resolucion.campo campo="nombre_emprendimiento" placeholder="[NOMBRE DEL EMPRENDIMIENTO]" mayusculas />"
+            <x-resolucion.opcional si="departamento">- <x-resolucion.campo campo="departamento" placeholder="[DEPARTAMENTO]" mayusculas /></x-resolucion.opcional>
         </span>
-        <span contenteditable="true">; y</span>
+        <span>; y</span>
     </div>
 
     <div class="seccion-considerando mt-4">
-        <p><span class="font-bold" contenteditable="true">CONSIDERANDO:</span></p>
+        <p><span class="font-bold">CONSIDERANDO:</span></p>
 
-        <p class="mt-2" contenteditable="true">
+        <p class="mt-2">
             Que, la vivienda mencionada fue otorgada a
-            @if(!empty($nombre_titular) && !empty($dni_titular))
-                @if(!empty($nombre_cotitular) && !empty($dni_cotitular))
-                    los Señores <span class="font-bold">{{ strtoupper($nombre_titular) }}</span> DNI N° {{ $dni_titular }} y <span class="font-bold">{{ strtoupper($nombre_cotitular) }}</span> DNI N° {{ $dni_cotitular }}
-                @else
-                    el/la Señor/a <span class="font-bold">{{ strtoupper($nombre_titular) }}</span> DNI N° {{ $dni_titular }}
-                @endif
-            @else
-                [NOMBRE Y DNI DEL/LOS TITULAR/ES]
-            @endif
-            mediante Acta de Tenencia y Uso Provisorio Intransferible Vivienda Única Social y Resolución de Adjudicación N° {{ !empty($num_res_adjudicacion) ? $num_res_adjudicacion : '[NÚMERO]' }}.
+            <x-resolucion.segun si="nombre_cotitular" con="los Señores" sin="el/la Señor/a" /> <span class="font-bold"><x-resolucion.campo campo="nombre_titular" placeholder="[NOMBRE TITULAR]" mayusculas /></span> DNI N° <x-resolucion.campo campo="dni_titular" placeholder="[DNI TITULAR]" /><x-resolucion.opcional si="nombre_cotitular"> y <span class="font-bold"><x-resolucion.campo campo="nombre_cotitular" placeholder="[NOMBRE COTITULAR]" mayusculas /></span> DNI N° <x-resolucion.campo campo="dni_cotitular" placeholder="[DNI COTITULAR]" /></x-resolucion.opcional>
+            mediante Acta de Tenencia y Uso Provisorio Intransferible Vivienda Única Social y Resolución de Adjudicación N° <x-resolucion.campo campo="num_res_adjudicacion" placeholder="[NÚMERO]" />.
         </p>
 
-        <p contenteditable="true">
-            Que, del informe obrante a fs. {{ !empty($num_foja_informe) ? $num_foja_informe : '[FOJA]' }} se constata que los titulares, tras sendas intimaciones no regularizan la deuda que pesa sobre la unidad de referencia, monto que a la fecha {{ !empty($fecha_deuda) ? formatearFecha($fecha_deuda) : '[FECHA]' }} se actualiza a $ {{ !empty($monto_deuda) ? formatearMoneda($monto_deuda) : '[MONTO]' }} ({{ !empty($monto_deuda) ? num2letras($monto_deuda) : '[MONTO EN LETRAS]' }}), por lo que la falta de pago por parte de los
-            @if(!empty($nombre_titular))
-                {{ strtoupper($nombre_titular) }}
-                @if(!empty($nombre_cotitular))
-                    /{{ strtoupper($nombre_cotitular) }}
-                @endif
-            @else
-                [TITULARES]
-            @endif
+        <p>
+            Que, del informe obrante a fs. <x-resolucion.campo campo="num_foja_informe" placeholder="[FOJA]" /> se constata que los titulares, tras sendas intimaciones no regularizan la deuda que pesa sobre la unidad de referencia, monto que a la fecha <x-resolucion.campo campo="fecha_deuda" placeholder="[FECHA]" tipo="date" formato="fecha" /> se actualiza a $ <x-resolucion.campo campo="monto_deuda" placeholder="[MONTO]" formato="moneda" /> (<x-resolucion.derivado campo="monto_deuda" placeholder="[MONTO EN LETRAS]" />), por lo que la falta de pago por parte de los
+            <x-resolucion.campo campo="nombre_titular" placeholder="[NOMBRE TITULAR]" mayusculas />
+                <x-resolucion.opcional si="nombre_cotitular">/<x-resolucion.campo campo="nombre_cotitular" placeholder="[NOMBRE COTITULAR]" mayusculas /></x-resolucion.opcional>
             se encuadra en el incumplimiento de la cláusula Novena del contrato suscripto configurándose el supuesto de la cláusula Décimo Primera, facultando al Instituto de Vivienda de la cláusula Décimo Primera, dar por finalizado el mentado contrato y exigir el inmediato desalojo de la unidad, quedando obligados los adjudicatarios a restituir el inmueble.
         </p>
 
-        <p contenteditable="true">
+        <p>
             Que, en consecuencia, la Falta de Pago por parte de los titulares se encuadra en el incumplimiento que habilita a dejar sin efecto el Acta de Tenencia y Uso Provisorio Intransferible de Vivienda Única Social y revocar la Resolución de Adjudicación por la causal falta de pago.
         </p>
 
-        <p contenteditable="true">
-            Que, a fs. {{ !empty($num_foja_dictamen) ? $num_foja_dictamen : '[FOJA]' }} {{ !empty($departamento) ? $departamento : '[DEPARTAMENTO]' }} de Recupero de Viviendas en fecha {{ !empty($fecha_dictamen) ? formatearFecha($fecha_dictamen) : '[FECHA]' }} emite Dictamen Legal N° {{ !empty($num_dictamen) ? $num_dictamen : '[NÚMERO]' }} en donde no se ofrecen objeciones legales para la procedencia del presente trámite.
+        <p>
+            Que, a fs. <x-resolucion.campo campo="num_foja_dictamen" placeholder="[FOJA]" /> <x-resolucion.campo campo="departamento" placeholder="[DEPARTAMENTO]" /> de Recupero de Viviendas en fecha <x-resolucion.campo campo="fecha_dictamen" placeholder="[FECHA]" tipo="date" formato="fecha" /> emite Dictamen Legal N° <x-resolucion.campo campo="num_dictamen" placeholder="[NÚMERO]" /> en donde no se ofrecen objeciones legales para la procedencia del presente trámite.
         </p>
 
-        <p class="mt-3" contenteditable="true">Por ello:</p>
+        <p class="mt-3">Por ello:</p>
     </div>
 
     <div class="bloque-intervencion">
-        <div class="font-bold" contenteditable="true">LA INTERVENCION</div>
-        <div class="font-bold" contenteditable="true">DEL INSTITUTO PROVINCIAL DE VIVIENDA Y DESARROLLO URBANO</div>
-        <div class="font-bold" contenteditable="true">DE TUCUMAN</div>
-        <div class="font-bold mt-1"><span class="underline" contenteditable="true">R E S U E L V E :</span></div>
+        <div class="font-bold">LA INTERVENCION</div>
+        <div class="font-bold">DEL INSTITUTO PROVINCIAL DE VIVIENDA Y DESARROLLO URBANO</div>
+        <div class="font-bold">DE TUCUMAN</div>
+        <div class="font-bold mt-1"><span class="underline">R E S U E L V E :</span></div>
     </div>
 
     <div class="space-y-3">
         <div class="articulo">
-            <p contenteditable="true">
+            <p>
                 <span class="font-bold underline">Art. 1º.- </span>RESCINDIR el Acta de Tenencia y Uso Provisorio Intransferible de Vivienda Única Social suscrita entre este Organismo y los
-                @if(!empty($nombre_titular) && !empty($dni_titular))
-                    @if(!empty($nombre_cotitular) && !empty($dni_cotitular))
-                        Señores <span class="font-bold">{{ strtoupper($nombre_titular) }}</span> DNI N° {{ $dni_titular }} y <span class="font-bold">{{ strtoupper($nombre_cotitular) }}</span> DNI N° {{ $dni_cotitular }}
-                    @else
-                        Señor/a <span class="font-bold">{{ strtoupper($nombre_titular) }}</span> DNI N° {{ $dni_titular }}
-                    @endif
-                @else
-                    [NOMBRE Y DNI DEL/LOS TITULAR/ES]
-                @endif
+                <x-resolucion.segun si="nombre_cotitular" con="Señores" sin="Señor/a" /> <span class="font-bold"><x-resolucion.campo campo="nombre_titular" placeholder="[NOMBRE TITULAR]" mayusculas /></span> DNI N° <x-resolucion.campo campo="dni_titular" placeholder="[DNI TITULAR]" /><x-resolucion.opcional si="nombre_cotitular"> y <span class="font-bold"><x-resolucion.campo campo="nombre_cotitular" placeholder="[NOMBRE COTITULAR]" mayusculas /></span> DNI N° <x-resolucion.campo campo="dni_cotitular" placeholder="[DNI COTITULAR]" /></x-resolucion.opcional>
                 por la causal Falta de Pago, de la vivienda identificada como
                 <span class="font-bold">
-                    MANZANA {{ !empty($manzana) ? $manzana : '[MANZANA]' }} – CASA {{ !empty($lote) ? $lote : '[CASA]' }}
-                    DEL EMPRENDIMIENTO "{{ !empty($nombre_emprendimiento) ? strtoupper($nombre_emprendimiento) : '[NOMBRE DEL EMPRENDIMIENTO]' }}"
+                    MANZANA <x-resolucion.campo campo="manzana" placeholder="[MANZANA]" /> – CASA <x-resolucion.campo campo="lote" placeholder="[CASA]" />
+                    DEL EMPRENDIMIENTO "<x-resolucion.campo campo="nombre_emprendimiento" placeholder="[NOMBRE DEL EMPRENDIMIENTO]" mayusculas />"
                 </span>; y por lo expuesto en los considerandos de la presente Resolución.
             </p>
         </div>
 
         <div class="articulo">
-            <p contenteditable="true">
-                <span class="font-bold underline">Art. 2º.- </span>REVOCAR: la Resolución de Adjudicación N° {{ !empty($num_res_adjudicacion) ? $num_res_adjudicacion : '[NÚMERO]' }} en lo que respecta a los
-                @if(!empty($nombre_titular) && !empty($dni_titular))
-                    @if(!empty($nombre_cotitular) && !empty($dni_cotitular))
-                        Señores <span class="font-bold">{{ strtoupper($nombre_titular) }}</span> DNI N° {{ $dni_titular }} y <span class="font-bold">{{ strtoupper($nombre_cotitular) }}</span> DNI N° {{ $dni_cotitular }}
-                    @else
-                        Señor/a <span class="font-bold">{{ strtoupper($nombre_titular) }}</span> DNI N° {{ $dni_titular }}
-                    @endif
-                @else
-                    [NOMBRE Y DNI DEL/LOS TITULAR/ES]
-                @endif
+            <p>
+                <span class="font-bold underline">Art. 2º.- </span>REVOCAR: la Resolución de Adjudicación N° <x-resolucion.campo campo="num_res_adjudicacion" placeholder="[NÚMERO]" /> en lo que respecta a los
+                <x-resolucion.segun si="nombre_cotitular" con="Señores" sin="Señor/a" /> <span class="font-bold"><x-resolucion.campo campo="nombre_titular" placeholder="[NOMBRE TITULAR]" mayusculas /></span> DNI N° <x-resolucion.campo campo="dni_titular" placeholder="[DNI TITULAR]" /><x-resolucion.opcional si="nombre_cotitular"> y <span class="font-bold"><x-resolucion.campo campo="nombre_cotitular" placeholder="[NOMBRE COTITULAR]" mayusculas /></span> DNI N° <x-resolucion.campo campo="dni_cotitular" placeholder="[DNI COTITULAR]" /></x-resolucion.opcional>
                 por la causal Falta de Pago de la vivienda identificada como
                 <span class="font-bold">
-                    MANZANA {{ !empty($manzana) ? $manzana : '[MANZANA]' }} – CASA {{ !empty($lote) ? $lote : '[CASA]' }}
-                    DEL EMPRENDIMIENTO "{{ !empty($nombre_emprendimiento) ? strtoupper($nombre_emprendimiento) : '[NOMBRE DEL EMPRENDIMIENTO]' }}"
+                    MANZANA <x-resolucion.campo campo="manzana" placeholder="[MANZANA]" /> – CASA <x-resolucion.campo campo="lote" placeholder="[CASA]" />
+                    DEL EMPRENDIMIENTO "<x-resolucion.campo campo="nombre_emprendimiento" placeholder="[NOMBRE DEL EMPRENDIMIENTO]" mayusculas />"
                 </span>; y por lo expuesto en los considerandos de la presente Resolución.
             </p>
         </div>
 
         <div class="articulo">
-            <p contenteditable="true">
+            <p>
                 <span class="font-bold underline">Art. 3º.- </span>INTIMAR a los
-                @if(!empty($nombre_titular))
-                    {{ strtoupper($nombre_titular) }}
-                    @if(!empty($nombre_cotitular))
-                        /{{ strtoupper($nombre_cotitular) }}
-                    @endif
-                @else
-                    [TITULARES]
-                @endif
+                <x-resolucion.campo campo="nombre_titular" placeholder="[NOMBRE TITULAR]" mayusculas />
+                    <x-resolucion.opcional si="nombre_cotitular">/<x-resolucion.campo campo="nombre_cotitular" placeholder="[NOMBRE COTITULAR]" mayusculas /></x-resolucion.opcional>
                 y/o cualesquiera que ocupare la vivienda para que en el plazo perentorio e improrrogable de 10 (diez) días, proceda a desalojar el inmueble libre de todo objeto y ocupantes, bajo apercibimiento de iniciar las acciones legales tendientes a recuperar el mismo.
             </p>
         </div>
 
         <div class="articulo">
-            <p contenteditable="true">
+            <p>
                 <span class="font-bold underline">Art. 4º.- </span>AUTORIZAR a la Dirección de Área de Regularización Dominial de este Organismo, a iniciar las acciones legales pertinentes para recuperar el inmueble en caso de así corresponder.
             </p>
         </div>
 
         <div class="articulo">
-            <p contenteditable="true">
+            <p>
                 <span class="font-bold underline">Art. 5º.- </span>COMUNICAR a los interesados, Áreas y Departamentos de este Instituto, a los fines que a cada uno les competa. Cumplido, PASE a la Dirección del Área de Recupero y Regularización Dominial a sus efectos.
             </p>
         </div>
@@ -295,18 +248,19 @@
     <div class="firmas">
         <div class="firma-box">
             <div class="linea-firma"></div>
-            <div class="font-bold" contenteditable="true">MARIA GABRIELA LAZARTE</div>
-            <div contenteditable="true">CONTADORA FISCAL</div>
-            <div contenteditable="true">TRIBUNAL DE CUENTAS</div>
+            <div class="font-bold">MARIA GABRIELA LAZARTE</div>
+            <div>CONTADORA FISCAL</div>
+            <div>TRIBUNAL DE CUENTAS</div>
         </div>
         <div class="firma-box center">
             <img src="{{ asset('images/logo-provincia.png') }}" alt="Provincia" />
         </div>
         <div class="firma-box">
             <div class="linea-firma"></div>
-            <div class="font-bold" contenteditable="true">Arq. HUGO CABRAL</div>
-            <div contenteditable="true">INTERVENTOR</div>
-            <div contenteditable="true">I.P.V.y D.U.</div>
+            <div class="font-bold">Arq. HUGO CABRAL</div>
+            <div>INTERVENTOR</div>
+            <div>I.P.V.y D.U.</div>
         </div>
     </div>
 </div>
+</x-resolucion.documento>

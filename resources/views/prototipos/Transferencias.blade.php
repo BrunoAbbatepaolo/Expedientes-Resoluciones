@@ -1,4 +1,9 @@
-{{-- resources/views/prototipos/transferencia.blade.php --}}
+{{-- resources/views/prototipos/Transferencias.blade.php — los datos se editan en el documento (ver components/resolucion/campo). --}}
+@php
+    $editable = $editable ?? false;
+    $datos = $datos ?? [];
+@endphp
+<x-resolucion.documento :editable="$editable" :datos="$datos">
 <div class="documento-resolucion">
     <style>
         .documento-resolucion {
@@ -100,20 +105,6 @@
         .documento-resolucion .firma-box.center img {
             width: 130px;
         }
-        .documento-resolucion [contenteditable="true"] {
-            outline: 1px dashed #ccc;
-            padding: 2px 4px;
-            border-radius: 2px;
-            transition: outline 0.2s;
-        }
-        .documento-resolucion [contenteditable="true"]:hover {
-            outline: 1px dashed #999;
-            background-color: rgba(255, 255, 255, 0.5);
-        }
-        .documento-resolucion [contenteditable="true"]:focus {
-            outline: 2px solid #3b82f6;
-            background-color: rgba(59, 130, 246, 0.05);
-        }
     </style>
 
     <div class="header-container">
@@ -128,136 +119,96 @@
 
     <div class="header-fecha">
         <div>
-            <div contenteditable="true">S.M. de Tucumán</div>
-            <div contenteditable="true">{{ !empty($fecha_res) ? formatearFecha($fecha_res) : 'dd MMM YYYY' }}</div>
+            <div>S.M. de Tucumán</div>
+            <div><x-resolucion.campo campo="fecha_res" tipo="date" formato="fecha" /></div>
         </div>
     </div>
 
     <div class="expediente">
-        <span class="underline" contenteditable="true">Expte. N° {{ !empty($num_exp) ? $num_exp : '[NÚMERO]' }}</span>
+        <span class="underline">Expte. N° <x-resolucion.campo campo="num_exp" placeholder="[NÚMERO]" /></span>
     </div>
 
     <div class="numero-resolucion">
-        <h1><span class="underline" contenteditable="true">RESOLUCION N° {{ !empty($num_res) ? $num_res : '[NÚMERO]' }}</span></h1>
+        <h1><span class="underline">RESOLUCION N° <x-resolucion.campo campo="num_res" placeholder="[NÚMERO]" /></span></h1>
     </div>
 
     <div class="seccion-visto pl-8">
-        <span class="font-bold" contenteditable="true">VISTO, </span>
-        <span contenteditable="true">estas actuaciones mediante las cuales se solicita autorización de transferencia de la unidad habitacional identificada como </span>
-        <span class="font-bold" contenteditable="true">
-            MANZANA {{ !empty($manzana) ? $manzana : '[MANZANA]' }} – CASA {{ !empty($lote) ? $lote : '[CASA]' }}
-            DEL {{ !empty($nombre_plan) ? strtoupper($nombre_plan) : '[NOMBRE DEL PLAN]' }}
+        <span class="font-bold">VISTO, </span>
+        <span>estas actuaciones mediante las cuales se solicita autorización de transferencia de la unidad habitacional identificada como </span>
+        <span class="font-bold">
+            MANZANA <x-resolucion.campo campo="manzana" placeholder="[MANZANA]" /> – CASA <x-resolucion.campo campo="lote" placeholder="[CASA]" />
+            DEL <x-resolucion.campo campo="nombre_plan" placeholder="[NOMBRE DEL PLAN]" mayusculas />
         </span>
-        <span contenteditable="true">; y,</span>
+        <span>; y,</span>
     </div>
 
     <div class="seccion-considerando mt-4">
-        <p><span class="font-bold" contenteditable="true">CONSIDERANDO:</span></p>
+        <p><span class="font-bold">CONSIDERANDO:</span></p>
 
-        <p class="mt-2" contenteditable="true">
-            Que, la vivienda antes descripta fue asignada mediante Acta de Tenencia de Uso adjudicada por Resolución N° {{ !empty($num_res_adjudicacion) ? $num_res_adjudicacion : '[NÚMERO]' }} a los
-            @if(!empty($nombre_titular_anterior) && !empty($dni_titular_anterior))
-                @if(!empty($nombre_cotitular_anterior) && !empty($dni_cotitular_anterior))
-                    Señores <span class="font-bold">{{ strtoupper($nombre_titular_anterior) }}</span> DNI N° {{ $dni_titular_anterior }} y <span class="font-bold">{{ strtoupper($nombre_cotitular_anterior) }}</span> DNI N° {{ $dni_cotitular_anterior }}
-                @else
-                    Señor/a <span class="font-bold">{{ strtoupper($nombre_titular_anterior) }}</span> DNI N° {{ $dni_titular_anterior }}
-                @endif
-            @else
-                [NOMBRE Y DNI DEL/LOS TITULAR/ES ANTERIORES]
-            @endif
+        <p class="mt-2">
+            Que, la vivienda antes descripta fue asignada mediante Acta de Tenencia de Uso adjudicada por Resolución N° <x-resolucion.campo campo="num_res_adjudicacion" placeholder="[NÚMERO]" /> a los
+            <x-resolucion.segun si="nombre_cotitular_anterior" con="Señores" sin="Señor/a" /> <span class="font-bold"><x-resolucion.campo campo="nombre_titular_anterior" placeholder="[NOMBRE TITULAR ANTERIOR]" mayusculas /></span> DNI N° <x-resolucion.campo campo="dni_titular_anterior" placeholder="[DNI TITULAR ANTERIOR]" /><x-resolucion.opcional si="nombre_cotitular_anterior"> y <span class="font-bold"><x-resolucion.campo campo="nombre_cotitular_anterior" placeholder="[NOMBRE COTITULAR ANTERIOR]" mayusculas /></span> DNI N° <x-resolucion.campo campo="dni_cotitular_anterior" placeholder="[DNI COTITULAR ANTERIOR]" /></x-resolucion.opcional>
         </p>
 
-        <p contenteditable="true">
-            Que, a fs. {{ !empty($num_foja_boleto) ? $num_foja_boleto : '[FOJA]' }} se encuentra adjuvant el Boleto de Venta debidamente certificado por Escribano Público entre los
-            @if(!empty($nombre_titular_anterior) && !empty($dni_titular_anterior))
-                @if(!empty($nombre_cotitular_anterior) && !empty($dni_cotitular_anterior))
-                    Señores <span class="font-bold">{{ strtoupper($nombre_titular_anterior) }}</span>/<span class="font-bold">{{ strtoupper($nombre_cotitular_anterior) }}</span>
-                @else
-                    Señor/a <span class="font-bold">{{ strtoupper($nombre_titular_anterior) }}</span>
-                @endif
-            @else
-                [TITULARES ANTERIORES]
-            @endif
+        <p>
+            Que, a fs. <x-resolucion.campo campo="num_foja_boleto" placeholder="[FOJA]" /> se encuentra adjuvant el Boleto de Venta debidamente certificado por Escribano Público entre los
+            <x-resolucion.segun si="nombre_cotitular_anterior" con="Señores" sin="Señor/a" /> <span class="font-bold"><x-resolucion.campo campo="nombre_titular_anterior" placeholder="[NOMBRE TITULAR ANTERIOR]" mayusculas /></span><x-resolucion.opcional si="nombre_cotitular_anterior">/<span class="font-bold"><x-resolucion.campo campo="nombre_cotitular_anterior" placeholder="[NOMBRE COTITULAR ANTERIOR]" mayusculas /></span></x-resolucion.opcional>
             a favor de
-            @if(!empty($nombre_titular_nuevo) && !empty($dni_titular_nuevo))
-                la Señora <span class="font-bold">{{ strtoupper($nombre_titular_nuevo) }}</span>.
-            @else
-                [NOMBRE DEL NUEVO TITULAR].
-            @endif
+            la Señora <span class="font-bold"><x-resolucion.campo campo="nombre_titular_nuevo" placeholder="[NOMBRE TITULAR NUEVO]" mayusculas /></span>.
         </p>
 
-        <p contenteditable="true">
-            Que, a fs. {{ !empty($num_foja_plan) ? $num_foja_plan : '[FOJA]' }} obra Plan de Readecuación de Pagos de Unidades Habitacionales el cual detalla el nuevo plan de amortización y Convenio de Recaudación de viviendas transferidas.
+        <p>
+            Que, a fs. <x-resolucion.campo campo="num_foja_plan" placeholder="[FOJA]" /> obra Plan de Readecuación de Pagos de Unidades Habitacionales el cual detalla el nuevo plan de amortización y Convenio de Recaudación de viviendas transferidas.
         </p>
 
-        <p contenteditable="true">
-            Que, en virtud de lo informado por el Departamento Recursos Financieros a fs. {{ !empty($num_foja_recursos) ? $num_foja_recursos : '[FOJA]' }}, lo solicitado por el Departamento Promoción Social a fs. {{ !empty($num_foja_promocion) ? $num_foja_promocion : '[FOJA]' }}, lo informado por la Dirección de Área de Recupero y Regularización Dominial a fs. {{ !empty($num_foja_regularizacion) ? $num_foja_regularizacion : '[FOJA]' }} vuelta y al Dictamen Legal N° {{ !empty($num_dictamen) ? $num_dictamen : '[NÚMERO]' }} de fecha {{ !empty($fecha_dictamen) ? formatearFecha($fecha_dictamen) : '[FECHA]' }} a fs. {{ !empty($num_foja_dictamen) ? $num_foja_dictamen : '[FOJA]' }} y su ratificación a fs. {{ !empty($num_foja_ratificacion) ? $num_foja_ratificacion : '[FOJA]' }}, corresponde dar curso a lo solicitado.
+        <p>
+            Que, en virtud de lo informado por el Departamento Recursos Financieros a fs. <x-resolucion.campo campo="num_foja_recursos" placeholder="[FOJA]" />, lo solicitado por el Departamento Promoción Social a fs. <x-resolucion.campo campo="num_foja_promocion" placeholder="[FOJA]" />, lo informado por la Dirección de Área de Recupero y Regularización Dominial a fs. <x-resolucion.campo campo="num_foja_regularizacion" placeholder="[FOJA]" /> vuelta y al Dictamen Legal N° <x-resolucion.campo campo="num_dictamen" placeholder="[NÚMERO]" /> de fecha <x-resolucion.campo campo="fecha_dictamen" placeholder="[FECHA]" tipo="date" formato="fecha" /> a fs. <x-resolucion.campo campo="num_foja_dictamen" placeholder="[FOJA]" /> y su ratificación a fs. <x-resolucion.campo campo="num_foja_ratificacion" placeholder="[FOJA]" />, corresponde dar curso a lo solicitado.
         </p>
 
-        <p class="mt-3" contenteditable="true">Por ello:</p>
+        <p class="mt-3">Por ello:</p>
     </div>
 
     <div class="bloque-intervencion">
-        <div class="font-bold" contenteditable="true">LA INTERVENCION</div>
-        <div class="font-bold" contenteditable="true">DEL INSTITUTO PROVINCIAL DE VIVIENDA Y DESARROLLO URBANO</div>
-        <div class="font-bold" contenteditable="true">DE TUCUMAN</div>
-        <div class="font-bold mt-1"><span class="underline" contenteditable="true">R E S U E L V E</span></div>
+        <div class="font-bold">LA INTERVENCION</div>
+        <div class="font-bold">DEL INSTITUTO PROVINCIAL DE VIVIENDA Y DESARROLLO URBANO</div>
+        <div class="font-bold">DE TUCUMAN</div>
+        <div class="font-bold mt-1"><span class="underline">R E S U E L V E</span></div>
     </div>
 
     <div class="space-y-3">
         <div class="articulo">
-            <p contenteditable="true">
+            <p>
                 <span class="font-bold underline">Art. 1º.- </span>APROBAR la transferencia de la unidad habitacional identificada como
                 <span class="font-bold">
-                    MANZANA {{ !empty($manzana) ? $manzana : '[MANZANA]' }} – CASA {{ !empty($lote) ? $lote : '[CASA]' }}
-                    DEL {{ !empty($nombre_plan) ? strtoupper($nombre_plan) : '[NOMBRE DEL PLAN]' }}
+                    MANZANA <x-resolucion.campo campo="manzana" placeholder="[MANZANA]" /> – CASA <x-resolucion.campo campo="lote" placeholder="[CASA]" />
+                    DEL <x-resolucion.campo campo="nombre_plan" placeholder="[NOMBRE DEL PLAN]" mayusculas />
                 </span>
-                que fuera adjudicada según Resolución N° {{ !empty($num_res_adjudicacion) ? $num_res_adjudicacion : '[NÚMERO]' }} a los
-                @if(!empty($nombre_titular_anterior) && !empty($dni_titular_anterior))
-                    @if(!empty($nombre_cotitular_anterior) && !empty($dni_cotitular_anterior))
-                        Señores <span class="font-bold">{{ strtoupper($nombre_titular_anterior) }}</span> DNI N° {{ $dni_titular_anterior }} y <span class="font-bold">{{ strtoupper($nombre_cotitular_anterior) }}</span> DNI N° {{ $dni_cotitular_anterior }}
-                    @else
-                        Señor/a <span class="font-bold">{{ strtoupper($nombre_titular_anterior) }}</span> DNI N° {{ $dni_titular_anterior }}
-                    @endif
-                @else
-                    [NOMBRE Y DNI DEL/LOS TITULAR/ES ANTERIORES]
-                @endif
+                que fuera adjudicada según Resolución N° <x-resolucion.campo campo="num_res_adjudicacion" placeholder="[NÚMERO]" /> a los
+                <x-resolucion.segun si="nombre_cotitular_anterior" con="Señores" sin="Señor/a" /> <span class="font-bold"><x-resolucion.campo campo="nombre_titular_anterior" placeholder="[NOMBRE TITULAR ANTERIOR]" mayusculas /></span> DNI N° <x-resolucion.campo campo="dni_titular_anterior" placeholder="[DNI TITULAR ANTERIOR]" /><x-resolucion.opcional si="nombre_cotitular_anterior"> y <span class="font-bold"><x-resolucion.campo campo="nombre_cotitular_anterior" placeholder="[NOMBRE COTITULAR ANTERIOR]" mayusculas /></span> DNI N° <x-resolucion.campo campo="dni_cotitular_anterior" placeholder="[DNI COTITULAR ANTERIOR]" /></x-resolucion.opcional>
                 a favor de los Señores
-                @if(!empty($nombre_titular_nuevo) && !empty($dni_titular_nuevo))
-                    <span class="font-bold">{{ strtoupper($nombre_titular_nuevo) }}</span> DNI N° {{ $dni_titular_nuevo }}
-                    @if(!empty($fecha_nacimiento_titular))
-                        (Fecha de Nacimiento {{ formatearFecha($fecha_nacimiento_titular) }})
-                    @endif
-                @else
-                    [NOMBRE Y DNI DEL NUEVO TITULAR]
-                @endif
-                @if(!empty($nombre_cotitular_nuevo) && !empty($dni_cotitular_nuevo))
-                    y <span class="font-bold">{{ strtoupper($nombre_cotitular_nuevo) }}</span> DNI N° {{ $dni_cotitular_nuevo }}
-                    @if(!empty($fecha_nacimiento_cotitular))
-                        (Fecha de Nacimiento {{ formatearFecha($fecha_nacimiento_cotitular) }})
-                    @endif
-                @endif
-                @if(!empty($nombre_titular_nuevo) && !empty($nombre_cotitular_nuevo))
-                    cónyuges en primeras nupcias
-                @endif
-                , en virtud del Instrumento Privado de fecha {{ !empty($fecha_instrumento) ? formatearFecha($fecha_instrumento) : '[FECHA]' }} en un todo de acuerdo a informes de autos.-
+                <span class="font-bold"><x-resolucion.campo campo="nombre_titular_nuevo" placeholder="[NOMBRE TITULAR NUEVO]" mayusculas /></span> DNI N° <x-resolucion.campo campo="dni_titular_nuevo" placeholder="[DNI TITULAR NUEVO]" />
+                    <x-resolucion.opcional si="fecha_nacimiento_titular">(Fecha de Nacimiento <x-resolucion.campo campo="fecha_nacimiento_titular" placeholder="[FECHA NACIMIENTO TITULAR]" tipo="date" formato="fecha" />)</x-resolucion.opcional>
+                <x-resolucion.opcional si="nombre_cotitular_nuevo">y <span class="font-bold"><x-resolucion.campo campo="nombre_cotitular_nuevo" placeholder="[NOMBRE COTITULAR NUEVO]" mayusculas /></span> DNI N° <x-resolucion.campo campo="dni_cotitular_nuevo" placeholder="[DNI COTITULAR NUEVO]" />
+                    <x-resolucion.opcional si="fecha_nacimiento_cotitular">(Fecha de Nacimiento <x-resolucion.campo campo="fecha_nacimiento_cotitular" placeholder="[FECHA NACIMIENTO COTITULAR]" tipo="date" formato="fecha" />)</x-resolucion.opcional></x-resolucion.opcional>
+                <x-resolucion.opcional si="nombre_titular_nuevo">cónyuges en primeras nupcias</x-resolucion.opcional>
+                , en virtud del Instrumento Privado de fecha <x-resolucion.campo campo="fecha_instrumento" placeholder="[FECHA]" tipo="date" formato="fecha" /> en un todo de acuerdo a informes de autos.-
             </p>
         </div>
 
         <div class="articulo">
-            <p contenteditable="true">
-                <span class="font-bold underline">Art. 2º.- </span>APROBAR el Convenio de Readecuación de Pagos de Unidades Habitacionales Transferidas, el cual está compuesto por {{ !empty($num_cuotas) ? $num_cuotas : '[NÚMERO]' }} ({{ !empty($num_cuotas) ? num2letras($num_cuotas) : '[NÚMERO]' }}) cuotas y el importe total de la cuota asciende a la suma de $ {{ !empty($monto_cuota) ? formatearMoneda($monto_cuota) : '[MONTO]' }} ({{ !empty($monto_cuota) ? num2letras($monto_cuota) : '[MONTO]' }}), más concepto de Fondo de Reserva y Gastos Administrativos. Este convenio considera una Tasa de Interés Anual del {{ !empty($tasa_interes) ? $tasa_interes : '[TASA]' }}% ({{ !empty($tasa_interes) ? num2letras($tasa_interes) : '[TASA]' }}%) de fecha {{ !empty($fecha_tasa) ? formatearFecha($fecha_tasa) : '[FECHA]' }} en un todo de acuerdo a lo informado por el Departamento Recursos Financieros a fs. {{ !empty($num_foja_recursos) ? $num_foja_recursos : '[FOJA]' }}.-
+            <p>
+                <span class="font-bold underline">Art. 2º.- </span>APROBAR el Convenio de Readecuación de Pagos de Unidades Habitacionales Transferidas, el cual está compuesto por <x-resolucion.campo campo="num_cuotas" placeholder="[NÚMERO]" /> (<x-resolucion.derivado campo="num_cuotas" placeholder="[NÚMERO]" />) cuotas y el importe total de la cuota asciende a la suma de $ <x-resolucion.campo campo="monto_cuota" placeholder="[MONTO]" formato="moneda" /> (<x-resolucion.derivado campo="monto_cuota" placeholder="[MONTO]" />), más concepto de Fondo de Reserva y Gastos Administrativos. Este convenio considera una Tasa de Interés Anual del <x-resolucion.campo campo="tasa_interes" placeholder="[TASA]" />% (<x-resolucion.derivado campo="tasa_interes" placeholder="[TASA]" />%) de fecha <x-resolucion.campo campo="fecha_tasa" placeholder="[FECHA]" tipo="date" formato="fecha" /> en un todo de acuerdo a lo informado por el Departamento Recursos Financieros a fs. <x-resolucion.campo campo="num_foja_recursos" placeholder="[FOJA]" />.-
             </p>
         </div>
 
         <div class="articulo">
-            <p contenteditable="true">
+            <p>
                 <span class="font-bold underline">Art. 3º.- </span>AUTORIZAR al Departamento Cómputos a generar las boletas de amortización mensual de la vivienda mencionada.-
             </p>
         </div>
 
         <div class="articulo">
-            <p contenteditable="true">
+            <p>
                 <span class="font-bold underline">Art. 4º.- </span>COMUNICAR a los interesados; Áreas y Departamentos de este Instituto, a los fines que a cada uno les competa. Cumplido, PASE a la Dirección Adjudicaciones, a sus efectos.-
             </p>
         </div>
@@ -266,18 +217,19 @@
     <div class="firmas">
         <div class="firma-box">
             <div class="linea-firma"></div>
-            <div class="font-bold" contenteditable="true">MARIA GABRIELA LAZARTE</div>
-            <div contenteditable="true">CONTADORA FISCAL</div>
-            <div contenteditable="true">TRIBUNAL DE CUENTAS</div>
+            <div class="font-bold">MARIA GABRIELA LAZARTE</div>
+            <div>CONTADORA FISCAL</div>
+            <div>TRIBUNAL DE CUENTAS</div>
         </div>
         <div class="firma-box center">
             <img src="{{ asset('images/logo-provincia.png') }}" alt="Provincia" />
         </div>
         <div class="firma-box">
             <div class="linea-firma"></div>
-            <div class="font-bold" contenteditable="true">Arq. HUGO CABRAL</div>
-            <div contenteditable="true">INTERVENTOR</div>
-            <div contenteditable="true">I.P.V.y D.U.</div>
+            <div class="font-bold">Arq. HUGO CABRAL</div>
+            <div>INTERVENTOR</div>
+            <div>I.P.V.y D.U.</div>
         </div>
     </div>
 </div>
+</x-resolucion.documento>

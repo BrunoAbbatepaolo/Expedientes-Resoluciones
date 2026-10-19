@@ -1,4 +1,9 @@
-{{-- resources/views/prototipos/cancelaciones.blade.php --}}
+{{-- resources/views/prototipos/Cancelaciones.blade.php — los datos se editan en el documento (ver components/resolucion/campo). --}}
+@php
+    $editable = $editable ?? false;
+    $datos = $datos ?? [];
+@endphp
+<x-resolucion.documento :editable="$editable" :datos="$datos">
 <div class="documento-resolucion">
     <style>
         .documento-resolucion {
@@ -121,20 +126,6 @@
             color: #999;
             font-style: italic;
         }
-        .documento-resolucion [contenteditable="true"] {
-            outline: 1px dashed #ccc;
-            padding: 2px 4px;
-            border-radius: 2px;
-            transition: outline 0.2s;
-        }
-        .documento-resolucion [contenteditable="true"]:hover {
-            outline: 1px dashed #999;
-            background-color: rgba(255, 255, 255, 0.5);
-        }
-        .documento-resolucion [contenteditable="true"]:focus {
-            outline: 2px solid #3b82f6;
-            background-color: rgba(59, 130, 246, 0.05);
-        }
     </style>
 
     <div class="header-container">
@@ -149,90 +140,82 @@
 
     <div class="header-fecha">
         <div>
-            <div contenteditable="true">S.M. de Tucumán</div>
-            <div contenteditable="true">{{ !empty($fecha_res) ? formatearFecha($fecha_res) : 'dd MMM YYYY' }}</div>
+            <div>S.M. de Tucumán</div>
+            <div><x-resolucion.campo campo="fecha_res" tipo="date" formato="fecha" /></div>
         </div>
     </div>
 
     <div class="expediente">
-        <span class="underline" contenteditable="true">Expte. N° {{ !empty($num_exp) ? $num_exp : '[NÚMERO]' }}</span>
+        <span class="underline">Expte. N° <x-resolucion.campo campo="num_exp" placeholder="[NÚMERO]" /></span>
     </div>
 
     <div class="numero-resolucion">
-        <h1><span class="underline" contenteditable="true">RESOLUCION N° {{ !empty($num_res) ? $num_res : '[NÚMERO]' }}</span></h1>
+        <h1><span class="underline">RESOLUCION N° <x-resolucion.campo campo="num_res" placeholder="[NÚMERO]" /></span></h1>
     </div>
 
     <div class="seccion-visto pl-8">
-        <span class="font-bold" contenteditable="true">VISTO, </span>
-        <span contenteditable="true">las presentes actuaciones mediante las cuales se solicita la Cancelación Definitiva y Levantamiento de Hipoteca en 1º Grado, correspondiente a la vivienda identificada como </span>
-        <span class="font-bold" contenteditable="true">
-            MANZANA {{ !empty($manzana) ? $manzana : '[MANZANA]' }} -
-            LOTE {{ !empty($lote) ? $lote : '[LOTE]' }}
-            DEL BARRIO {{ !empty($nombre_barrio) ? strtoupper($nombre_barrio) : '[NOMBRE DEL BARRIO]' }}
+        <span class="font-bold">VISTO, </span>
+        <span>las presentes actuaciones mediante las cuales se solicita la Cancelación Definitiva y Levantamiento de Hipoteca en 1º Grado, correspondiente a la vivienda identificada como </span>
+        <span class="font-bold">
+            MANZANA <x-resolucion.campo campo="manzana" placeholder="[MANZANA]" /> -
+            LOTE <x-resolucion.campo campo="lote" placeholder="[LOTE]" />
+            DEL BARRIO <x-resolucion.campo campo="nombre_barrio" placeholder="[NOMBRE DEL BARRIO]" mayusculas />
         </span>
     </div>
 
     <div class="seccion-considerando mt-4">
-        <p><span class="font-bold" contenteditable="true">CONSIDERANDO:</span></p>
+        <p><span class="font-bold">CONSIDERANDO:</span></p>
 
-        <p class="mt-2" contenteditable="true">
-            Que, a fs. {{ !empty($num_foja_solicitud) ? $num_foja_solicitud : '[FOJA]' }} obra solicitud de Cancelación y Levantamiento de Hipoteca de la vivienda.
+        <p class="mt-2">
+            Que, a fs. <x-resolucion.campo campo="num_foja_solicitud" placeholder="[FOJA]" /> obra solicitud de Cancelación y Levantamiento de Hipoteca de la vivienda.
         </p>
 
-        <p contenteditable="true">
-            Que, a fs. {{ !empty($num_foja_informe) ? $num_foja_informe : '[FOJA]' }} obra informe del Departamento Recursos Financieros donde consta que la vivienda se encuentra cancelada con la conformidad dada por la Dirección de Área de Recupero y Regularización Dominial en fecha {{ !empty($fecha_cancelacion) ? formatearFechaLarga($fecha_cancelacion) : '[FECHA]' }} a fs. {{ !empty($num_foja_darrd) ? $num_foja_darrd : '[FOJA]' }}.
+        <p>
+            Que, a fs. <x-resolucion.campo campo="num_foja_informe" placeholder="[FOJA]" /> obra informe del Departamento Recursos Financieros donde consta que la vivienda se encuentra cancelada con la conformidad dada por la Dirección de Área de Recupero y Regularización Dominial en fecha <x-resolucion.campo campo="fecha_cancelacion" placeholder="[FECHA]" tipo="date" formato="fecha_larga" /> a fs. <x-resolucion.campo campo="num_foja_darrd" placeholder="[FOJA]" />.
         </p>
 
-        <p contenteditable="true">
-            Que, a fs. {{ !empty($num_foja_dictamen) ? $num_foja_dictamen : '[FOJA]' }} glosa Dictamen Legal N° 3136/23, en el cual no se ofrecen objeciones legales para la procedencia del presente trámite.
+        <p>
+            Que, a fs. <x-resolucion.campo campo="num_foja_dictamen" placeholder="[FOJA]" /> glosa Dictamen Legal N° 3136/23, en el cual no se ofrecen objeciones legales para la procedencia del presente trámite.
         </p>
 
-        <p class="mt-3" contenteditable="true">Es por lo considerado que:</p>
+        <p class="mt-3">Es por lo considerado que:</p>
     </div>
 
     <div class="bloque-intervencion">
-        <div class="font-bold" contenteditable="true">LA INTERVENCION</div>
-        <div class="font-bold" contenteditable="true">DEL INSTITUTO PROVINCIAL DE VIVIENDA Y DESARROLLO URBANO</div>
-        <div class="font-bold" contenteditable="true">DE TUCUMAN</div>
-        <div class="font-bold mt-1"><span class="underline" contenteditable="true">RESUELVE</span></div>
+        <div class="font-bold">LA INTERVENCION</div>
+        <div class="font-bold">DEL INSTITUTO PROVINCIAL DE VIVIENDA Y DESARROLLO URBANO</div>
+        <div class="font-bold">DE TUCUMAN</div>
+        <div class="font-bold mt-1"><span class="underline">RESUELVE</span></div>
     </div>
 
     <div class="space-y-3">
         <div class="articulo">
-            <p contenteditable="true">
+            <p>
                 <span class="font-bold underline">Art. 1º.- </span>APROBAR la Cancelación Definitiva de la vivienda identificada como
                 <span class="font-bold">
-                    MANZANA {{ !empty($manzana) ? $manzana : '[MANZANA]' }} -
-                    LOTE {{ !empty($lote) ? $lote : '[LOTE]' }}
-                    DEL BARRIO {{ !empty($nombre_barrio) ? strtoupper($nombre_barrio) : '[NOMBRE DEL BARRIO]' }}
+                    MANZANA <x-resolucion.campo campo="manzana" placeholder="[MANZANA]" /> -
+                    LOTE <x-resolucion.campo campo="lote" placeholder="[LOTE]" />
+                    DEL BARRIO <x-resolucion.campo campo="nombre_barrio" placeholder="[NOMBRE DEL BARRIO]" mayusculas />
                 </span>, que fuera otorgada a
-                @if(!empty($nombre_titular) && !empty($dni_titular))
-                    @if(!empty($nombre_cotitular) && !empty($dni_cotitular))
-                        los Señores <span class="font-bold">{{ strtoupper($nombre_titular) }}</span> DNI N° {{ $dni_titular }} y <span class="font-bold">{{ strtoupper($nombre_cotitular) }}</span> DNI N° {{ $dni_cotitular }}
-                    @else
-                        el/la Señor/a <span class="font-bold">{{ strtoupper($nombre_titular) }}</span> DNI N° {{ $dni_titular }}
-                    @endif
-                @else
-                    [NOMBRE Y DNI DEL/LOS TITULAR/ES]
-                @endif
+                <x-resolucion.segun si="nombre_cotitular" con="los Señores" sin="el/la Señor/a" /> <span class="font-bold"><x-resolucion.campo campo="nombre_titular" placeholder="[NOMBRE TITULAR]" mayusculas /></span> DNI N° <x-resolucion.campo campo="dni_titular" placeholder="[DNI TITULAR]" /><x-resolucion.opcional si="nombre_cotitular"> y <span class="font-bold"><x-resolucion.campo campo="nombre_cotitular" placeholder="[NOMBRE COTITULAR]" mayusculas /></span> DNI N° <x-resolucion.campo campo="dni_cotitular" placeholder="[DNI COTITULAR]" /></x-resolucion.opcional>
                 , en un todo de acuerdo a lo informado por el Departamento Recursos Financieros.
             </p>
         </div>
 
         <div class="articulo">
-            <p contenteditable="true">
-                <span class="font-bold underline">Art. 2º.- </span>DISPONER el Levantamiento de Hipoteca en 1º Grado sobre el inmueble referido, oportunamente instrumentada en la Escritura Pública N° {{ !empty($num_escritura) ? $num_escritura : '[NÚMERO]' }} de fecha {{ !empty($fecha_escritura) ? formatearFechaLarga($fecha_escritura) : '[FECHA]' }}, pasada por ante {{ !empty($nombre_escribano) ? strtoupper($nombre_escribano) : '[NOMBRE DEL ESCRIBANO]' }}, Titular del Registro de Gobierno de la Provincia de Tucumán.
+            <p>
+                <span class="font-bold underline">Art. 2º.- </span>DISPONER el Levantamiento de Hipoteca en 1º Grado sobre el inmueble referido, oportunamente instrumentada en la Escritura Pública N° <x-resolucion.campo campo="num_escritura" placeholder="[NÚMERO]" /> de fecha <x-resolucion.campo campo="fecha_escritura" placeholder="[FECHA]" tipo="date" formato="fecha_larga" />, pasada por ante <x-resolucion.campo campo="nombre_escribano" placeholder="[NOMBRE DEL ESCRIBANO]" mayusculas />, Titular del Registro de Gobierno de la Provincia de Tucumán.
             </p>
         </div>
 
         <div class="articulo">
-            <p contenteditable="true">
+            <p>
                 <span class="font-bold underline">Art. 3º.- </span>DEJAR ACLARADO que los titulares deberán presentarse en el Departamento Regularización Dominial de este Organismo, en el horario de 07:00 a 13:30 a los efectos de gestionar el levantamiento de Hipoteca del inmueble oportunamente otorgado.
             </p>
         </div>
 
         <div class="articulo">
-            <p contenteditable="true">
+            <p>
                 <span class="font-bold underline">Art. 4º.- </span>COMUNICAR a los interesados; Áreas y Departamentos de este Instituto, a los fines que a cada uno les competa. Cumplido, PASE a la Dirección del Área de Recupero y Regularización Dominial, a sus efectos.
             </p>
         </div>
@@ -241,18 +224,19 @@
     <div class="firmas">
         <div class="firma-box">
             <div class="linea-firma"></div>
-            <div class="font-bold" contenteditable="true">MARIA GABRIELA LAZARTE</div>
-            <div contenteditable="true">CONTADORA FISCAL</div>
-            <div contenteditable="true">TRIBUNAL DE CUENTAS</div>
+            <div class="font-bold">MARIA GABRIELA LAZARTE</div>
+            <div>CONTADORA FISCAL</div>
+            <div>TRIBUNAL DE CUENTAS</div>
         </div>
         <div class="firma-box center">
             <img src="{{ asset('images/logo-provincia.png') }}" alt="Provincia" />
         </div>
         <div class="firma-box">
             <div class="linea-firma"></div>
-            <div class="font-bold" contenteditable="true">Arq. HUGO CABRAL</div>
-            <div contenteditable="true">INTERVENTOR</div>
-            <div contenteditable="true">I.P.V.y D.U.</div>
+            <div class="font-bold">Arq. HUGO CABRAL</div>
+            <div>INTERVENTOR</div>
+            <div>I.P.V.y D.U.</div>
         </div>
     </div>
 </div>
+</x-resolucion.documento>

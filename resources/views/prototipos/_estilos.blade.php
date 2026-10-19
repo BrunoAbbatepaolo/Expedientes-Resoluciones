@@ -257,22 +257,6 @@
 }
 
 /* EDITABLE */
-.documento-resolucion [contenteditable="true"] {
-    outline: 1px dashed #9ca3af;
-    padding: 2px 4px;
-    border-radius: 3px;
-    transition: all 0.2s;
-    min-width: 30px;
-    display: inline-block;
-}
-.documento-resolucion [contenteditable="true"]:hover {
-    outline: 2px dashed #6b7280;
-    background-color: rgba(255, 255, 255, 0.5);
-}
-.documento-resolucion [contenteditable="true"]:focus {
-    outline: 2px solid #3b82f6;
-    background-color: rgba(59, 130, 246, 0.08);
-}
 
 /* RESPONSIVE */
 @media (max-width: 1250px) {

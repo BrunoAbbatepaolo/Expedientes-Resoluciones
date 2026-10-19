@@ -1,7 +1,8 @@
 {{--
     Un dato de la resolución dentro del documento. Todos los <x-resolucion.campo> con el mismo 'campo' leen y escriben
     $wire.datos[campo]: si el dato aparece varias veces, al tipear en uno se actualizan todos.
-    'predeterminado' se usa si el dato está vacío (y se precarga en el input). 'formato' solo afecta el texto final.
+    'predeterminado' se usa si el dato está vacío (y se precarga en el input). 'formato' y 'mayusculas' solo afectan
+    cómo se ve (el dato queda como se tipeó).
 --}}
 @aware(['editable' => false, 'datos' => []])
 @props([
@@ -11,6 +12,7 @@
     'tipo' => 'text',
     'formato' => null,
     'maxlength' => null,
+    'mayusculas' => false,
 ])
 @php
     $valor = trim((string) ($datos[$campo] ?? ''));
@@ -30,10 +32,10 @@
         data-campo="{{ $campo }}"
         aria-label="{{ $placeholder ?: $campo }}"
         autocomplete="off"
-        {{ $attributes->class('campo-plantilla') }} />{{-- sin salto antes de @else/@endif: sumaría un espacio en el texto ("(123 )") --}}@else
+        {{ $attributes->class(['campo-plantilla', 'campo-mayusculas' => $mayusculas]) }} />{{-- sin salto antes de @else/@endif: sumaría un espacio en el texto ("(123 )") --}}@else
     <span {{ $attributes }}>{{ match ($formato) {
         'fecha' => formatearFecha($valor),
         'fecha_larga' => formatearFechaLarga($valor),
         'moneda' => formatearMoneda($valor),
-        default => $valor,
+        default => $mayusculas ? mb_strtoupper($valor) : $valor,
     } }}</span>@endif
