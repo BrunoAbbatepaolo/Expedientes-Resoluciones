@@ -60,10 +60,10 @@ test('modo personalizado: guarda con datos reales y avisa con un cartel de éxit
     expect(Resolucion::count())->toBe(1);
 });
 
-test('modelo completo: con todo vacío no guarda y muestra qué falta', function () {
+test('plantilla completa: con todo vacío no guarda y muestra qué falta', function () {
     Livewire::actingAs(editorDeResoluciones())->test(CrearResolucion::class, ['tipo' => 'Cancelaciones'])
-        ->set('modo', 'completo')
-        ->call('guardar')
+        ->set('modo', 'plantilla')
+        ->call('guardarPlantilla')
         ->assertHasErrors(['datos.num_exp', 'datos.num_res', 'datos.nombre_titular', 'datos.dni_titular'])
         ->assertSee('Revisá lo siguiente:')
         ->assertSee('El número de expediente es obligatorio')
@@ -74,20 +74,20 @@ test('modelo completo: con todo vacío no guarda y muestra qué falta', function
 
 test('Rectificación y Transferencias no exigen un titular que su formulario no tiene', function () {
     $rectificacion = Livewire::actingAs(editorDeResoluciones())->test(CrearResolucion::class, ['tipo' => 'Rectificacion'])
-        ->set('modo', 'completo')
+        ->set('modo', 'plantilla')
         ->set('datos.num_exp', '1234/440-2026')
         ->set('datos.num_res', '55/2026')
-        ->call('guardar')
+        ->call('guardarPlantilla')
         ->assertHasNoErrors()
         ->assertDispatched('toast', type: 'success');
 
     expect(Resolucion::count())->toBe(1);
 
     Livewire::actingAs(editorDeResoluciones())->test(CrearResolucion::class, ['tipo' => 'Transferencias'])
-        ->set('modo', 'completo')
+        ->set('modo', 'plantilla')
         ->set('datos.num_exp', '1235/440-2026')
         ->set('datos.num_res', '56/2026')
-        ->call('guardar')
+        ->call('guardarPlantilla')
         ->assertHasErrors(['datos.nombre_titular_nuevo', 'datos.dni_titular_nuevo'])
         ->assertHasNoErrors(['datos.nombre_titular', 'datos.dni_titular']);
 });
@@ -143,7 +143,7 @@ test('subir un PDF del mismo tipo precarga el formulario, lo adjunta y avisa par
     Livewire::actingAs(editorDeResoluciones())->test(CrearResolucion::class, ['tipo' => 'Cancelaciones'])
         ->set('documentoAnalizar', pdfDeCancelacion())
         ->assertHasNoErrors()
-        ->assertSet('modo', 'completo')
+        ->assertSet('modo', 'plantilla')
         ->assertSet('datos.num_exp', '1234/440-2026')
         ->assertSet('datos.num_res', '55/2026')
         ->assertSet('datos.fecha_res', '2026-05-20')
@@ -169,7 +169,7 @@ test('subir un PDF de otro tipo sugiere cambiar de formulario y los datos viajan
         ->assertRedirect(route('resoluciones.crear', ['tipo' => 'Cancelaciones']));
 
     Livewire::actingAs($user)->test(CrearResolucion::class, ['tipo' => 'Cancelaciones'])
-        ->assertSet('modo', 'completo')
+        ->assertSet('modo', 'plantilla')
         ->assertSet('datos.num_exp', '1234/440-2026')
         ->assertSet('datos.nombre_barrio', 'Los Aromos');
 });
@@ -195,11 +195,11 @@ test('un archivo que no es PDF ni Word se rechaza con un mensaje claro', functio
         ->assertSet('documentoAnalizar', null);
 });
 
-test('en el modelo completo se puede adjuntar un PDF a la resolución', function () {
+test('en la plantilla completa se puede adjuntar un PDF a la resolución', function () {
     \Illuminate\Support\Facades\Storage::fake('local');
 
     Livewire::actingAs(editorDeResoluciones())->test(CrearResolucion::class, ['tipo' => 'Cancelaciones'])
-        ->set('modo', 'completo')
+        ->set('modo', 'plantilla')
         ->assertSee('Agregar PDF')
         ->set('tempArchivos', [\Illuminate\Http\UploadedFile::fake()->create('dni.pdf', 20, 'application/pdf')])
         ->assertHasNoErrors()
@@ -208,12 +208,12 @@ test('en el modelo completo se puede adjuntar un PDF a la resolución', function
 });
 
 
-test('no se guarda una resolución de un expediente que no existe (formulario y modo personalizado)', function () {
+test('no se guarda una resolución de un expediente que no existe (plantilla completa y modo personalizado)', function () {
     Livewire::actingAs(editorDeResoluciones())->test(CrearResolucion::class, ['tipo' => 'Rectificacion'])
-        ->set('modo', 'completo')
+        ->set('modo', 'plantilla')
         ->set('datos.num_exp', '9999/440-2026')
         ->set('datos.num_res', '55/2026')
-        ->call('guardar')
+        ->call('guardarPlantilla')
         ->assertHasErrors('datos.num_exp')
         ->assertSee('no existe');
 
@@ -236,10 +236,10 @@ test('no se guarda una resolución de un expediente que no existe (formulario y 
 test('un expediente puede tener más de una resolución', function () {
     foreach (['55/2026', '56/2026'] as $numero) {
         Livewire::actingAs(editorDeResoluciones())->test(CrearResolucion::class, ['tipo' => 'Rectificacion'])
-            ->set('modo', 'completo')
+            ->set('modo', 'plantilla')
             ->set('datos.num_exp', '1234/440-2026')
             ->set('datos.num_res', $numero)
-            ->call('guardar')
+            ->call('guardarPlantilla')
             ->assertHasNoErrors();
     }
 
@@ -248,16 +248,16 @@ test('un expediente puede tener más de una resolución', function () {
 
 test('el campo de expediente confirma que existe y avisa si no', function () {
     Livewire::actingAs(editorDeResoluciones())->test(CrearResolucion::class, ['tipo' => 'Cancelaciones'])
-        ->set('modo', 'completo')
+        ->set('modo', 'plantilla')
         ->set('datos.num_exp', '1234/440-2026')
         ->assertSee('Expediente encontrado: GARCIA, ANA')
         ->set('datos.num_exp', '1/1-1')
         ->assertSee('No existe ese expediente');
 });
 
-test('quitar un artículo en la vista previa renumera los siguientes y también lo guardado', function () {
+test('quitar un artículo en el documento renumera los siguientes y también lo guardado', function () {
     $componente = Livewire::actingAs(editorDeResoluciones())->test(CrearResolucion::class, ['tipo' => 'Cancelaciones'])
-        ->set('modo', 'completo')
+        ->set('modo', 'plantilla')
         ->assertSee('Art. 4º.-', false)
         ->call('quitarArticulo', 2)
         ->assertSet('articulosQuitados', [2])
@@ -267,7 +267,7 @@ test('quitar un artículo en la vista previa renumera los siguientes y también 
 
     $componente->set('datos.num_exp', '1234/440-2026')->set('datos.num_res', '938/2026')
         ->set('datos.nombre_titular', 'ANA GARCIA')->set('datos.dni_titular', '1')
-        ->call('guardar')->assertHasNoErrors();
+        ->call('guardarPlantilla')->assertHasNoErrors();
 
     $html = Resolucion::first()->plantilla;
     expect($html)->not->toContain('DISPONER el Levantamiento')
@@ -277,7 +277,7 @@ test('quitar un artículo en la vista previa renumera los siguientes y también 
 
 test('se pueden restaurar los artículos y no se puede quitar el último', function () {
     $c = Livewire::actingAs(editorDeResoluciones())->test(CrearResolucion::class, ['tipo' => 'Cancelaciones'])
-        ->set('modo', 'completo')
+        ->set('modo', 'plantilla')
         ->call('quitarArticulo', 1)->call('quitarArticulo', 2)->call('quitarArticulo', 3)
         ->call('quitarArticulo', 4)
         ->assertSet('articulosQuitados', [1, 2, 3])
@@ -297,4 +297,102 @@ test('Articulos renumera de corrido y respeta los artículos citados (data-art-f
 
     expect($r)->toContain('Art. 1º.- </span>A')->toContain('Art. 1º.- </span>CITADO')->toContain('Art. 2º.- </span>C')
         ->not->toContain('>B<')->not->toContain('Art. 3º');
+});
+
+function aplicarPagosCompleto(User $user)
+{
+    return Livewire::actingAs($user)->test(CrearResolucion::class, ['tipo' => 'AplicarPagos'])
+        ->call('usarPlantilla')
+        ->set('datos.num_exp', '1234/440-2026')
+        ->set('datos.codigo_pago', '778899')
+        ->set('datos.monto', '15000.50')
+        ->set('datos.cuotas_adeudadas', '3');
+}
+
+test('plantilla completa: cada dato del documento es un input ligado a datos (los repetidos comparten el mismo dato)', function () {
+    $html = Livewire::actingAs(editorDeResoluciones())->test(CrearResolucion::class, ['tipo' => 'AplicarPagos'])
+        ->call('usarPlantilla')
+        ->assertSet('modo', 'plantilla')
+        ->instance()->documentoEditable();
+    $html = html_entity_decode($html, ENT_QUOTES); // el navegador decodifica &#039; en los atributos
+
+    expect(substr_count($html, 'x-model="$wire.datos[\'codigo_pago\']"'))->toBe(3)
+        ->and($html)->toContain('x-model="$wire.datos[\'num_exp\']"')
+        ->and($html)->toContain('x-model="$wire.datos[\'monto\']"')
+        ->and($html)->not->toMatch('/<[a-z][^>]*contenteditable/');
+});
+
+test('Aplicar pagos: guarda con los datos del documento, sin pedir número de resolución ni titular', function () {
+    $c = aplicarPagosCompleto(editorDeResoluciones())
+        ->call('guardarPlantilla')
+        ->assertHasNoErrors()
+        ->assertDispatched('toast', type: 'success');
+
+    $resolucion = Resolucion::sole();
+    expect($c->get('resolucionGuardadaId'))->toBe($resolucion->id)
+        ->and($resolucion->tipo)->toBe('AplicarPagos')
+        ->and($resolucion->datos['campos']['codigo_pago'])->toBe('778899')
+        ->and(substr_count($resolucion->plantilla, '778899'))->toBe(3)
+        ->and($resolucion->plantilla)->toContain('15000.50')->not->toContain('<input')->not->toContain('[MONTO]')
+        ->and(session('resolucion_guardada.id'))->toBe($resolucion->id);
+
+    // Otro clic en "Guardar" no la duplica.
+    $c->call('guardarPlantilla');
+    expect(Resolucion::count())->toBe(1);
+});
+
+test('Aplicar pagos: si faltan datos no guarda, avisa qué falta y conserva lo cargado', function () {
+    Livewire::actingAs(editorDeResoluciones())->test(CrearResolucion::class, ['tipo' => 'AplicarPagos'])
+        ->call('usarPlantilla')
+        ->set('datos.num_exp', '1234/440-2026')
+        ->set('datos.codigo_pago', '778899')
+        ->call('guardarPlantilla')
+        ->assertHasErrors(['datos.monto', 'datos.cuotas_adeudadas'])
+        ->assertHasNoErrors(['datos.num_res', 'datos.nombre_titular', 'datos.codigo_pago'])
+        ->assertSee('El monto es obligatorio')
+        ->assertSet('modo', 'plantilla')
+        ->assertSet('datos.codigo_pago', '778899')
+        ->assertSet('datos.num_exp', '1234/440-2026');
+
+    expect(Resolucion::count())->toBe(0);
+});
+
+test('Aplicar pagos: el PDF imprimible arma el documento con su diseño y los datos guardados', function () {
+    $user = editorDeResoluciones();
+    Permiso::create(['user_id' => $user->id, 'nombre' => 'resolucion_ver']);
+    aplicarPagosCompleto($user)->call('guardarPlantilla')->assertHasNoErrors();
+
+    $this->actingAs($user)->get(route('resoluciones.imprimir', Resolucion::sole()))
+        ->assertOk()
+        ->assertSee('class="sheet"', false)
+        ->assertSee('778899')
+        ->assertSee('DEPARTAMENTO RECURSOS FINANCIEROS')
+        ->assertSee('window.print()', false)
+        ->assertDontSee('<input', false);
+});
+
+test('el PDF imprimible respeta la oficina de la resolución', function () {
+    aplicarPagosCompleto(editorDeResoluciones())->call('guardarPlantilla')->assertHasNoErrors();
+
+    $otro = editorDeResoluciones();
+    Permiso::create(['user_id' => $otro->id, 'nombre' => 'resolucion_ver']);
+
+    $this->actingAs($otro)->get(route('resoluciones.imprimir', Resolucion::sole()))->assertForbidden();
+});
+
+test('subir la nota de Aplicar pagos en PDF completa el código, el monto y las cuotas en la plantilla', function () {
+    \Illuminate\Support\Facades\Storage::fake('local');
+
+    Livewire::actingAs(editorDeResoluciones())->test(CrearResolucion::class, ['tipo' => 'AplicarPagos'])
+        ->set('documentoAnalizar', \Illuminate\Http\UploadedFile::fake()->createWithContent('nota.pdf', pdfConTexto([
+            'Expte. N 1234/440-2026',
+            'SR. JEFE DEPARTAMENTO COMPUTOS ING. FEDERICO CONRAD:',
+            'REF.: APLICAR PAGO - CODIGO (445566)',
+            'Remito las presentes actuaciones a fin que se proceda a aplicar al CODIGO (445566) EL pago especial de $ 15.000,50 a las 3 cuotas adeudadas',
+        ])))
+        ->assertHasNoErrors()
+        ->assertSet('modo', 'plantilla')
+        ->assertSet('datos.codigo_pago', '445566')
+        ->assertSet('datos.monto', '15000.50')
+        ->assertSet('datos.cuotas_adeudadas', '3');
 });

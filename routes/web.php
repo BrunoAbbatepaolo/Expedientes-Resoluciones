@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\ImprimirExpedienteIpvController;
+use App\Http\Controllers\ImprimirResolucionController;
 use App\Http\Controllers\InformesExpedientesController;
 use App\Http\Controllers\IngresosOficinaCsvController;
 use App\Http\Controllers\ResolucionArchivoController;
@@ -91,6 +92,9 @@ Route::middleware(['auth', 'password.change'])->group(function () {
     Route::get('/resoluciones/{resolucion}/pdf', [ResolucionArchivoController::class, 'pdf'])
         ->whereNumber('resolucion')
         ->name('resoluciones.pdf');
+    Route::get('/resoluciones/{resolucion}/imprimir', ImprimirResolucionController::class)
+        ->whereNumber('resolucion')
+        ->name('resoluciones.imprimir');
 });
 
 require __DIR__.'/auth.php';

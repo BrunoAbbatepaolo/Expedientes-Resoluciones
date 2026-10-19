@@ -28,7 +28,17 @@ class Resolucion extends Model
         'cod_barrio',
         'cod_casa',
         'pdf',
+        'tipo',
+        'datos',
     ];
+
+    /** datos: ['campos' => [...], 'articulos_quitados' => [...]] de la "Plantilla completa" (ver Documento). */
+    protected function casts(): array
+    {
+        return [
+            'datos' => 'array',
+        ];
+    }
 
     public function expediente(): BelongsTo
     {

@@ -8,6 +8,15 @@
             Sistema de Carga de Resoluciones
         </h1>
 
+        {{-- Recién guardada desde "Plantilla completa": el PDF se abre en otra pestaña; si el navegador la bloqueó, queda el enlace. --}}
+        @php $guardada = session()->pull('resolucion_guardada'); @endphp
+        @if ($guardada)
+            <div role="status" class="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-emerald-600/25 bg-emerald-600/10 px-4 py-3 text-sm text-emerald-800 dark:text-emerald-300">
+                <span>Resolución guardada{{ $guardada['numero_exp'] ? ' (expediente '.$guardada['numero_exp'].')' : '' }}.</span>
+                <a href="{{ route('resoluciones.imprimir', $guardada['id']) }}" target="_blank" rel="noopener" class="font-semibold underline">Imprimir / Guardar PDF</a>
+            </div>
+        @endif
+
         <div class="flex items-center gap-2">
             <input type="text" placeholder="Búsqueda de resoluciones"
                 class="w-full rounded-lg border border-ipv-blue/20 bg-white/80 px-4 py-2 text-sm text-ipv-ink focus:outline-none focus:ring-2 focus:ring-ipv-blue/40 dark:border-white/15 dark:bg-white/[0.06] dark:text-ipv-ink-dark">
@@ -79,8 +88,17 @@
                                         </svg>
                                         Ver PDF{{ $resolucion->archivos->count() > 1 ? ' ('.$resolucion->archivos->count().')' : '' }}
                                     </a>
-                                @else
+                                @elseif (! $resolucion->plantilla)
                                     <span class="text-sm text-ipv-ink/40 dark:text-ipv-ink-dark/40">—</span>
+                                @endif
+                                @if ($resolucion->plantilla)
+                                    <a href="{{ route('resoluciones.imprimir', $resolucion) }}" target="_blank" rel="noopener"
+                                        class="ml-2 inline-flex items-center gap-1 text-sm text-ipv-blue transition-colors duration-200 hover:opacity-80 dark:text-ipv-blue-light" title="Imprimir o guardar como PDF">
+                                        <svg class="size-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M6 9V3h12v6M6 18H4a1 1 0 01-1-1v-6a2 2 0 012-2h14a2 2 0 012 2v6a1 1 0 01-1 1h-2M7 14h10v7H7z" />
+                                        </svg>
+                                        Imprimir
+                                    </a>
                                 @endif
                             </td>
 

@@ -7,12 +7,12 @@ use App\Models\ResolucionArchivo;
 use App\Services\ExpedientesIpv;
 use App\Services\Resoluciones\AnalizadorResolucion;
 use App\Services\Resoluciones\Articulos;
+use App\Services\Resoluciones\Documento;
 use App\Services\Resoluciones\LectorDocumento;
 use App\Traits\AuthorizesOficina;
 use App\Traits\NotificaUi;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Facades\View;
 use Illuminate\Validation\ValidationException;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Locked;
@@ -30,7 +30,11 @@ class CrearResolucion extends Component
     #[Locked]
     public string $tipo;
 
-    public string $modo = ''; // 'completo' o 'personalizado'
+    public string $modo = ''; // 'plantilla' (datos editados en el documento) o 'personalizado' (editor libre)
+
+    /** Ya guardada en esta pantalla: evita guardarla dos veces con otro clic. */
+    #[Locked]
+    public ?int $resolucionGuardadaId = null;
 
     /** Posiciones (1..n) de los artículos de RESUELVE que se quitaron de la vista previa; ver Articulos. */
     #[Locked]
@@ -151,9 +155,6 @@ class CrearResolucion extends Component
     // Plantilla para el modo personalizado
     public string $plantilla = '';
 
-    // Cache para la vista previa
-    private ?string $vistaPrevia = null;
-
     public function getDisplayNameProperty(): string
     {
         return match ($this->tipo) {
@@ -179,15 +180,15 @@ class CrearResolucion extends Component
         if (is_array($sugerida) && ($sugerida['tipo'] ?? null) === $tipo) {
             session()->forget('sugerencia_resolucion');
             $cargados = $this->aplicarDatosDetectados($sugerida['datos'] ?? []);
-            $this->modo = 'completo';
+            $this->modo = 'plantilla';
             $this->toast('info', "Completé {$cargados} campos con los datos del documento. Revisalos antes de guardar y volvé a adjuntar el archivo si lo necesitás.", 8000);
         }
     }
 
-    public function usarCompleto()
+    public function usarPlantilla(): void
     {
-        $this->modo = 'completo';
-        $this->resetearVistaPrevia();
+        // Sin resetear: si se llegó desde "Autocompletar", los datos del documento ya están cargados.
+        $this->modo = 'plantilla';
     }
 
     public function usarPersonalizado()
@@ -196,36 +197,18 @@ class CrearResolucion extends Component
         $this->cargarPlantillaEditable();
     }
 
-    public function verPlantillaCompleta()
-    {
-        $this->modo = 'plantilla';
-        $this->resetFormulario();
-        $this->cargarPlantillaHtml();
-    }
-
-    public function cargarPlantillaHtml(): void
-    {
-        $this->plantilla = $this->plantillaCompletaHtml();
-    }
-
     /**
-     * HTML del prototipo con datos de ejemplo. La vista lo imprime sin escapar, por
-     * eso se genera en el servidor en vez de leer $plantilla (que el cliente puede
-     * modificar vía wire:model).
+     * Documento del modo 'plantilla' con los datos como inputs (ligados a $wire.datos). La vista lo imprime
+     * sin escapar: se arma en el servidor y los datos van escapados por Blade dentro de los componentes.
      */
-    public function plantillaCompletaHtml(): string
+    public function documentoEditable(): string
     {
         try {
-            $datosConFunciones = array_merge($this->getDatosEjemplo(), [
-                'formatearFecha' => 'formatearFecha',
-                'formatearFechaLarga' => 'formatearFechaLarga',
-                'formatearMoneda' => 'formatearMoneda',
-                'num2letras' => 'num2letras',
-            ]);
+            return Documento::html($this->tipo, $this->datos, $this->articulosQuitados, true);
+        } catch (\Throwable $e) {
+            report($e);
 
-            return View::make("prototipos.{$this->tipo}", $datosConFunciones)->render();
-        } catch (\Exception $e) {
-            return e($this->mensajePlantillaNoDisponible());
+            return "<div class='text-red-500'>No se pudo mostrar la plantilla.</div>";
         }
     }
 
@@ -330,19 +313,62 @@ class CrearResolucion extends Component
         ];
     }
 
-    // Botón "Guardar resolución" del modo 'plantilla': mismo guardado que el personalizado.
-    public function guardarPlantilla()
+    /**
+     * "Guardar resolución" del modo 'plantilla'. El documento se arma en el servidor desde $datos (lo que se tipeó
+     * en los campos del documento), no desde el DOM. Devuelve la URL para imprimirla, o null si no se guardó:
+     * en ese caso la pantalla queda como estaba (los datos no se pierden).
+     */
+    public function guardarPlantilla(): ?string
     {
-        $this->guardarPersonalizado();
+        if ($this->resolucionGuardadaId) {
+            return route('resoluciones.imprimir', $this->resolucionGuardadaId);
+        }
+
+        if (! Documento::existe($this->tipo)) {
+            $this->toast('error', $this->mensajePlantillaNoDisponible(), 6000);
+
+            return null;
+        }
+
+        $this->validarConAviso($this->reglasPlantilla(), $this->messages());
+
+        try {
+            $resolucion = $this->persistirResolucion(
+                numeroExp: trim($this->datos['num_exp']),
+                numeroResolucion: $this->datos['num_res'] ?? null,
+                fecha: $this->datos['fecha_res'],
+                codBarrio: $this->datos['manzana'] ?? null,
+                codCasa: $this->datos['lote'] ?? null,
+                plantilla: Documento::html($this->tipo, $this->datos, $this->articulosQuitados),
+                tipo: $this->tipo,
+                datos: ['campos' => $this->datos, 'articulos_quitados' => $this->articulosQuitados],
+            );
+        } catch (\Exception $e) {
+            $this->flashErrorGuardado($e);
+
+            return null;
+        }
+
+        $this->resolucionGuardadaId = $resolucion->id;
+        // La lista lo muestra con el enlace para imprimir (por si el navegador bloqueó la pestaña nueva).
+        session()->put('resolucion_guardada', ['id' => $resolucion->id, 'numero_exp' => $resolucion->numero_exp]);
+        $this->toast('success', 'Resolución guardada. Abriendo el PDF…', 4000);
+
+        return route('resoluciones.imprimir', $resolucion);
     }
 
+    /**
+     * @param  array{campos: array<string, mixed>, articulos_quitados: list<int>}|null  $datos
+     */
     private function persistirResolucion(
         string $numeroExp,
         ?string $numeroResolucion,
         string $fecha,
         ?string $codBarrio,
         ?string $codCasa,
-        string $plantilla
+        string $plantilla,
+        ?string $tipo = null,
+        ?array $datos = null,
     ): Resolucion {
         // Sin oficina la resolución quedaría visible y editable para todas las
         // oficinas (ver AuthorizesOficina::autorizarResolucion()).
@@ -354,7 +380,7 @@ class CrearResolucion extends Component
         $rutasGuardadas = [];
 
         try {
-            $resolucion = DB::transaction(function () use ($oficinaId, $numeroExp, $numeroResolucion, $fecha, $codBarrio, $codCasa, $plantilla, &$rutasGuardadas) {
+            $resolucion = DB::transaction(function () use ($oficinaId, $numeroExp, $numeroResolucion, $fecha, $codBarrio, $codCasa, $plantilla, $tipo, $datos, &$rutasGuardadas) {
                 $resolucion = Resolucion::create([
                     'oficina_id' => $oficinaId,
                     'numero_exp' => $numeroExp,
@@ -369,6 +395,8 @@ class CrearResolucion extends Component
                     // personalizado (HTML libre del usuario) y podría contener HTML/JS
                     // malicioso si se muestra sin escapar a otros usuarios/oficinas.
                     'plantilla' => Purifier::clean($plantilla),
+                    'tipo' => $tipo,
+                    'datos' => $datos,
                 ]);
 
                 foreach ($this->archivosPDF as $archivo) {
@@ -525,7 +553,7 @@ class CrearResolucion extends Component
         }
 
         $cargados = $this->aplicarDatosDetectados($resultado['datos']);
-        $this->modo = 'completo';
+        $this->modo = 'plantilla';
         if (strtolower($archivo->getClientOriginalExtension()) === 'pdf') {
             $this->adjuntar($archivo);
         }
@@ -551,7 +579,6 @@ class CrearResolucion extends Component
                 $cargados++;
             }
         }
-        $this->resetearVistaPrevia();
 
         return $cargados;
     }
@@ -569,42 +596,6 @@ class CrearResolucion extends Component
             'ReconocimientoCuotaPagadaNoCargada' => 'Reconocimiento de cuota pagada y no cargada',
             default => $tipo,
         };
-    }
-
-    public function guardar()
-    {
-        if (! View::exists("prototipos.{$this->tipo}")) {
-            $this->toast('error', $this->mensajePlantillaNoDisponible(), 6000);
-
-            return;
-        }
-
-        $this->validarConAviso($this->rules(), $this->messages());
-
-        try {
-            $html = Articulos::procesar(View::make("prototipos.{$this->tipo}", array_merge($this->datos, [
-                'formatearFecha' => 'formatearFecha',
-                'formatearFechaLarga' => 'formatearFechaLarga',
-                'formatearMoneda' => 'formatearMoneda',
-                'num2letras' => 'num2letras',
-            ]))->render(), $this->articulosQuitados, false);
-
-            $cantidadArchivos = count($this->archivosPDF);
-
-            $this->persistirResolucion(
-                numeroExp: $this->datos['num_exp'],
-                numeroResolucion: $this->datos['num_res'] ?? null,
-                fecha: $this->datos['fecha_res'],
-                codBarrio: $this->datos['manzana'] ?? null,
-                codCasa: $this->datos['lote'] ?? null,
-                plantilla: $html,
-            );
-
-            $this->toast('success', 'Resolución guardada exitosamente'.($cantidadArchivos ? " con {$cantidadArchivos} archivo(s)" : ''), 4000);
-            $this->resetFormulario();
-        } catch (\Exception $e) {
-            $this->flashErrorGuardado($e);
-        }
     }
 
     public function guardarPersonalizado()
@@ -668,25 +659,11 @@ class CrearResolucion extends Component
         }
     }
 
-    public function updated($propertyName)
-    {
-        // Resetear cache cuando cambien los datos
-        if (str_starts_with($propertyName, 'datos.')) {
-            $this->resetearVistaPrevia();
-        }
-    }
-
-    /** Saca un artículo de la vista previa (y de lo que se guarda); los siguientes se renumeran solos. */
+    /** Saca un artículo del documento (y de lo que se guarda); los siguientes se renumeran solos. */
     public function quitarArticulo(int $posicion): void
     {
         try {
-            $total = Articulos::contar(View::make("prototipos.{$this->tipo}", array_merge($this->datos, [
-                'formatearFecha' => 'formatearFecha',
-                'formatearFechaLarga' => 'formatearFechaLarga',
-                'formatearMoneda' => 'formatearMoneda',
-                'num2letras' => 'num2letras',
-                'numero_tramite' => '',
-            ]))->render());
+            $total = Articulos::contar(Documento::html($this->tipo, $this->datos));
         } catch (\Throwable $e) {
             report($e);
 
@@ -704,73 +681,18 @@ class CrearResolucion extends Component
         }
 
         $this->articulosQuitados[] = $posicion;
-        $this->resetearVistaPrevia();
     }
 
     public function restaurarArticulos(): void
     {
         $this->articulosQuitados = [];
-        $this->resetearVistaPrevia();
-    }
-
-    public function getVistaPrevia(): string
-    {
-        if ($this->vistaPrevia === null) {
-            $this->vistaPrevia = $this->generarVistaPrevia();
-        }
-
-        return $this->vistaPrevia;
-    }
-
-    private function generarVistaPrevia(): string
-    {
-        try {
-            $datos = array_merge($this->datos, [
-                'formatearFecha' => 'formatearFecha',
-                'formatearFechaLarga' => 'formatearFechaLarga',
-                'formatearMoneda' => 'formatearMoneda',
-                'num2letras' => 'num2letras',
-                'numero_tramite' => $this->generarNumeroTramite(),
-            ]);
-
-            return Articulos::procesar(View::make("prototipos.{$this->tipo}", $datos)->render(), $this->articulosQuitados, true);
-        } catch (\Exception $e) {
-            report($e);
-
-            return "<div class='text-red-500'>No se pudo generar la vista previa.</div>";
-        }
-    }
-
-    private function resetearVistaPrevia(): void
-    {
-        $this->vistaPrevia = null;
-    }
-
-    private function resetFormulario(): void
-    {
-        $this->datos = array_fill_keys(array_keys($this->datos), '');
-        // Restaurar el valor por defecto de la fecha, manteniéndolo en Y-m-d
-        $this->datos['fecha_res'] = date('Y-m-d');
-        $this->articulosQuitados = [];
-        $this->resetearVistaPrevia();
     }
 
     protected function cargarPlantillaEditable(): void
     {
         try {
-            $datosConFunciones = array_merge($this->getDatosEjemplo(), [
-                'formatearFecha' => 'formatearFecha',
-                'formatearFechaLarga' => 'formatearFechaLarga',
-                'formatearMoneda' => 'formatearMoneda',
-                'num2letras' => 'num2letras',
-            ]);
-
-            // Renderizar el prototipo con datos placeholder
-            $contenidoHTML = View::make("prototipos.{$this->tipo}", $datosConFunciones)->render();
-
-            // Convertir a texto plano manteniendo estructura
-            $this->plantilla = $this->convertirHTMLaTexto($contenidoHTML);
-
+            // El prototipo con marcadores ([NÚMERO_EXPEDIENTE]...) pasado a texto para el editor libre.
+            $this->plantilla = $this->convertirHTMLaTexto(Documento::html($this->tipo, $this->getDatosEjemplo()));
         } catch (\Exception $e) {
             // Sin plantilla base: se deja vacío para que la persona escriba desde cero
             // en vez de precargar un mensaje de error que podría guardarse por accidente.
@@ -800,17 +722,6 @@ class CrearResolucion extends Component
         $texto = str_replace(['. ', ':', 'Resolución Nº'], [".\n\n", ":\n", "\nResolución Nº"], $texto);
 
         return trim($texto);
-    }
-
-    public function generarNumeroTramite(): string
-    {
-        $año = date('Y');
-        do {
-            $numero = str_pad((string) rand(1, 9999), 4, '0', STR_PAD_LEFT);
-            $numeroTramite = "{$numero}/440-{$año}";
-        } while (\App\Models\Resolucion::where('numero_exp', $numeroTramite)->exists());
-
-        return $numeroTramite;
     }
 
     protected function rules(): array
@@ -886,7 +797,52 @@ class CrearResolucion extends Component
             // Campos específicos de AplicarPagos
             'datos.año_cuotas' => 'nullable|integer|min:2020|max:2100',
             'datos.fecha_primer_pago' => 'nullable|date',
+            'datos.codigo_pago' => 'nullable|string|max:20',
+            'datos.monto' => 'nullable|string|max:30',
+            'datos.cuotas_adeudadas' => 'nullable|string|max:10',
+            'datos.causante' => 'nullable|string|max:255',
+            'datos.jefe_computos' => 'nullable|string|max:255',
+            'datos.firma_1_nombre' => 'nullable|string|max:255',
+            'datos.firma_1_cargo' => 'nullable|string|max:255',
+            'datos.firma_2_nombre' => 'nullable|string|max:255',
+            'datos.firma_2_cargo' => 'nullable|string|max:255',
         ];
+    }
+
+    /**
+     * Datos obligatorios de los tipos cuya plantilla no tiene todos los de rules() (p. ej. una nota de
+     * Aplicar pagos no lleva número de resolución ni titular): sin esto no se podría guardar nunca,
+     * porque el dato exigido no aparece en el documento. null = se usan las reglas de rules() tal cual.
+     *
+     * @return list<string>|null
+     */
+    private function camposObligatorios(): ?array
+    {
+        return match ($this->tipo) {
+            'AplicarPagos' => ['fecha_res', 'num_exp', 'codigo_pago', 'monto', 'cuotas_adeudadas'],
+            default => null,
+        };
+    }
+
+    /** rules() con 'required' solo en los datos obligatorios de la plantilla de este tipo. */
+    private function reglasPlantilla(): array
+    {
+        $reglas = $this->rules();
+        $obligatorios = $this->camposObligatorios();
+        if ($obligatorios === null) {
+            return $reglas;
+        }
+
+        foreach ($reglas as $clave => $regla) {
+            $lista = array_values(array_filter(
+                is_array($regla) ? $regla : explode('|', $regla),
+                fn ($r) => ! in_array($r, ['required', 'nullable'], true),
+            ));
+            $campo = substr($clave, strlen('datos.'));
+            $reglas[$clave] = [in_array($campo, $obligatorios, true) ? 'required' : 'nullable', ...$lista];
+        }
+
+        return $reglas;
     }
 
     private function tipoConTitularNuevo(): bool
@@ -951,6 +907,9 @@ class CrearResolucion extends Component
             'datos.num_res.required' => 'El número de resolución es obligatorio',
             'datos.nombre_titular.required' => 'El nombre del titular es obligatorio',
             'datos.dni_titular.required' => 'El DNI del titular es obligatorio',
+            'datos.codigo_pago.required' => 'El código de pago es obligatorio',
+            'datos.monto.required' => 'El monto es obligatorio',
+            'datos.cuotas_adeudadas.required' => 'La cantidad de cuotas adeudadas es obligatoria',
             'datos.*.max' => 'El campo excede la longitud máxima permitida',
             'datos.*.date' => 'El campo debe ser una fecha válida',
         ];
