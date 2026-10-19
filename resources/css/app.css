@@ -1,5 +1,4 @@
 @import 'tailwindcss';
-@import 'quill/dist/quill.snow.css';
 
 @source '../views';
 @source '../../app/Enums';
@@ -784,61 +783,6 @@
         scroll-behavior: smooth;
     }
 }
-
-/* Quill dark mode overrides */
-.dark .ql-toolbar.ql-snow,
-.dark .ql-container.ql-snow {
-    border-color: #3f3f46 !important;
-}
-.dark .ql-toolbar.ql-snow {
-    background: #27272a;
-}
-.dark .ql-toolbar.ql-snow .ql-stroke {
-    stroke: #a1a1aa;
-}
-.dark .ql-toolbar.ql-snow .ql-fill {
-    fill: #a1a1aa;
-}
-.dark .ql-toolbar.ql-snow button:hover .ql-stroke,
-.dark .ql-toolbar.ql-snow button.ql-active .ql-stroke {
-    stroke: #60a5fa;
-}
-.dark .ql-toolbar.ql-snow button:hover .ql-fill,
-.dark .ql-toolbar.ql-snow button.ql-active .ql-fill {
-    fill: #60a5fa;
-}
-.dark .ql-editor.ql-blank {
-    color: #e4e4e7;
-}
-.dark .ql-snow .ql-picker-label {
-    color: #a1a1aa;
-}
-.dark .ql-snow .ql-picker-options {
-    background: #3f3f46;
-    border-color: #3f3f46;
-}
-.dark .ql-tooltip {
-    background: #3f3f46;
-    color: #e4e4e7;
-    border-color: #52525b;
-}
-
-/* Quill editor — documento resolucion */
-.documento-ql-editor {
-    font-family: 'Times New Roman', Times, serif;
-    font-size: 14px;
-    line-height: 1.35;
-    text-align: justify;
-    padding: 50px 60px;
-    min-height: 1100px;
-}
-.documento-ql-editor p { margin-bottom: 0.5em; }
-.documento-ql-editor p:empty::after { content: ' '; white-space: pre; }
-.documento-ql-editor h1,
-.documento-ql-editor h2,
-.documento-ql-editor h3 { font-weight: bold; margin-bottom: 0.5em; }
-.documento-ql-editor h2 { font-size: 16px; }
-.documento-ql-editor h3 { font-size: 15px; }
 
 @media (prefers-reduced-motion: reduce) {
   .transition-all,

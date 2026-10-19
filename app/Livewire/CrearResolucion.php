@@ -79,13 +79,11 @@ class CrearResolucion extends Component
         'nombre_escribano' => '',
         'num_foja_boleto' => '',
         'num_dictamen' => '',
-        'num_foja_social' => '',
         'num_res_adjudicacion' => '',
         'nombre_titular_anterior' => '',
         'dni_titular_anterior' => '',
         'nombre_cotitular_anterior' => '',
         'dni_cotitular_anterior' => '',
-        'fecha_boleto' => '',
         'num_res_reglamentacion' => '',
         'num_res_modificatoria' => '',
         'unidad' => '',
@@ -93,11 +91,8 @@ class CrearResolucion extends Component
         'estado_civil_titular_nuevo' => '',
         'estado_civil_cotitular_nuevo' => '',
         // Campos específicos de AplicarPagos (nombre_barrio ya está arriba)
-        'año_cuotas' => '',
-        'fecha_primer_pago' => '',
         'codigo_pago' => '',
         'causante' => 'DEPARTAMENTO RECURSOS FINANCIEROS',
-        'fecha_documento' => '',
         'jefe_computos' => '',
         'monto' => '',
         'cuotas_adeudadas' => '',
@@ -108,10 +103,7 @@ class CrearResolucion extends Component
         'firma_1_dependencia' => '',
         'firma_2_dependencia' => '',
         // Campos específicos de Rectificación
-        'texto_rectificacion' => '',
-        'texto_adjudicacion' => '',
         'texto_donde_dice' => '',
-        'tabla_datos' => '',
         'res_reglamentacion' => '185/2017',
         'res_modificatoria' => '779/2017',
         'fecha_res_adjudicacion' => '',
@@ -145,7 +137,6 @@ class CrearResolucion extends Component
         'monto_cuota' => '',
         'tasa_interes' => '',
         'fecha_tasa' => '',
-        'numero_tramite' => '',
         // Campos específicos de ReconocimientoCuotaPagadaDosVeces
         'quien_suscribe' => '',
         'dni_suscribe' => '',
@@ -312,9 +303,8 @@ class CrearResolucion extends Component
                     // en modo estricto de MySQL.
                     'cod_barrio' => $codBarrio !== '' ? $codBarrio : null,
                     'cod_casa' => $codCasa !== '' ? $codCasa : null,
-                    // Sanitizado antes de guardar: 'plantilla' llega del editor Quill en modo
-                    // personalizado (HTML libre del usuario) y podría contener HTML/JS
-                    // malicioso si se muestra sin escapar a otros usuarios/oficinas.
+                    // Sanitizado antes de guardar: en modo personalizado 'plantilla' es HTML editado a mano
+                    // en el navegador y podría contener HTML/JS malicioso si se muestra a otros usuarios.
                     'plantilla' => Purifier::clean($plantilla, $purificador),
                     'tipo' => $tipo,
                     'datos' => $datos,
@@ -709,10 +699,7 @@ class CrearResolucion extends Component
             'datos.estado_civil_titular_nuevo' => 'nullable|string|max:30',
             'datos.estado_civil_cotitular_nuevo' => 'nullable|string|max:30',
             // Campos específicos de Rectificación
-            'datos.texto_rectificacion' => 'nullable|string',
-            'datos.texto_adjudicacion' => 'nullable|string',
             'datos.texto_donde_dice' => 'nullable|string',
-            'datos.tabla_datos' => 'nullable|string',
             'datos.res_reglamentacion' => 'nullable|string|max:20',
             'datos.res_modificatoria' => 'nullable|string|max:20',
             'datos.fecha_res_adjudicacion' => 'nullable|date',
@@ -724,8 +711,6 @@ class CrearResolucion extends Component
             'datos.cantidad_viviendas' => 'nullable|string|max:20',
             'datos.cantidad_letras' => 'nullable|string|max:100',
             // Campos específicos de AplicarPagos
-            'datos.año_cuotas' => 'nullable|integer|min:2020|max:2100',
-            'datos.fecha_primer_pago' => 'nullable|date',
             'datos.codigo_pago' => 'nullable|string|max:20',
             'datos.monto' => 'nullable|string|max:30',
             'datos.cuotas_adeudadas' => 'nullable|string|max:10',

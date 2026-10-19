@@ -1,7 +1,4 @@
-import Swal from 'sweetalert2'
 import './modal-permisos'
-
-window.Swal = Swal
 
 // Toasts: los componentes Livewire hacen $this->dispatch('toast', type: ..., message: ...)
 // (ver App\Traits\NotificaUi). Reemplaza a Flux::toast y livewire-alert.
