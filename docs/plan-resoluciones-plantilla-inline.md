@@ -57,3 +57,21 @@ Componentes en `resources/views/components/resolucion/`: `documento` (envoltorio
 2. Solo campos editables; el texto legal queda fijo (para cambios de redacción: Personalizado). Se quitan los `contenteditable`.
 3. Se elimina del todo el modo `completo` (formulario + vista previa).
 4. Después de guardar: abrir el PDF en otra pestaña e ir a la lista de resoluciones.
+
+## Segunda tanda (2026-10-19)
+
+- [x] Firmantes: tabla `firmantes` + Administración → Firmantes; cada resolución guarda copia de nombre/cargo/dependencia.
+      Futuro (pedido del usuario): firma digital por firmante con código de acceso al aplicarla.
+- [x] Dictamen de Cancelaciones: en ~120 PDF reales (C:\Users\Bruno\Documents\Resoluciones-Prueba-PDF) ninguno usa 3136/23;
+      cada expediente tiene el suyo → campo obligatorio, sin valor fijo.
+- [x] Guía en el editor: "Faltan N datos obligatorios / Ir al siguiente" y campos en rojo al fallar el guardado.
+- [x] Ficha del expediente: cada resolución abre su PDF (`Resolucion::urlPdf()`).
+- [x] Lista de resoluciones rediseñada (búsqueda/filtros reales, dd/mm/aaaa, fila → PDF, móvil en tarjetas).
+      fix: "Guardar cambios" del modal de edición no hacía nada.
+- [x] Personalizado: el documento de la plantilla con todo el texto editable (contenteditable), marcadores resaltados,
+      saneado con Purifier 'resolucion'; se imprime con los estilos del prototipo. Fix de acentos rotos. Quill eliminado.
+
+## Pendiente / para decidir
+
+- Quitar `quill` de package.json (ya no se importa).
+- Push de la rama y PR (gh sin sesión).
