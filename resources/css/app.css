@@ -1161,3 +1161,14 @@
     .sirex-elegir-card:hover, .sirex-elegir-card:active { transform: none; }
     .sirex-elegir-card:hover .sirex-elegir-icono { transform: none; }
 }
+
+/* ── Crear resolución ── */
+.sirex-crear [data-acento="azul"] { --acento: 0 81 158; }
+.sirex-crear [data-acento="cielo"] { --acento: 2 132 199; }
+.sirex-crear [data-acento="magenta"] { --acento: 190 24 93; }
+.sirex-crear [data-acento="oro"] { --acento: 180 120 0; }
+.sirex-crear [data-acento="verde"] { --acento: 5 150 105; }
+.sirex-crear [data-acento="gris"] { --acento: 100 116 139; }
+.sirex-crear-icono { animation: sirex-pop 380ms cubic-bezier(.3, 1.6, .5, 1) backwards; }
+.sirex-autocompletar:hover .sirex-autocompletar-subir { animation: sirex-flota 900ms ease-in-out infinite; }
+@media (prefers-reduced-motion: reduce) { .sirex-crear-icono, .sirex-autocompletar:hover .sirex-autocompletar-subir { animation: none; } }

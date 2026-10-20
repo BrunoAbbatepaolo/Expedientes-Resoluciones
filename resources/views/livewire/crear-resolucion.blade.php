@@ -1,11 +1,26 @@
-<div class="p-6 text-ipv-ink dark:text-ipv-ink-dark">
-    <div class="max-w-7xl mx-auto">
-        <h1 class="mb-6 text-2xl font-bold text-ipv-ink dark:text-ipv-ink-dark md:text-3xl">
-            Crear resolución: <span class="text-ipv-blue dark:text-ipv-blue-light">{{ $this->displayName }}</span>
-        </h1>
+<div class="sirex-crear p-6 text-ipv-ink dark:text-ipv-ink-dark">
+    @php
+        [$acento, $iconoTipo] = \App\Livewire\ElegirResolucion::ICONO[$tipo] ?? ['gris', 'M12 4.5v15m7.5-7.5h-15'];
+    @endphp
+    <div class="max-w-7xl mx-auto" data-acento="{{ $acento }}">
+        <a wire:navigate href="{{ route('resoluciones.elegir') }}"
+            class="mb-4 inline-flex items-center gap-1.5 rounded-lg border border-ipv-blue/20 bg-white/70 px-3 py-1.5 text-sm font-medium text-ipv-ink/80 transition hover:bg-white dark:border-white/15 dark:bg-white/[0.06] dark:text-ipv-ink-dark/85 dark:hover:bg-white/[0.1]">
+            <svg class="size-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
+            Cambiar de tipo
+        </a>
+
+        <div class="mb-6 flex items-center gap-3.5">
+            <span class="sirex-elegir-icono sirex-crear-icono grid size-12 shrink-0 place-items-center rounded-2xl">
+                <svg class="size-7" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24" aria-hidden="true"><path d="{{ $iconoTipo }}" /></svg>
+            </span>
+            <div class="min-w-0">
+                <p class="text-xs font-semibold uppercase tracking-wider text-ipv-ink/50 dark:text-ipv-ink-dark/50">Nueva resolución</p>
+                <h1 class="text-xl font-bold leading-tight text-ipv-ink sm:text-2xl dark:text-ipv-ink-dark">{{ $this->displayName }}</h1>
+            </div>
+        </div>
 
         @if ($errors->any())
-            <div role="alert" class="mb-4 rounded-lg border border-ipv-magenta/30 bg-ipv-magenta/10 px-4 py-3 text-sm text-ipv-magenta dark:text-ipv-magenta-light">
+            <div role="alert" class="sirex-res-aviso mb-4 rounded-xl border border-ipv-magenta/30 bg-ipv-magenta/10 px-4 py-3 text-sm text-ipv-magenta dark:text-ipv-magenta-light">
                 <p class="font-semibold">Revisá lo siguiente:</p>
                 <ul class="mt-1 list-disc space-y-0.5 pl-5">
                     @foreach (array_unique($errors->all()) as $mensajeError)
@@ -14,49 +29,40 @@
                 </ul>
             </div>
         @endif
-        @if (in_array($modo, ['', 'plantilla'], true))
-            @include('livewire.partials.autocompletar-resolucion')
-        @endif
 
         @if ($modo === '')
-        <div class="mb-4">
-            <button type="button" onclick="window.location.href='/resoluciones/elegir'"
-                class="inline-flex items-center gap-1.5 rounded-lg border border-ipv-blue/20 bg-white/70 px-3 py-1.5 text-sm font-medium text-ipv-ink/80 hover:bg-white dark:border-white/15 dark:bg-white/[0.06] dark:text-ipv-ink-dark/85 dark:hover:bg-white/[0.1]">
-                <svg class="size-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-                </svg>
-                Volver
+        <h2 class="mb-2.5 text-xs font-semibold uppercase tracking-wider text-ipv-ink/50 dark:text-ipv-ink-dark/50">¿Cómo la querés completar?</h2>
+        <div class="mb-6 grid gap-3 sm:grid-cols-2">
+            <button type="button" wire:click="usarPlantilla" class="sirex-elegir-card sirex-glass-card group flex items-start gap-3.5 rounded-2xl p-5 text-left" style="--i: 0">
+                <span class="sirex-elegir-icono grid size-12 shrink-0 place-items-center rounded-xl">
+                    <svg class="size-6" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                </span>
+                <span class="min-w-0 flex-1">
+                    <span class="flex flex-wrap items-center gap-2 text-base font-semibold text-ipv-ink dark:text-ipv-ink-dark">
+                        Completar los datos
+                        <span class="rounded-full bg-ipv-gold/25 px-2 py-0.5 text-[0.68rem] font-semibold text-[#7a5200] dark:text-ipv-gold-light">Recomendado</span>
+                    </span>
+                    <span class="mt-0.5 block text-sm text-ipv-ink/60 dark:text-ipv-ink-dark/60">Escribís los datos directo en el documento. El texto legal ya viene listo.</span>
+                </span>
+                <svg class="sirex-elegir-flecha mt-1 size-5 shrink-0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14m-6-6 6 6-6 6" /></svg>
+            </button>
+            <button type="button" wire:click="usarPersonalizado" class="sirex-elegir-card sirex-glass-card group flex items-start gap-3.5 rounded-2xl p-5 text-left" style="--i: 1">
+                <span class="sirex-elegir-icono grid size-12 shrink-0 place-items-center rounded-xl">
+                    <svg class="size-6" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24" aria-hidden="true"><path d="m16.862 4.487 1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125" /></svg>
+                </span>
+                <span class="min-w-0 flex-1">
+                    <span class="block text-base font-semibold text-ipv-ink dark:text-ipv-ink-dark">Cambiar el texto</span>
+                    <span class="mt-0.5 block text-sm text-ipv-ink/60 dark:text-ipv-ink-dark/60">El mismo documento, pero podés escribir y modificar todo lo que quieras.</span>
+                </span>
+                <svg class="sirex-elegir-flecha mt-1 size-5 shrink-0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14m-6-6 6 6-6 6" /></svg>
             </button>
         </div>
-        <div class="sirex-glass-card mb-6 rounded-[14px] p-6">
-            <h2 class="mb-4 text-xl font-semibold text-ipv-ink dark:text-ipv-ink-dark">Seleccione el modo de creación</h2>
-            <div class="flex flex-col sm:flex-row gap-4">
-                <button type="button" wire:click="usarPlantilla"
-                    class="flex flex-1 flex-col items-center justify-center gap-1 rounded-lg bg-ipv-blue px-4 py-3 font-medium text-white shadow-sm transition-colors hover:bg-ipv-blue-dark">
-                    <span class="inline-flex items-center gap-2">
-                        <svg class="size-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                        </svg>
-                        Plantilla completa
-                    </span>
-                    <span class="text-xs font-normal opacity-80">Completás los datos directamente en el documento</span>
-                </button>
-                <button type="button" wire:click="usarPersonalizado"
-                    class="flex flex-1 flex-col items-center justify-center gap-1 rounded-lg border border-ipv-blue/20 bg-white/70 px-4 py-3 font-medium text-ipv-ink/80 transition-colors hover:bg-white dark:border-white/15 dark:bg-white/[0.06] dark:text-ipv-ink-dark/85 dark:hover:bg-white/[0.1]">
-                    <span class="inline-flex items-center gap-2">
-                        <svg class="size-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                        </svg>
-                        Personalizado
-                    </span>
-                    <span class="text-xs font-normal opacity-70">El mismo documento, pero podés cambiar todo el texto</span>
-                </button>
-            </div>
-        </div>
+        @include('livewire.partials.autocompletar-resolucion')
 
         @elseif ($modo === 'plantilla')
+        @include('livewire.partials.autocompletar-resolucion')
         <div class="min-h-screen bg-black/[0.02] dark:bg-white/[0.02] -mx-6 -my-6 p-6">
-            <div class="sirex-glass-card mb-6 -mx-6 flex flex-wrap items-center justify-between gap-3 rounded-lg px-6 py-3">
+            <div class="sirex-glass-card sticky top-2 z-30 mb-6 -mx-6 flex flex-wrap items-center justify-between gap-3 rounded-lg px-6 py-3">
                 <div class="flex items-center gap-4">
                     <button type="button" wire:click="$set('modo', '')"
                         class="inline-flex items-center gap-1.5 rounded-lg border border-ipv-blue/20 bg-white/70 px-3 py-1.5 text-sm font-medium text-ipv-ink/80 hover:bg-white dark:border-white/15 dark:bg-white/[0.06] dark:text-ipv-ink-dark/85 dark:hover:bg-white/[0.1]">
@@ -98,8 +104,8 @@
                         }).catch(() => { guardando = false; });
                     "
                     class="sirex-btn rounded-lg bg-ipv-blue px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-ipv-blue-dark disabled:cursor-wait disabled:opacity-60">
-                    <span x-show="! guardando">Guardar y generar PDF</span>
-                    <span x-show="guardando" x-cloak>Guardando…</span>
+                    <span x-show="! guardando" class="inline-flex items-center gap-1.5"><svg class="size-4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 13l4 4L19 7" /></svg>Guardar y generar PDF</span>
+                    <span x-show="guardando" x-cloak class="inline-flex items-center gap-1.5"><svg class="size-4 animate-spin" fill="none" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="3" class="opacity-25" /><path d="M21 12a9 9 0 00-9-9" stroke="currentColor" stroke-width="3" stroke-linecap="round" /></svg>Guardando…</span>
                 </button>
             </div>
 
@@ -170,7 +176,7 @@
                     contar();
                 }));
             ">
-            <div class="sirex-glass-card mb-4 -mx-6 flex flex-wrap items-center justify-between gap-3 rounded-lg px-6 py-3">
+            <div class="sirex-glass-card sticky top-2 z-30 mb-4 -mx-6 flex flex-wrap items-center justify-between gap-3 rounded-lg px-6 py-3">
                 <div class="flex flex-wrap items-center gap-3">
                     <button type="button" x-on:click="volver()"
                         class="inline-flex items-center gap-1.5 rounded-lg border border-ipv-blue/20 bg-white/70 px-3 py-1.5 text-sm font-medium text-ipv-ink/80 hover:bg-white dark:border-white/15 dark:bg-white/[0.06] dark:text-ipv-ink-dark/85 dark:hover:bg-white/[0.1]">
@@ -196,8 +202,8 @@
                 </div>
                 <button type="button" x-on:click="guardar()" x-bind:disabled="guardando"
                     class="sirex-btn rounded-lg bg-ipv-blue px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-ipv-blue-dark disabled:cursor-wait disabled:opacity-60">
-                    <span x-show="! guardando">Guardar y generar PDF</span>
-                    <span x-show="guardando" x-cloak>Guardando…</span>
+                    <span x-show="! guardando" class="inline-flex items-center gap-1.5"><svg class="size-4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 13l4 4L19 7" /></svg>Guardar y generar PDF</span>
+                    <span x-show="guardando" x-cloak class="inline-flex items-center gap-1.5"><svg class="size-4 animate-spin" fill="none" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="3" class="opacity-25" /><path d="M21 12a9 9 0 00-9-9" stroke="currentColor" stroke-width="3" stroke-linecap="round" /></svg>Guardando…</span>
                 </button>
             </div>
 

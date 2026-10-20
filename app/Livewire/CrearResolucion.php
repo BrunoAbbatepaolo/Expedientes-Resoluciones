@@ -65,11 +65,7 @@ class CrearResolucion extends Component
 
     public function getDisplayNameProperty(): string
     {
-        return match ($this->tipo) {
-            'ReconocimientoCuotaPagadaDosVeces' => 'Reconocimiento de Cuota Pagada Dos Veces',
-            'ReconocimientoCuotaPagadaNoCargada' => 'Recon. de cta. pagadas y no cargadas',
-            default => $this->tipo,
-        };
+        return $this->tipo === 'Otros' ? 'Otra resolución' : Tipos::nombre($this->tipo);
     }
 
     public function mount($tipo)

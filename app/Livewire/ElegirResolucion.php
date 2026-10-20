@@ -16,14 +16,14 @@ class ElegirResolucion extends Component
      * Cómo se agrupan en la pantalla (por lo que la persona quiere hacer) y la ayuda de cada tipo.
      * Un tipo nuevo de Tipos::TODOS que no esté acá cae en "Otras resoluciones" sin descripción.
      */
-    private const GRUPOS = [
+    public const GRUPOS = [
         'Cancelar una deuda' => ['Cancelaciones', 'Cancelacion8042', 'CancelacionFondoReserva'],
         'Cambiar la titularidad' => ['Transferencias', 'Transferencia-Cancelacion', 'Adjudicacion', 'Resciciones'],
         'Pagos y notas' => ['AplicarPagos', 'ReconocimientoCuotaPagadaDosVeces', 'ReconocimientoCuotaPagadaNoCargada'],
         'Corregir o responder' => ['Rectificacion', 'OficioJudicial'],
     ];
 
-    private const AYUDA = [
+    public const AYUDA = [
         'Cancelaciones' => 'Cancela la deuda de una vivienda ya pagada.',
         'Cancelacion8042' => 'Cancelación de deuda amparada por la Ley 8042.',
         'CancelacionFondoReserva' => 'Cancelación cubierta por el Fondo de Reserva.',
@@ -39,7 +39,7 @@ class ElegirResolucion extends Component
     ];
 
     /** Ícono (trazos de 24x24) y color por tipo; los colores son los de la lista de resoluciones. */
-    private const ICONO = [
+    public const ICONO = [
         'Cancelaciones' => ['azul', 'M9 12.75 11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z'],
         'Cancelacion8042' => ['azul', 'M12 3 4.5 6v5.25c0 4.5 3.2 8.2 7.5 9.75 4.3-1.55 7.5-5.25 7.5-9.75V6L12 3zM9 12l2 2 4-4'],
         'CancelacionFondoReserva' => ['azul', 'M2.25 18.75a60 60 0 0115.8-2.4m-15.8 2.4V8.25m0 10.5h.75m14.25-2.4a60 60 0 013.75.15M18 6.75h.008v.008H18V6.75zM6 9.75h.008v.008H6V9.75zM12 14.25a2.25 2.25 0 100-4.5 2.25 2.25 0 000 4.5z'],
