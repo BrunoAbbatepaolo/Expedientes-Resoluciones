@@ -1138,3 +1138,26 @@
     .sirex-res-fila, .sirex-res-aviso, .sirex-trazo-anim { animation: none; }
     .sirex-res-fila:hover .sirex-res-icono, .sirex-res-fila:hover .sirex-res-pdf svg { transform: none; }
 }
+
+/* ── Elegir tipo de resolución ── */
+.sirex-elegir [data-acento="azul"] { --acento: 0 81 158; }
+.sirex-elegir [data-acento="cielo"] { --acento: 2 132 199; }
+.sirex-elegir [data-acento="magenta"] { --acento: 190 24 93; }
+.sirex-elegir [data-acento="oro"] { --acento: 180 120 0; }
+.sirex-elegir [data-acento="verde"] { --acento: 5 150 105; }
+.sirex-elegir [data-acento="gris"] { --acento: 100 116 139; }
+.sirex-elegir-card { animation: sirex-fila-entra 340ms cubic-bezier(.2, .8, .2, 1) backwards; animation-delay: calc(var(--i, 0) * 30ms); transition: transform 200ms ease, box-shadow 200ms ease, border-color 200ms ease; }
+.sirex-elegir-card:hover, .sirex-elegir-card:focus-visible { transform: translateY(-3px); box-shadow: 0 10px 24px -10px rgb(var(--acento) / 0.45); border-color: rgb(var(--acento) / 0.5); }
+.sirex-elegir-card:active { transform: translateY(-1px) scale(.985); }
+.sirex-elegir-card:focus-visible { outline: 2px solid rgb(var(--acento)); outline-offset: 2px; }
+.sirex-elegir-icono { background: rgb(var(--acento) / 0.1); color: rgb(var(--acento)); transition: transform 220ms cubic-bezier(.3, 1.6, .5, 1), background-color 200ms; }
+.sirex-elegir-card:hover .sirex-elegir-icono { transform: scale(1.1) rotate(-5deg); background: rgb(var(--acento) / 0.18); }
+.dark .sirex-elegir-icono { background: rgb(var(--acento) / 0.22); filter: brightness(1.5); }
+.sirex-elegir-flecha { color: rgb(var(--acento)); opacity: 0; transform: translateX(-6px); transition: opacity 200ms, transform 200ms; }
+.sirex-elegir-card:hover .sirex-elegir-flecha, .sirex-elegir-card:focus-visible .sirex-elegir-flecha { opacity: 1; transform: none; }
+@media (hover: none) { .sirex-elegir-flecha { opacity: .5; transform: none; } }
+@media (prefers-reduced-motion: reduce) {
+    .sirex-elegir-card { animation: none; transition: none; }
+    .sirex-elegir-card:hover, .sirex-elegir-card:active { transform: none; }
+    .sirex-elegir-card:hover .sirex-elegir-icono { transform: none; }
+}
