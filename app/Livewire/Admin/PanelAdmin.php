@@ -6,6 +6,7 @@ use App\Models\Audit;
 use App\Models\Expediente;
 use App\Models\Resolucion;
 use App\Models\User;
+use App\Services\Resoluciones\SinExpediente;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
@@ -184,7 +185,7 @@ class PanelAdmin extends Component
 
         $sinExpediente = function (): string {
             try {
-                $n = app(\App\Services\Resoluciones\SinExpediente::class)->buscar()->count();
+                $n = app(SinExpediente::class)->buscar()->count();
 
                 return $n === 0 ? 'Ninguna' : $n.' (ver con: php artisan resoluciones:sin-expediente)';
             } catch (\Throwable) {

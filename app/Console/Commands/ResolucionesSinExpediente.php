@@ -5,6 +5,7 @@ namespace App\Console\Commands;
 use App\Services\Resoluciones\SinExpediente;
 use App\Support\Csv;
 use Illuminate\Console\Command;
+use Illuminate\Support\Carbon;
 
 /** Lista las resoluciones cuyo expediente no existe en el sistema de expedientes del IPV (no modifica nada). */
 class ResolucionesSinExpediente extends Command
@@ -27,7 +28,7 @@ class ResolucionesSinExpediente extends Command
             $r->id,
             $r->numero_resolucion,
             $r->numero_exp,
-            $r->fecha ? \Illuminate\Support\Carbon::parse($r->fecha)->format('d/m/Y') : '',
+            $r->fecha ? Carbon::parse($r->fecha)->format('d/m/Y') : '',
             $r->oficina->nombre ?? '',
         ]);
 

@@ -1,13 +1,21 @@
 <?php
 
+use App\Livewire\Admin\Firmantes;
 use App\Livewire\CrearResolucion;
+use App\Livewire\Resoluciones;
+use App\Models\Firmante;
 use App\Models\Oficina;
 use App\Models\Permiso;
 use App\Models\Resolucion;
+use App\Models\ResolucionArchivo;
 use App\Models\User;
 use App\Services\Resoluciones\Articulos;
+use App\Services\Resoluciones\Documento;
 use App\Services\Resoluciones\Tipos;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 use Livewire\Livewire;
+use Mews\Purifier\Facades\Purifier;
 use Tests\Support\MitivFalso;
 
 // Toda resolución se vincula a un expediente real de mitivdb: estos números existen.
@@ -107,7 +115,7 @@ test('Rectificación: las tablas de adjudicatarios se completan y se pueden quit
         ->assertHasNoErrors();
 
     $resolucion = Resolucion::first();
-    $html = \App\Services\Resoluciones\Documento::html($resolucion->tipo, $resolucion->datos['campos']);
+    $html = Documento::html($resolucion->tipo, $resolucion->datos['campos']);
 
     expect($html)->toContain('PEREZ JUAN')
         ->and(substr_count($html, 'tabla-resolucion'))->toBe(1);
@@ -146,9 +154,9 @@ function pdfConTexto(array $lineas): string
     return $pdf.'trailer<</Root 1 0 R/Size '.(count($objetos) + 1).">>\nstartxref\n{$xref}\n%%EOF";
 }
 
-function pdfDeCancelacion(): \Illuminate\Http\UploadedFile
+function pdfDeCancelacion(): UploadedFile
 {
-    return \Illuminate\Http\UploadedFile::fake()->createWithContent('resolucion.pdf', pdfConTexto([
+    return UploadedFile::fake()->createWithContent('resolucion.pdf', pdfConTexto([
         'S.M. de Tucuman, 20 de mayo de 2026',
         'Expte. N 1234/440-2026',
         'RESOLUCION N 55/2026',
@@ -159,7 +167,7 @@ function pdfDeCancelacion(): \Illuminate\Http\UploadedFile
 }
 
 test('subir un PDF del mismo tipo precarga el formulario, lo adjunta y avisa para revisar', function () {
-    \Illuminate\Support\Facades\Storage::fake('local');
+    Storage::fake('local');
 
     Livewire::actingAs(editorDeResoluciones())->test(CrearResolucion::class, ['tipo' => 'Cancelaciones'])
         ->set('documentoAnalizar', pdfDeCancelacion())
@@ -178,7 +186,7 @@ test('subir un PDF del mismo tipo precarga el formulario, lo adjunta y avisa par
 });
 
 test('subir un PDF de otro tipo sugiere cambiar de formulario y los datos viajan por sesión', function () {
-    \Illuminate\Support\Facades\Storage::fake('local');
+    Storage::fake('local');
     $user = editorDeResoluciones();
 
     Livewire::actingAs($user)->test(CrearResolucion::class, ['tipo' => 'Rectificacion'])
@@ -196,10 +204,10 @@ test('subir un PDF de otro tipo sugiere cambiar de formulario y los datos viajan
 });
 
 test('un PDF que no es una resolución conocida avisa y no toca el formulario', function () {
-    \Illuminate\Support\Facades\Storage::fake('local');
+    Storage::fake('local');
 
     Livewire::actingAs(editorDeResoluciones())->test(CrearResolucion::class, ['tipo' => 'Cancelaciones'])
-        ->set('documentoAnalizar', \Illuminate\Http\UploadedFile::fake()->createWithContent('receta.pdf', pdfConTexto(['Receta de empanadas tucumanas con carne cortada a cuchillo y cebolla de verdeo'])))
+        ->set('documentoAnalizar', UploadedFile::fake()->createWithContent('receta.pdf', pdfConTexto(['Receta de empanadas tucumanas con carne cortada a cuchillo y cebolla de verdeo'])))
         ->assertSet('modo', '')
         ->assertSet('sugerencia', null)
         ->assertSet('datos.num_exp', '')
@@ -207,27 +215,26 @@ test('un PDF que no es una resolución conocida avisa y no toca el formulario', 
 });
 
 test('un archivo que no es PDF ni Word se rechaza con un mensaje claro', function () {
-    \Illuminate\Support\Facades\Storage::fake('local');
+    Storage::fake('local');
 
     Livewire::actingAs(editorDeResoluciones())->test(CrearResolucion::class, ['tipo' => 'Cancelaciones'])
-        ->set('documentoAnalizar', \Illuminate\Http\UploadedFile::fake()->create('programa.exe', 10))
+        ->set('documentoAnalizar', UploadedFile::fake()->create('programa.exe', 10))
         ->assertHasErrors('documentoAnalizar')
         ->assertSee('Ese archivo no se puede leer. Subí un PDF o un Word (.docx).')
         ->assertSet('documentoAnalizar', null);
 });
 
 test('en la plantilla completa se puede adjuntar un PDF a la resolución', function () {
-    \Illuminate\Support\Facades\Storage::fake('local');
+    Storage::fake('local');
 
     Livewire::actingAs(editorDeResoluciones())->test(CrearResolucion::class, ['tipo' => 'Cancelaciones'])
         ->set('modo', 'plantilla')
         ->assertSee('Agregar PDF')
-        ->set('tempArchivos', [\Illuminate\Http\UploadedFile::fake()->create('dni.pdf', 20, 'application/pdf')])
+        ->set('tempArchivos', [UploadedFile::fake()->create('dni.pdf', 20, 'application/pdf')])
         ->assertHasNoErrors()
         ->assertCount('archivosPDF', 1)
         ->assertSee('dni.pdf');
 });
-
 
 test('no se guarda una resolución de un expediente que no existe (plantilla completa y modo personalizado)', function () {
     Livewire::actingAs(editorDeResoluciones())->test(CrearResolucion::class, ['tipo' => 'Rectificacion'])
@@ -402,10 +409,10 @@ test('el PDF imprimible respeta la oficina de la resolución', function () {
 });
 
 test('subir la nota de Aplicar pagos en PDF completa el código, el monto y las cuotas en la plantilla', function () {
-    \Illuminate\Support\Facades\Storage::fake('local');
+    Storage::fake('local');
 
     Livewire::actingAs(editorDeResoluciones())->test(CrearResolucion::class, ['tipo' => 'AplicarPagos'])
-        ->set('documentoAnalizar', \Illuminate\Http\UploadedFile::fake()->createWithContent('nota.pdf', pdfConTexto([
+        ->set('documentoAnalizar', UploadedFile::fake()->createWithContent('nota.pdf', pdfConTexto([
             'Expte. N 1234/440-2026',
             'SR. JEFE DEPARTAMENTO COMPUTOS ING. FEDERICO CONRAD:',
             'REF.: APLICAR PAGO - CODIGO (445566)',
@@ -455,7 +462,7 @@ test('cada tipo: los datos obligatorios están en su plantilla y completándolos
 test('firmantes: se eligen de la lista, la resolución guarda su copia y el PDF no cambia si después se edita el firmante', function () {
     $user = editorDeResoluciones();
     Permiso::create(['user_id' => $user->id, 'nombre' => 'resolucion_ver']);
-    $interventor = \App\Models\Firmante::where('nombre', 'Arq. HUGO CABRAL')->sole();
+    $interventor = Firmante::where('nombre', 'Arq. HUGO CABRAL')->sole();
 
     $c = Livewire::actingAs($user)->test(CrearResolucion::class, ['tipo' => 'Cancelaciones'])->call('usarPlantilla');
     $html = html_entity_decode($c->instance()->documentoEditable(), ENT_QUOTES);
@@ -490,26 +497,26 @@ test('Administración → Firmantes: agregar, editar, ordenar y desactivar', fun
     $admin = User::factory()->create();
     Permiso::create(['user_id' => $admin->id, 'nombre' => 'admin_ver']);
 
-    Livewire::actingAs($admin)->test(\App\Livewire\Admin\Firmantes::class)
+    Livewire::actingAs($admin)->test(Firmantes::class)
         ->call('guardar')->assertHasErrors(['nombre', 'cargo'])
         ->set('nombre', 'Lic. NUEVA FIRMA')->set('cargo', 'DIRECTORA')->call('guardar')->assertHasNoErrors();
 
-    $nueva = \App\Models\Firmante::where('nombre', 'Lic. NUEVA FIRMA')->sole();
-    expect($nueva->activo)->toBeTrue()->and($nueva->orden)->toBe(\App\Models\Firmante::max('orden'));
+    $nueva = Firmante::where('nombre', 'Lic. NUEVA FIRMA')->sole();
+    expect($nueva->activo)->toBeTrue()->and($nueva->orden)->toBe(Firmante::max('orden'));
 
-    Livewire::actingAs($admin)->test(\App\Livewire\Admin\Firmantes::class)
+    Livewire::actingAs($admin)->test(Firmantes::class)
         ->call('mover', $nueva->id, -1)
         ->call('editar', $nueva->id)->set('cargo', 'DIRECTORA GENERAL')->call('guardar')
         ->call('alternarActivo', $nueva->id);
 
     $nueva->refresh();
     expect($nueva->cargo)->toBe('DIRECTORA GENERAL')->and($nueva->activo)->toBeFalse()
-        ->and(\App\Models\Firmante::paraElegir()->pluck('nombre'))->not->toContain('Lic. NUEVA FIRMA')
-        ->and(\App\Models\Firmante::orderBy('orden')->pluck('nombre')->get(\App\Models\Firmante::count() - 2))->toBe('Lic. NUEVA FIRMA');
+        ->and(Firmante::paraElegir()->pluck('nombre'))->not->toContain('Lic. NUEVA FIRMA')
+        ->and(Firmante::orderBy('orden')->pluck('nombre')->get(Firmante::count() - 2))->toBe('Lic. NUEVA FIRMA');
 });
 
 test('Administración → Firmantes requiere admin_ver', function () {
-    Livewire::actingAs(editorDeResoluciones())->test(\App\Livewire\Admin\Firmantes::class)->assertForbidden();
+    Livewire::actingAs(editorDeResoluciones())->test(Firmantes::class)->assertForbidden();
 });
 
 test('lista: "Modificar datos" guarda sin fecha de ingreso y el PDF imprimible muestra el número nuevo', function () {
@@ -518,7 +525,7 @@ test('lista: "Modificar datos" guarda sin fecha de ingreso y el PDF imprimible m
     aplicarPagosCompleto($user)->set('datos.num_res', '10/2026')->call('guardarPlantilla')->assertHasNoErrors();
     $res = Resolucion::sole();
 
-    Livewire::actingAs($user)->test(\App\Livewire\Resoluciones::class)
+    Livewire::actingAs($user)->test(Resoluciones::class)
         ->call('cargarResolucion', $res->id)
         ->set('resolucionForm.numero_resolucion', '999/2026')
         ->call('guardarEdicion')->assertHasNoErrors();
@@ -533,7 +540,7 @@ test('lista: busca por número y filtra por tipo; la fecha sale dd/mm/aaaa y la 
     aplicarPagosCompleto($user)->set('datos.fecha_res', '2026-03-07')->call('guardarPlantilla');
     $res = Resolucion::sole();
 
-    Livewire::actingAs($user)->test(\App\Livewire\Resoluciones::class)
+    Livewire::actingAs($user)->test(Resoluciones::class)
         ->assertSee('07/03/2026')->assertDontSee('2026-03-07')
         ->assertSee(route('resoluciones.imprimir', $res), false)
         ->set('buscar', '1234/440')->assertSee('Aplicar pagos')
@@ -586,26 +593,26 @@ test('resolución vieja (sin tipo, con texto guardado y PDF adjunto): la lista y
         'numero_exp' => '1234/440-2026', 'numero_resolucion' => '12/2025', 'fecha' => '2025-05-02',
         'oficina_id' => $user->oficinaAsignadaId(), 'plantilla' => '<p>Texto viejo</p>', 'tipo' => null,
     ]);
-    $archivo = \App\Models\ResolucionArchivo::create([
+    $archivo = ResolucionArchivo::create([
         'resolucion_id' => $res->id, 'nombre_original' => 'firmada.pdf', 'nombre_archivo' => 'x.pdf',
         'ruta' => 'resoluciones/x.pdf', 'tipo' => 'application/pdf', 'tamano' => 10,
     ]);
 
     expect($res->fresh('archivos')->urlPdf())->toBe(route('resoluciones.archivo', $archivo));
 
-    Livewire::actingAs($user)->test(\App\Livewire\Resoluciones::class)
+    Livewire::actingAs($user)->test(Resoluciones::class)
         ->assertSee(route('resoluciones.archivo', $archivo), false)
         ->assertSee('Sin tipo')->assertSee('02/05/2025');
 });
 
 test('Personalizado conserva los logos (rutas relativas) y no deja imágenes externas', function () {
-    expect(\App\Services\Resoluciones\Documento::rutasRelativas('<img src="http://otro-host:8080/images/Logo-ipv.png" alt="IPV">'))
+    expect(Documento::rutasRelativas('<img src="http://otro-host:8080/images/Logo-ipv.png" alt="IPV">'))
         ->toBe('<img src="/images/Logo-ipv.png" alt="IPV">');
 
     $c = Livewire::actingAs(editorDeResoluciones())->test(CrearResolucion::class, ['tipo' => 'Cancelaciones'])->call('usarPersonalizado');
-    $limpio = \Mews\Purifier\Facades\Purifier::clean($c->get('plantilla'), 'resolucion');
+    $limpio = Purifier::clean($c->get('plantilla'), 'resolucion');
     expect(substr_count($limpio, '<img'))->toBeGreaterThanOrEqual(3)
-        ->and(\Mews\Purifier\Facades\Purifier::clean('<img src="https://rastreo.example/x.gif">', 'resolucion'))->not->toContain('<img');
+        ->and(Purifier::clean('<img src="https://rastreo.example/x.gif">', 'resolucion'))->not->toContain('<img');
 });
 
 function resolucionSinNumero(User $user): Resolucion
@@ -623,7 +630,7 @@ test('el número de resolución es opcional: se guarda sin número y se asigna d
     $res->update(['documento_html' => '<p>viejo</p>']);
     expect($res->numero_resolucion)->toBeNull();
 
-    Livewire::actingAs($user)->test(\App\Livewire\Resoluciones::class)
+    Livewire::actingAs($user)->test(Resoluciones::class)
         ->assertSee('Sin número')->assertSee('Asignar número')
         ->call('cargarResolucion', $res->id)
         ->set('resolucionForm.numero_resolucion', '41/2026')
@@ -654,7 +661,7 @@ test('lista: pagina de a 20 y conserva la búsqueda al cambiar de página', func
         Resolucion::create(['oficina_id' => $oficina, 'numero_exp' => "9{$n}/440-2026", 'numero_resolucion' => "{$n}/2026", 'fecha' => '2026-01-01']);
     }
 
-    $c = Livewire::actingAs($user)->test(\App\Livewire\Resoluciones::class);
+    $c = Livewire::actingAs($user)->test(Resoluciones::class);
     expect($c->viewData('resolucionesConExpediente'))->toHaveCount(20)
         ->and($c->viewData('resolucionesConExpediente')->total())->toBe(25);
 
@@ -687,7 +694,7 @@ test('historial: registra quién creó y qué cambió, sin guardar el texto del 
     Permiso::create(['user_id' => $user->id, 'nombre' => 'resolucion_ver']);
     $res = resolucionSinNumero($user);
 
-    Livewire::actingAs($user)->test(\App\Livewire\Resoluciones::class)
+    Livewire::actingAs($user)->test(Resoluciones::class)
         ->call('cargarResolucion', $res->id)
         ->set('resolucionForm.numero_resolucion', '12/2026')
         ->call('guardarEdicion')

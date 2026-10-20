@@ -84,7 +84,7 @@ test('lee una cancelación real: palabras cortadas, manzana con letra, Señora y
     $texto = "S.M.de Tucumán,\nExpte. N° 10241/440-2025.-\nR E S O L U C I O N N ° .\n"
         ."VISTO, la Cance-\nlación Definitiva y Levantamiento de Hipoteca en 2º Grado, correspondiente a la vivienda identificada como Manzana C - UNIDAD 03 DEL BARRIO “200 VIVIENDAS EN YERBA BUENA ”; y\nCONSIDERANDO:\n"
         ."Art.1°.-APROBAR la Cancelación Definitiva de la vivienda identificada como MANZANA C - UNIDAD 03 que fuera otorgada a la Se-\nñora MARIA LAURA APUD DNI Nº 21.745.752, en un todo de acuerdo a lo informado.-\n"
-        ."Art.2°.-Resolución Nº 185/2017 citada.";
+        .'Art.2°.-Resolución Nº 185/2017 citada.';
 
     $r = (new AnalizadorResolucion)->analizar($texto);
 

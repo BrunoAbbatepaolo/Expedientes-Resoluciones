@@ -2,11 +2,12 @@
 
 namespace Database\Factories;
 
+use App\Models\Expediente;
 use App\Models\Oficina;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Expediente>
+ * @extends Factory<Expediente>
  */
 class ExpedienteFactory extends Factory
 {

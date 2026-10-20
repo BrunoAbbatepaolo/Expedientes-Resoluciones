@@ -2,13 +2,14 @@
 
 namespace App\Livewire\Forms;
 
+use App\Models\Expediente;
 use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\Validate;
 use Livewire\Form;
 
 class ExpedienteForm extends Form
 {
-    public ?\App\Models\Expediente $expediente;
+    public ?Expediente $expediente;
 
     #[Validate('required', message: 'Debe ingresar el número de expediente')]
     public $num_exp;
@@ -88,7 +89,7 @@ class ExpedienteForm extends Form
             return DB::connection('mysql_admin')->transaction(function () {
                 $data = $this->datos([...array_diff($this->editables, ['fecha_salida']), 'oficina_id']);
 
-                \App\Models\Expediente::create($data);
+                Expediente::create($data);
 
                 return 1;
             });
@@ -109,7 +110,7 @@ class ExpedienteForm extends Form
             return DB::connection('mysql_admin')->transaction(function () {
                 // lockForUpdate: si dos usuarios editan el mismo expediente a la vez, el
                 // segundo espera a que termine el primero.
-                $expediente = \App\Models\Expediente::lockForUpdate()->findOrFail($this->expediente->id);
+                $expediente = Expediente::lockForUpdate()->findOrFail($this->expediente->id);
 
                 $expediente->update($this->datos($this->editables));
                 $this->expediente = $expediente;

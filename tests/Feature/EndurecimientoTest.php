@@ -2,6 +2,7 @@
 
 use App\Livewire\Admin\PanelAdmin;
 use App\Models\Audit;
+use App\Models\Pase;
 use App\Models\Permiso;
 use App\Models\User;
 use App\Support\Csv;
@@ -46,12 +47,12 @@ test('el panel Admin oculta claves aunque ya estén guardadas en un registro vie
 });
 
 test('crear, cambiar y borrar un pase de SiRex queda en la auditoría', function () {
-    $pase = \App\Models\Pase::factory()->create();
+    $pase = Pase::factory()->create();
     $pase->update(['observacion' => 'cambiada']);
     $id = $pase->id;
     $pase->delete();
 
-    $eventos = Audit::where('auditable_type', \App\Models\Pase::class)->where('auditable_id', $id)->pluck('event')->all();
+    $eventos = Audit::where('auditable_type', Pase::class)->where('auditable_id', $id)->pluck('event')->all();
 
     expect($eventos)->toContain('created', 'updated', 'deleted');
 });

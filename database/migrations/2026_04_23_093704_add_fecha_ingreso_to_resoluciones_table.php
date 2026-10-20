@@ -16,6 +16,7 @@ return new class extends Migration
             $table->dateTime('fecha_ingreso')->after('fecha');
         });
     }
+
     /**
      * Reverse the migrations.
      */

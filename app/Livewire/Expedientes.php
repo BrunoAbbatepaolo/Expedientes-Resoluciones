@@ -6,11 +6,12 @@ use App\Livewire\Forms\ExpedienteForm;
 use App\Models\Expediente;
 use App\Models\Oficina;
 use App\Models\Pase;
+use App\Models\VistaExpedientes;
+use App\Services\ExpedientesIpv;
 use App\Traits\AuthorizesOficina;
 use App\Traits\NotificaUi;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
-use App\Services\ExpedientesIpv;
 use Livewire\Attributes\Locked;
 use Livewire\Attributes\Url;
 use Livewire\Component;
@@ -65,7 +66,6 @@ class Expedientes extends Component
     public $query = '';
 
     public $oficinas = [];
-
 
     public function updatedQuery()
     {
@@ -226,12 +226,12 @@ class Expedientes extends Component
 
         // 6) Filtros de fecha
         if (! empty($this->filtro['fechaDesde'])) {
-            $fechaDesde = \Carbon\Carbon::parse($this->filtro['fechaDesde'])->startOfDay();
+            $fechaDesde = Carbon::parse($this->filtro['fechaDesde'])->startOfDay();
             $query->where('created_at', '>=', $fechaDesde);
         }
 
         if (! empty($this->filtro['fechaHasta'])) {
-            $fechaHasta = \Carbon\Carbon::parse($this->filtro['fechaHasta'])->endOfDay();
+            $fechaHasta = Carbon::parse($this->filtro['fechaHasta'])->endOfDay();
             $query->where('created_at', '<=', $fechaHasta);
         }
 
@@ -298,7 +298,7 @@ class Expedientes extends Component
             // Coincidencia exacta (sin distinguir mayúsculas): con '%...%' un número
             // parcial traía cualquier expediente que lo contuviera.
             try {
-                $this->expedienteEncontrado = \App\Models\VistaExpedientes::where('numero', 'ILIKE', addcslashes($this->busquedaExp, '%_\\'))->first();
+                $this->expedienteEncontrado = VistaExpedientes::where('numero', 'ILIKE', addcslashes($this->busquedaExp, '%_\\'))->first();
             } catch (\Throwable $e) {
                 report($e);
                 $this->expedienteEncontrado = null;
@@ -310,7 +310,7 @@ class Expedientes extends Component
 
             if (! is_null($this->expedienteEncontrado)) { // Si el expediente se encuentra cargado en el 95 trae los datos necesarios.
                 // Verificar si el expediente ya existe en la base de datos
-                $expedienteExistente = \App\Models\Expediente::with(['oficina', 'oficinaById'])
+                $expedienteExistente = Expediente::with(['oficina', 'oficinaById'])
                     ->where('num_exp', $this->expedienteEncontrado['numero'])
                     ->first();
                 if ($expedienteExistente) { // Si el expediente ya existe, limpiar los valores y mostrar mensaje de error
@@ -367,7 +367,7 @@ class Expedientes extends Component
 
         // Se chequea el número que efectivamente se va a guardar (el del form), no el
         // de la búsqueda: el form lo puede modificar el cliente.
-        $expedienteExistente = \App\Models\Expediente::where('num_exp', $this->expedienteForm->num_exp)->first();
+        $expedienteExistente = Expediente::where('num_exp', $this->expedienteForm->num_exp)->first();
 
         if ($expedienteExistente) {
             $this->toast('error', 'El expediente ya se encuentra cargado');
@@ -415,7 +415,7 @@ class Expedientes extends Component
 
     public function editar($id)
     {
-        $expediente = \App\Models\Expediente::findOrFail($id);
+        $expediente = Expediente::findOrFail($id);
         $this->autorizarExpediente($expediente, 'expediente_editar');
 
         $this->expedienteForm->loadExpMitiv($expediente);
@@ -464,7 +464,7 @@ class Expedientes extends Component
     {
         abort_unless(config('sirex.pases_internos'), 404);
 
-        $expediente = \App\Models\Expediente::findOrFail($id);
+        $expediente = Expediente::findOrFail($id);
         $this->autorizarExpediente($expediente, 'expediente_editar');
 
         $this->expedientePaseId = $expediente->id;
@@ -485,7 +485,7 @@ class Expedientes extends Component
             return;
         }
 
-        $expediente = \App\Models\Expediente::findOrFail($this->expedientePaseId);
+        $expediente = Expediente::findOrFail($this->expedientePaseId);
         $this->autorizarExpediente($expediente, 'expediente_editar');
 
         if (Pase::where('expediente_id', $expediente->id)->where('estado', 'pendiente')->exists()) {
@@ -536,7 +536,7 @@ class Expedientes extends Component
 
     public function eliminarExpediente()
     {
-        $expediente = \App\Models\Expediente::findOrFail($this->expedienteId);
+        $expediente = Expediente::findOrFail($this->expedienteId);
         $this->autorizarExpediente($expediente, 'expediente_editar');
 
         $expediente->delete();

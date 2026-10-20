@@ -1,9 +1,11 @@
 <?php
 
 use App\Models\User;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
 use Livewire\Volt\Volt;
 
-uses(\Illuminate\Foundation\Testing\RefreshDatabase::class);
+uses(RefreshDatabase::class);
 
 test('profile page is displayed', function () {
     $this->actingAs($user = User::factory()->create());
@@ -83,7 +85,7 @@ test('una foto en formato no soportado (.ico) se rechaza con aviso y sin romper 
     $this->actingAs(User::factory()->create());
 
     Volt::test('settings.profile')
-        ->set('profilePhoto', \Illuminate\Http\UploadedFile::fake()->create('icono.ico', 10, 'image/x-icon'))
+        ->set('profilePhoto', UploadedFile::fake()->create('icono.ico', 10, 'image/x-icon'))
         ->assertHasErrors(['profilePhoto'])
         ->assertSee('Ese archivo no es una foto que podamos usar. Elegí una imagen en formato JPG, PNG o WebP.')
         ->assertSet('profilePhoto', null)
@@ -94,7 +96,7 @@ test('una foto PNG válida se acepta y se previsualiza', function () {
     $this->actingAs(User::factory()->create());
 
     Volt::test('settings.profile')
-        ->set('profilePhoto', \Illuminate\Http\UploadedFile::fake()->createWithContent('foto.png', base64_decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==')))
+        ->set('profilePhoto', UploadedFile::fake()->createWithContent('foto.png', base64_decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==')))
         ->assertHasNoErrors()
         ->assertSee('Vista previa de foto');
 });

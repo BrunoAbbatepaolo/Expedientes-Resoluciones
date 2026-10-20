@@ -10,7 +10,7 @@ if (! function_exists('formatearFecha')) {
         }
         try {
             return Carbon::parse($fecha)->format('d-m-Y');
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             return '';
         }
     }
@@ -24,7 +24,7 @@ if (! function_exists('formatearFechaLarga')) {
         }
         try {
             return Carbon::parse($fecha)->locale('es_AR')->translatedFormat('j \d\e F \d\e\l Y');
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             return '';
         }
     }
@@ -38,7 +38,7 @@ if (! function_exists('formatearMoneda')) {
         }
         try {
             return number_format((float) str_replace(['$', ','], '', $monto), 2, ',', '.');
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             return $monto;
         }
     }

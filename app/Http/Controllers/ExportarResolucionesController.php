@@ -2,10 +2,11 @@
 
 namespace App\Http\Controllers;
 
-use App\Services\Resoluciones\Tipos;
 use App\Models\Resolucion;
+use App\Services\Resoluciones\Tipos;
 use App\Support\Csv;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Symfony\Component\HttpFoundation\Response;
 
 /** Planilla (CSV para Excel) con las resoluciones que ve la persona, con la misma búsqueda y filtro de la lista. */
@@ -32,7 +33,7 @@ class ExportarResolucionesController extends Controller
                     $r->numero_exp,
                     $r->numero_resolucion ?? '',
                     $r->tipo ? Tipos::nombre($r->tipo) : 'Sin tipo',
-                    $r->fecha ? \Illuminate\Support\Carbon::parse($r->fecha)->format('d/m/Y') : '',
+                    $r->fecha ? Carbon::parse($r->fecha)->format('d/m/Y') : '',
                     $r->cod_barrio ?? '',
                     $r->cod_casa ?? '',
                 ]), ';');

@@ -1,13 +1,16 @@
 <?php
 
 use App\Livewire\ConsultaIpv;
+use App\Livewire\Detalles;
 use App\Livewire\Expedientes;
 use App\Livewire\FichaIpv;
 use App\Livewire\SeguirExpediente;
+use App\Models\Expediente;
 use App\Models\Oficina;
 use App\Models\Permiso;
 use App\Models\Seguimiento;
 use App\Models\User;
+use Illuminate\Support\Facades\Schema;
 use Livewire\Livewire;
 use Tests\Support\MitivFalso;
 
@@ -44,7 +47,7 @@ test('la consulta IPV requiere permiso expediente_ver', function () {
 });
 
 test('si el sistema IPV no responde se muestra un aviso', function () {
-    \Illuminate\Support\Facades\Schema::connection('pgsql_mitiv')->drop('expedientes');
+    Schema::connection('pgsql_mitiv')->drop('expedientes');
 
     Livewire::withoutLazyLoading()->actingAs($this->user)
         ->test(ConsultaIpv::class)
@@ -90,7 +93,7 @@ test('seguir y dejar de seguir un expediente', function () {
 
 test('mi oficina muestra dónde está hoy cada expediente según el IPV', function () {
     MitivFalso::expediente('10/440-2026', 'A', [[$this->legal, now()->subDays(40)->format('Y-m-d H:i')]]);
-    \App\Models\Expediente::factory()->create(['num_exp' => '10/440-2026', 'oficina_id' => $this->oficina->id]);
+    Expediente::factory()->create(['num_exp' => '10/440-2026', 'oficina_id' => $this->oficina->id]);
 
     Livewire::actingAs($this->user)
         ->test(Expedientes::class)
@@ -102,17 +105,17 @@ test('mi oficina muestra dónde está hoy cada expediente según el IPV', functi
 test('el detalle muestra el historial de cambios y el acceso al IPV', function () {
     MitivFalso::expediente('77/440-2026', 'A');
     $this->actingAs($this->user);
-    $exp = \App\Models\Expediente::factory()->create(['num_exp' => '77/440-2026', 'asunto' => 'VIEJO', 'oficina_id' => $this->oficina->id]);
+    $exp = Expediente::factory()->create(['num_exp' => '77/440-2026', 'asunto' => 'VIEJO', 'oficina_id' => $this->oficina->id]);
     $exp->update(['asunto' => 'NUEVO']);
 
-    Livewire::test(\App\Livewire\Detalles::class, ['id' => $exp->id])
+    Livewire::test(Detalles::class, ['id' => $exp->id])
         ->assertSee('Historial de cambios')
         ->assertSeeInOrder([$this->user->name, 'editó', 'VIEJO', 'NUEVO'])
         ->assertSee('Ver recorrido completo en el IPV');
 });
 
 test('los pases internos quedan desactivados del lado del servidor', function () {
-    $exp = \App\Models\Expediente::factory()->create(['oficina_id' => $this->oficina->id]);
+    $exp = Expediente::factory()->create(['oficina_id' => $this->oficina->id]);
 
     Livewire::actingAs($this->user)
         ->test(Expedientes::class)

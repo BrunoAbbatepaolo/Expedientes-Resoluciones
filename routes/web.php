@@ -1,7 +1,7 @@
 <?php
 
-use App\Http\Controllers\ImprimirExpedienteIpvController;
 use App\Http\Controllers\ExportarResolucionesController;
+use App\Http\Controllers\ImprimirExpedienteIpvController;
 use App\Http\Controllers\ImprimirResolucionController;
 use App\Http\Controllers\InformesExpedientesController;
 use App\Http\Controllers\IngresosOficinaCsvController;

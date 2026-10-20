@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Carbon;
 
 /**
  * Expediente del IPV que un usuario sigue.
@@ -11,7 +12,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property int $id
  * @property int $user_id
  * @property string $numero_exp
- * @property \Illuminate\Support\Carbon|null $ultimo_pase_visto
+ * @property Carbon|null $ultimo_pase_visto
  */
 class Seguimiento extends Model
 {

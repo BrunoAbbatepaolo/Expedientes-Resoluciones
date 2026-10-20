@@ -3,6 +3,7 @@
 namespace App\Models\Mitiv;
 
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Carbon;
 
 /**
  * Pase del sistema viejo: el expediente "entra" a oficina_id en fecha_hora.
@@ -11,7 +12,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property int $expediente_id
  * @property int $oficina_id
  * @property int|null $empleado_id
- * @property \Illuminate\Support\Carbon|null $fecha_hora
+ * @property Carbon|null $fecha_hora
  * @property-read OficinaExpediente|null $oficina
  * @property-read Empleado|null $empleado
  * @property int|null $folio

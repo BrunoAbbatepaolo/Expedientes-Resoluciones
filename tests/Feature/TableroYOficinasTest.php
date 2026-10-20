@@ -6,6 +6,7 @@ use App\Models\Oficina;
 use App\Models\Permiso;
 use App\Models\Seguimiento;
 use App\Models\User;
+use App\Services\ExpedientesIpv;
 use Illuminate\Support\Facades\DB;
 use Livewire\Livewire;
 use Tests\Support\MitivFalso;
@@ -46,7 +47,7 @@ test('la oficina IPV se deduce del legajo si no hay vínculo', function () {
     $empleado = MitivFalso::empleado(['legajo' => 777]);
     DB::connection('pgsql_mitiv')->table('empleado_expediente_oficinas')->insert(['empleado_id' => $empleado, 'expediente_oficina_id' => $this->legalIpv]);
 
-    expect(app(\App\Services\ExpedientesIpv::class)->oficinaIpvDe($this->user))->toBe($this->legalIpv);
+    expect(app(ExpedientesIpv::class)->oficinaIpvDe($this->user))->toBe($this->legalIpv);
 });
 
 test('los seguimientos avisan cuando el expediente se movió', function () {

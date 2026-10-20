@@ -4,11 +4,12 @@ namespace Database\Factories;
 
 use App\Models\Expediente;
 use App\Models\Oficina;
+use App\Models\Pase;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Pase>
+ * @extends Factory<Pase>
  */
 class PaseFactory extends Factory
 {

@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Collection;
 
 class User extends Authenticatable
 {
@@ -38,19 +39,19 @@ class User extends Authenticatable
     // --- Permisos ---
     public function permisos()
     {
-        return $this->hasMany(\App\Models\Permiso::class, 'user_id');
+        return $this->hasMany(Permiso::class, 'user_id');
     }
 
     /**
      * Permisos del usuario cargados una sola vez por request: el menú y las vistas
      * llaman a permiso() decenas de veces (antes era una consulta por llamada).
      *
-     * @var \Illuminate\Support\Collection<int, Permiso>|null
+     * @var Collection<int, Permiso>|null
      */
-    private ?\Illuminate\Support\Collection $permisosEnMemoria = null;
+    private ?Collection $permisosEnMemoria = null;
 
-    /** @return \Illuminate\Support\Collection<int, Permiso> */
-    private function permisosCargados(): \Illuminate\Support\Collection
+    /** @return Collection<int, Permiso> */
+    private function permisosCargados(): Collection
     {
         return $this->permisosEnMemoria ??= $this->permisos()->get(['id', 'user_id', 'nombre', 'oficina_id'])->toBase();
     }

@@ -343,7 +343,6 @@ class ExpedientesIpv
             ->where('px.habilitado', true)
             ->whereNotExists(fn ($q) => $this->pasePosterior($q));
 
-
         if ($minDias > 0) {
             $query->where('px.fecha_hora', '<=', now()->subDays($minDias));
         }

@@ -6,6 +6,7 @@ use App\Models\Oficina;
 use App\Models\Permiso;
 use App\Models\Resolucion;
 use App\Models\User;
+use Illuminate\Support\Facades\DB;
 use Livewire\Livewire;
 use Tests\Support\MitivFalso;
 
@@ -67,7 +68,7 @@ test('una resolución vieja con expediente inexistente se puede seguir editando 
 
 test('el listado enlaza el número de expediente a su ficha', function () {
     // En mitivdb real es una vista; en los tests se arma igual sobre las tablas falsas.
-    \Illuminate\Support\Facades\DB::connection('pgsql_mitiv')->statement(
+    DB::connection('pgsql_mitiv')->statement(
         'create view vista_expedientes as select e.id, e.numero, e.asunto, e.folio, e.fecha, c.nombre as causante from expedientes e join causantes c on c.id = e.causante_id'
     );
     resolucionDe('1234/440-2026', $this->oficina->id);

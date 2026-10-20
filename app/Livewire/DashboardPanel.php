@@ -1,13 +1,14 @@
 <?php
+
 // app/Livewire/DashboardPanel.php
 
 namespace App\Livewire;
 
-use Livewire\Attributes\Locked;
-use Livewire\Component;
 use App\Models\Expediente;
 use App\Models\Resolucion;
 use Illuminate\Support\Facades\Auth;
+use Livewire\Attributes\Locked;
+use Livewire\Component;
 
 class DashboardPanel extends Component
 {
@@ -34,38 +35,38 @@ class DashboardPanel extends Component
 
         // Métricas del mes actual
         $mesInicio = now()->startOfMonth();
-        $mesFin    = now()->endOfMonth();
+        $mesFin = now()->endOfMonth();
 
         if ($verExpedientes) {
-            $activos    = Expediente::deOficina($oficina)
-                            ->whereNull('fecha_salida')
-                            ->whereNull('deleted_at')
-                            ->count();
+            $activos = Expediente::deOficina($oficina)
+                ->whereNull('fecha_salida')
+                ->whereNull('deleted_at')
+                ->count();
 
-            $egresados  = Expediente::deOficina($oficina)
-                            ->whereNotNull('fecha_salida')
-                            ->whereBetween('fecha_salida', [$mesInicio, $mesFin])
-                            ->whereNull('deleted_at')
-                            ->count();
+            $egresados = Expediente::deOficina($oficina)
+                ->whereNotNull('fecha_salida')
+                ->whereBetween('fecha_salida', [$mesInicio, $mesFin])
+                ->whereNull('deleted_at')
+                ->count();
 
             $ingresados = Expediente::deOficina($oficina)
-                            ->whereBetween('fecha_ingreso', [$mesInicio, $mesFin])
-                            ->whereNull('deleted_at')
-                            ->count();
+                ->whereBetween('fecha_ingreso', [$mesInicio, $mesFin])
+                ->whereNull('deleted_at')
+                ->count();
 
             // Últimos 5 expedientes ingresados a la oficina
             $recientes = Expediente::deOficina($oficina)
-                            ->whereNull('deleted_at')
-                            ->with('oficinaById')
-                            ->orderByDesc('fecha_ingreso')
-                            ->limit(5)
-                            ->get();
+                ->whereNull('deleted_at')
+                ->with('oficinaById')
+                ->orderByDesc('fecha_ingreso')
+                ->limit(5)
+                ->get();
         }
 
         if ($verResoluciones) {
             $resoluciones = Resolucion::whereBetween('fecha', [$mesInicio, $mesFin])
-                            ->whereNull('deleted_at')
-                            ->count();
+                ->whereNull('deleted_at')
+                ->count();
         }
 
         return view('livewire.dashboard-panel', compact(

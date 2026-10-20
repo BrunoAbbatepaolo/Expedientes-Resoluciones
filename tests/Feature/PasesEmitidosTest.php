@@ -4,6 +4,7 @@ use App\Livewire\PasesEmitidos;
 use App\Models\Permiso;
 use App\Models\User;
 use App\Services\ExpedientesIpv;
+use Illuminate\Support\Facades\DB;
 use Livewire\Livewire;
 use Tests\Support\MitivFalso;
 
@@ -22,7 +23,7 @@ test('lista los pases que salieron de la oficina, con destino, y no cuenta el al
     $emp = MitivFalso::empleado(['apellido' => 'GOMEZ', 'nombre' => 'LAURA']);
     // Alta en MESA (sin origen) → pasa a LEGAL el 10/09 → pasa a CONTADURIA el 20/09.
     $id = MitivFalso::expediente('1/440-2026', 'GARCIA, ANA', [[$this->mesa, '2026-09-05 09:00'], [$this->legal, '2026-09-10 10:00'], [$this->conta, '2026-09-20 11:00']]);
-    \Illuminate\Support\Facades\DB::connection('pgsql_mitiv')->table('expediente_pases')->where('expediente_id', $id)->where('oficina_id', $this->conta)->update(['empleado_id' => $emp]);
+    DB::connection('pgsql_mitiv')->table('expediente_pases')->where('expediente_id', $id)->where('oficina_id', $this->conta)->update(['empleado_id' => $emp]);
 
     $r = $this->servicio->pasesEmitidos($this->legal, '2026-09-01', '2026-09-30');
 
