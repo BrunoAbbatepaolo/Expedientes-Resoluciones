@@ -22,10 +22,13 @@ trait Auditable
         });
     }
 
-    /** Claves que nunca se guardan en la auditoría: las ocultas del modelo, claves y tokens. */
+    /**
+     * Claves que nunca se guardan en la auditoría: las ocultas del modelo, claves y tokens, y las que el modelo
+     * excluya en $auditoriaExcluye (p. ej. textos largos).
+     */
     private function sinSecretos(array $valores): array
     {
-        $secretos = array_merge($this->getHidden(), ['password', 'remember_token']);
+        $secretos = array_merge($this->getHidden(), ['password', 'remember_token'], $this->auditoriaExcluye ?? []);
 
         return array_diff_key($valores, array_flip($secretos));
     }

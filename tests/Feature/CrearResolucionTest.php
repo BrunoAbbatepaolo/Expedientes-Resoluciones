@@ -64,7 +64,8 @@ test('plantilla completa: con todo vacío no guarda y muestra qué falta', funct
     Livewire::actingAs(editorDeResoluciones())->test(CrearResolucion::class, ['tipo' => 'Cancelaciones'])
         ->set('modo', 'plantilla')
         ->call('guardarPlantilla')
-        ->assertHasErrors(['datos.num_exp', 'datos.num_res', 'datos.nombre_titular', 'datos.dni_titular'])
+        ->assertHasErrors(['datos.num_exp', 'datos.nombre_titular', 'datos.dni_titular'])
+        ->assertHasNoErrors('datos.num_res')
         ->assertSee('Revisá lo siguiente:')
         ->assertSee('El número de expediente es obligatorio')
         ->assertDispatched('toast', type: 'error');
@@ -604,4 +605,112 @@ test('Personalizado conserva los logos (rutas relativas) y no deja imágenes ext
     $limpio = \Mews\Purifier\Facades\Purifier::clean($c->get('plantilla'), 'resolucion');
     expect(substr_count($limpio, '<img'))->toBeGreaterThanOrEqual(3)
         ->and(\Mews\Purifier\Facades\Purifier::clean('<img src="https://rastreo.example/x.gif">', 'resolucion'))->not->toContain('<img');
+});
+
+function resolucionSinNumero(User $user): Resolucion
+{
+    aplicarPagosCompleto($user)->call('guardarPlantilla')->assertHasNoErrors();
+
+    return Resolucion::sole();
+}
+
+test('el número de resolución es opcional: se guarda sin número y se asigna después desde la lista', function () {
+    $user = editorDeResoluciones();
+    Permiso::create(['user_id' => $user->id, 'nombre' => 'resolucion_ver']);
+    $res = resolucionSinNumero($user);
+
+    $res->update(['documento_html' => '<p>viejo</p>']);
+    expect($res->numero_resolucion)->toBeNull();
+
+    Livewire::actingAs($user)->test(\App\Livewire\Resoluciones::class)
+        ->assertSee('Sin número')->assertSee('Asignar número')
+        ->call('cargarResolucion', $res->id)
+        ->set('resolucionForm.numero_resolucion', '41/2026')
+        ->call('guardarEdicion')->assertHasNoErrors();
+
+    $res->refresh();
+    expect($res->numero_resolucion)->toBe('41/2026')
+        ->and($res->datos['campos']['num_res'])->toBe('41/2026')
+        ->and($res->documento_html)->toContain('778899');
+});
+
+test('el PDF se guarda fijo al crear: cambiar la plantilla después no modifica la resolución', function () {
+    $user = editorDeResoluciones();
+    Permiso::create(['user_id' => $user->id, 'nombre' => 'resolucion_ver']);
+    $res = resolucionSinNumero($user);
+
+    expect($res->documento_html)->toContain('778899');
+
+    $res->update(['documento_html' => '<p>COPIA FIJA ORIGINAL</p>']);
+    $this->actingAs($user)->get(route('resoluciones.imprimir', $res))->assertOk()->assertSee('COPIA FIJA ORIGINAL', false);
+});
+
+test('lista: pagina de a 20 y conserva la búsqueda al cambiar de página', function () {
+    $user = editorDeResoluciones();
+    Permiso::create(['user_id' => $user->id, 'nombre' => 'resolucion_ver']);
+    $oficina = $user->oficinaAsignadaId();
+    foreach (range(1, 25) as $n) {
+        Resolucion::create(['oficina_id' => $oficina, 'numero_exp' => "9{$n}/440-2026", 'numero_resolucion' => "{$n}/2026", 'fecha' => '2026-01-01']);
+    }
+
+    $c = Livewire::actingAs($user)->test(\App\Livewire\Resoluciones::class);
+    expect($c->viewData('resolucionesConExpediente'))->toHaveCount(20)
+        ->and($c->viewData('resolucionesConExpediente')->total())->toBe(25);
+
+    $c->call('gotoPage', 2);
+    expect($c->viewData('resolucionesConExpediente'))->toHaveCount(5);
+
+    $c->set('buscar', '9');
+    expect($c->viewData('resolucionesConExpediente')->currentPage())->toBe(1);
+});
+
+test('exportar: baja un CSV con lo que filtra la lista y solo de la oficina de la persona', function () {
+    $user = editorDeResoluciones();
+    Permiso::create(['user_id' => $user->id, 'nombre' => 'resolucion_ver']);
+    $oficina = $user->oficinaAsignadaId();
+    Resolucion::create(['oficina_id' => $oficina, 'numero_exp' => '111/440-2026', 'numero_resolucion' => '5/2026', 'fecha' => '2026-03-07', 'tipo' => 'Cancelaciones']);
+    Resolucion::create(['oficina_id' => $oficina, 'numero_exp' => '222/440-2026', 'numero_resolucion' => '=CMD()', 'fecha' => '2026-03-08']);
+    Resolucion::create(['oficina_id' => Oficina::factory()->create()->id, 'numero_exp' => '333/440-2026', 'numero_resolucion' => '7/2026', 'fecha' => '2026-03-09']);
+
+    $csv = $this->actingAs($user)->get(route('resoluciones.exportar'))->assertOk()->streamedContent();
+    expect($csv)->toContain('111/440-2026', '07/03/2026', "'=CMD()")->not->toContain('333/440-2026');
+
+    $filtrado = $this->actingAs($user)->get(route('resoluciones.exportar', ['tipo' => 'Cancelaciones']))->streamedContent();
+    expect($filtrado)->toContain('111/440-2026')->not->toContain('222/440-2026');
+
+    $this->actingAs(User::factory()->create())->get(route('resoluciones.exportar'))->assertForbidden();
+});
+
+test('historial: registra quién creó y qué cambió, sin guardar el texto del documento', function () {
+    $user = editorDeResoluciones();
+    Permiso::create(['user_id' => $user->id, 'nombre' => 'resolucion_ver']);
+    $res = resolucionSinNumero($user);
+
+    Livewire::actingAs($user)->test(\App\Livewire\Resoluciones::class)
+        ->call('cargarResolucion', $res->id)
+        ->set('resolucionForm.numero_resolucion', '12/2026')
+        ->call('guardarEdicion')
+        ->call('verHistorial', $res->id)
+        ->assertSee('Creó la resolución')->assertSee('Modificó la resolución')
+        ->assertSee('N° de resolución: (vacío) → 12/2026');
+
+    foreach ($res->audits as $audit) {
+        expect($audit->new_values)->not->toHaveKeys(['plantilla', 'documento_html', 'datos']);
+    }
+});
+
+test('usar como base: copia los datos de otra resolución, sin número y con la fecha de hoy', function () {
+    $user = editorDeResoluciones();
+    aplicarPagosCompleto($user)->set('datos.num_res', '10/2026')->set('datos.fecha_res', '2026-03-07')->call('guardarPlantilla')->assertHasNoErrors();
+    $res = Resolucion::sole();
+
+    Livewire::actingAs($user)->test(CrearResolucion::class, ['tipo' => 'AplicarPagos', 'base' => $res->id])
+        ->assertSet('modo', 'plantilla')
+        ->assertSet('datos.codigo_pago', '778899')
+        ->assertSet('datos.num_res', '')
+        ->assertSet('datos.fecha_res', date('Y-m-d'));
+
+    // Un tipo distinto no copia nada.
+    Livewire::actingAs($user)->test(CrearResolucion::class, ['tipo' => 'Cancelaciones', 'base' => $res->id])
+        ->assertSet('datos.codigo_pago', '');
 });

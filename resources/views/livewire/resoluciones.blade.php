@@ -1,4 +1,4 @@
-<div class="sirex-resoluciones space-y-5" x-data="{ showEditar: false, showBorrar: false }"
+<div class="sirex-resoluciones space-y-5" x-data="{ showEditar: false, showBorrar: false, showHistorial: false }"
     x-on:modal-close.window="
         if ($event.detail.name === 'edit-profile') showEditar = false;
         if ($event.detail.name === 'delete-profile') showBorrar = false;
@@ -28,6 +28,12 @@
                     {{ $total }} {{ $total === 1 ? 'resolución' : 'resoluciones' }} de tu oficina. Tocá una fila para abrir su PDF.
                 </p>
             </div>
+            <div class="flex flex-wrap items-center gap-2">
+            <a href="{{ route('resoluciones.exportar', array_filter(['q' => $buscar, 'tipo' => $tipo])) }}" title="Descargar la lista (con la búsqueda y el filtro actuales) para Excel"
+                class="inline-flex items-center gap-2 rounded-xl border border-ipv-blue/20 bg-white/70 px-3.5 py-2.5 text-sm font-semibold text-ipv-blue transition hover:bg-ipv-blue/[0.06] dark:border-white/15 dark:bg-white/[0.05] dark:text-ipv-blue-light">
+                <svg class="size-4" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v11m0 0l-4-4m4 4l4-4M5 20h14" /></svg>
+                Exportar
+            </a>
             @if ($puedeEditar)
                 <a wire:navigate href="{{ route('resoluciones.elegir') }}"
                     class="sirex-res-nueva group inline-flex items-center gap-2 rounded-xl bg-ipv-blue px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-ipv-blue-dark hover:shadow-md">
@@ -35,6 +41,7 @@
                     Nueva resolución
                 </a>
             @endif
+            </div>
         </header>
 
         {{-- Recién guardada desde "Plantilla completa": el PDF se abre en otra pestaña; si el navegador la bloqueó, queda el enlace. --}}
@@ -113,7 +120,13 @@
                                     <svg class="size-[18px]" fill="none" stroke="currentColor" stroke-width="1.9" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M7 3h7l5 5v11a2 2 0 01-2 2H7a2 2 0 01-2-2V5a2 2 0 012-2z" /><path stroke-linecap="round" stroke-linejoin="round" d="M14 3v5h5M9 13h6M9 17h4" /></svg>
                                 </span>
                                 <span class="min-w-0">
-                                    <span class="block truncate text-sm font-semibold text-ipv-ink dark:text-ipv-ink-dark">Resolución {{ $resolucion->numero_resolucion ?: 's/n' }}</span>
+                                    <span class="block truncate text-sm font-semibold text-ipv-ink dark:text-ipv-ink-dark">
+                                        @if ($resolucion->numero_resolucion)
+                                            Resolución {{ $resolucion->numero_resolucion }}
+                                        @else
+                                            Resolución <span class="rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-semibold text-amber-800 dark:bg-amber-400/15 dark:text-amber-200" title="Todavía no se le asignó número">Sin número</span>
+                                        @endif
+                                    </span>
                                     <span class="block truncate text-xs text-ipv-ink/55 dark:text-ipv-ink-dark/55">{{ $nombreTipo($resolucion->tipo) }}</span>
                                 </span>
                             </div>
@@ -159,7 +172,6 @@
 
                             {{-- Acciones --}}
                             <div class="col-start-2 row-start-2 row-span-2 flex items-center justify-end lg:col-start-auto lg:row-start-auto lg:row-span-1">
-                                @if ($puedeEditar)
                                     <div class="pointer-events-auto relative z-20" x-data="{ open: false }" @click.outside="open = false" @keydown.escape="open = false">
                                         <button type="button" @click="open = !open" :aria-expanded="open" aria-label="Acciones de la resolución {{ $resolucion->numero_resolucion ?: 's/n' }}"
                                             class="grid size-9 place-items-center rounded-xl text-ipv-ink/55 transition hover:bg-black/[0.06] hover:text-ipv-ink dark:text-ipv-ink-dark/60 dark:hover:bg-white/[0.08] dark:hover:text-ipv-ink-dark">
@@ -176,10 +188,23 @@
                                                     Ver / imprimir PDF
                                                 </a>
                                             @endif
+                                            <button type="button" wire:click="verHistorial({{ $resolucion->id }})" @click="open = false; showHistorial = true"
+                                                class="flex w-full items-center gap-2.5 px-4 py-2.5 text-left text-sm text-ipv-ink/85 transition hover:bg-ipv-blue/[0.08] dark:text-ipv-ink-dark/85 dark:hover:bg-white/[0.06]">
+                                                <svg class="size-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9" /><path stroke-linecap="round" stroke-linejoin="round" d="M12 7v5l3 2" /></svg>
+                                                Ver historial
+                                            </button>
+                                            @if ($puedeEditar)
+                                            @if ($resolucion->esPlantillaCompleta())
+                                                <a href="{{ route('resoluciones.crear', ['tipo' => $resolucion->tipo, 'base' => $resolucion->id]) }}" wire:navigate @click="open = false"
+                                                    class="flex w-full items-center gap-2.5 px-4 py-2.5 text-sm text-ipv-ink/85 transition hover:bg-ipv-blue/[0.08] dark:text-ipv-ink-dark/85 dark:hover:bg-white/[0.06]">
+                                                    <svg class="size-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2" /><path stroke-linecap="round" d="M5 15V6a2 2 0 012-2h9" /></svg>
+                                                    Usar como base
+                                                </a>
+                                            @endif
                                             <button type="button" wire:click="cargarResolucion({{ $resolucion->id }})" @click="open = false; showEditar = true"
                                                 class="flex w-full items-center gap-2.5 px-4 py-2.5 text-left text-sm text-ipv-ink/85 transition hover:bg-ipv-blue/[0.08] dark:text-ipv-ink-dark/85 dark:hover:bg-white/[0.06]">
                                                 <svg class="size-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
-                                                Modificar datos
+                                                {{ $resolucion->numero_resolucion ? 'Modificar datos' : 'Asignar número' }}
                                             </button>
                                             <div class="my-1 border-t border-ipv-blue/10 dark:border-white/10"></div>
                                             <button type="button" wire:click="confirmarBorrado({{ $resolucion->id }})" @click="open = false; showBorrar = true"
@@ -187,9 +212,9 @@
                                                 <svg class="size-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
                                                 Eliminar
                                             </button>
+                                            @endif
                                         </div>
                                     </div>
-                                @endif
                             </div>
                         </div>
                     </li>
@@ -212,6 +237,10 @@
                 @endforelse
             </ul>
         </div>
+
+        @if ($resolucionesConExpediente->hasPages())
+            <div class="px-1">{{ $resolucionesConExpediente->links() }}</div>
+        @endif
 
         <!-- modal para editar resoluciones -->
         <div x-show="showEditar" x-cloak x-on:keydown.escape.window="showEditar = false"
@@ -266,6 +295,38 @@
                 <div class="sirex-modal-pie">
                     <button type="button" @click="showEditar = false" class="sirex-boton sirex-boton-secundario">Cancelar</button>
                     <button type="button" wire:click="guardarEdicion" wire:loading.attr="disabled" wire:target="guardarEdicion" class="sirex-boton sirex-boton-primario">Guardar cambios</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- modal del historial -->
+        <div x-show="showHistorial" x-cloak x-on:keydown.escape.window="showHistorial = false"
+            class="sirex-modal-fondo" x-on:click.self="showHistorial = false">
+            <div class="sirex-modal" role="dialog" aria-modal="true" aria-labelledby="titulo-historial-resolucion">
+                <div class="sirex-modal-cabeza">
+                    <div>
+                        <h3 id="titulo-historial-resolucion" class="sirex-modal-titulo">Historial</h3>
+                        <p class="sirex-modal-subtitulo">Quién creó y modificó esta resolución.</p>
+                    </div>
+                    <button type="button" @click="showHistorial = false" class="sirex-modal-cerrar" aria-label="Cerrar">
+                        <svg fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" viewBox="0 0 24 24"><path d="M6 18 18 6M6 6l12 12" /></svg>
+                    </button>
+                </div>
+                <div class="sirex-modal-cuerpo max-h-[60vh] space-y-3 overflow-y-auto">
+                    @forelse ($this->historial as $h)
+                        <div class="border-l-2 border-ipv-blue/25 pl-3">
+                            <p class="text-sm font-semibold text-ipv-ink dark:text-ipv-ink-dark">{{ $h['que'] }}</p>
+                            <p class="text-xs text-ipv-ink/60 dark:text-ipv-ink-dark/60">{{ $h['quien'] }} · {{ $h['cuando'] }}</p>
+                            @foreach ($h['cambios'] as $cambio)
+                                <p class="mt-0.5 text-xs text-ipv-ink/75 dark:text-ipv-ink-dark/75">{{ $cambio }}</p>
+                            @endforeach
+                        </div>
+                    @empty
+                        <p class="text-sm text-ipv-ink/60 dark:text-ipv-ink-dark/60">Sin movimientos registrados (las resoluciones anteriores a esta función no tienen historial).</p>
+                    @endforelse
+                </div>
+                <div class="sirex-modal-pie">
+                    <button type="button" @click="showHistorial = false" class="sirex-boton sirex-boton-secundario">Cerrar</button>
                 </div>
             </div>
         </div>

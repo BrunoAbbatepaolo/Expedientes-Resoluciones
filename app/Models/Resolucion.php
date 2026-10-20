@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Services\Resoluciones\Documento;
+use App\Traits\Auditable;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -12,7 +15,10 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Resolucion extends Model
 {
-    use HasFactory, SoftDeletes;
+    use Auditable, HasFactory, SoftDeletes;
+
+    /** Columnas grandes que no se guardan en la auditoría (el historial muestra solo los datos de la lista). */
+    protected array $auditoriaExcluye = ['plantilla', 'documento_html', 'datos'];
 
     protected $table = 'resoluciones';
 
@@ -30,6 +36,7 @@ class Resolucion extends Model
         'pdf',
         'tipo',
         'datos',
+        'documento_html',
     ];
 
     /** datos: ['campos' => [...], 'articulos_quitados' => [...]] de la "Plantilla completa" (ver Documento). */
@@ -38,6 +45,52 @@ class Resolucion extends Model
         return [
             'datos' => 'array',
         ];
+    }
+
+    /**
+     * Las que ve el usuario: las de su oficina y las viejas sin oficina (ver implementacion_futuro.md 2.1),
+     * que se muestran a todos hasta que se les asigne una.
+     */
+    public function scopeVisiblesPara(Builder $query, User $usuario): Builder
+    {
+        $oficinaId = $usuario->oficinaAsignadaId() ?? $usuario->oficinaIdPara('resolucion_ver');
+
+        return $query->where(function (Builder $q) use ($oficinaId) {
+            $q->whereNull('oficina_id');
+
+            if ($oficinaId) {
+                $q->orWhere('oficina_id', $oficinaId);
+            }
+        });
+    }
+
+    /** Filtro de la lista: $tipo es un tipo de CrearResolucion::TIPOS o 'otras' (sin tipo); $buscar, texto libre. */
+    public function scopeFiltrar(Builder $query, string $buscar, string $tipo): Builder
+    {
+        if ($tipo === 'otras') {
+            $query->whereNull('tipo');
+        } elseif ($tipo !== '') {
+            $query->where('tipo', $tipo);
+        }
+
+        if (trim($buscar) !== '') {
+            $termino = '%'.addcslashes(trim($buscar), '%_\\').'%';
+            $query->where(fn (Builder $q) => $q->where('numero_exp', 'like', $termino)
+                ->orWhere('numero_resolucion', 'like', $termino)
+                ->orWhere('cod_barrio', 'like', $termino)
+                ->orWhere('cod_casa', 'like', $termino));
+        }
+
+        return $query;
+    }
+
+    /** ¿Se puede usar como base de una nueva? Solo las de "Plantilla completa" (tienen sus datos guardados). */
+    public function esPlantillaCompleta(): bool
+    {
+        /** @var array{campos?: array<string, mixed>}|null $datos cast 'array' */
+        $datos = $this->datos;
+
+        return $this->tipo && is_array($datos) && isset($datos['campos']);
     }
 
     public function expediente(): BelongsTo
@@ -64,6 +117,25 @@ class Resolucion extends Model
             (bool) $this->plantilla => route('resoluciones.imprimir', $this),
             default => null,
         };
+    }
+
+    /**
+     * Vuelve a armar y guardar el documento fijo de una resolución de "Plantilla completa" (tras editar sus datos).
+     * Las de tipo Personalizado y las cargadas como archivo no tienen: su texto ya es el definitivo.
+     */
+    public function regenerarDocumento(): void
+    {
+        /** @var array{campos?: array<string, mixed>, articulos_quitados?: list<int>, personalizado?: bool}|null $datos */
+        $datos = $this->datos;
+        if (! $this->tipo || ! is_array($datos) || ! empty($datos['personalizado']) || ! Documento::existe($this->tipo)) {
+            return;
+        }
+
+        $this->update(['documento_html' => Documento::html(
+            $this->tipo,
+            (array) ($datos['campos'] ?? []),
+            array_map('intval', $datos['articulos_quitados'] ?? []),
+        )]);
     }
 
     public function archivos(): HasMany

@@ -28,6 +28,8 @@ class ImprimirResolucionController extends Controller
             // Personalizado sobre el documento: estilos del prototipo + el texto editado (saneado).
             $conPrototipo && ! empty($datos['personalizado']) => Documento::estilos($resolucion->tipo)
                 .Purifier::clean((string) $resolucion->plantilla, 'resolucion'),
+            // Documento fijo guardado al crear; las anteriores a esa columna se arman de nuevo desde sus datos.
+            $conPrototipo && $resolucion->documento_html => $resolucion->documento_html,
             $conPrototipo => Documento::html($resolucion->tipo, (array) ($datos['campos'] ?? []), array_map('intval', $datos['articulos_quitados'] ?? [])),
             default => Purifier::clean((string) $resolucion->plantilla),
         };

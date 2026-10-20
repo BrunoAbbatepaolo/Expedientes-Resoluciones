@@ -15,7 +15,8 @@ class ResolucionForm extends Form
     #[Validate('required|string')]
     public $numero_exp;
 
-    #[Validate('required|string')]
+    // Opcional: el borrador sale sin número y se asigna al firmar.
+    #[Validate('nullable|string|max:50')]
     public $numero_resolucion;
 
     #[Validate('required|date')]
@@ -100,5 +101,6 @@ class ResolucionForm extends Form
         }
 
         $this->resolucion->update($datos);
+        $this->resolucion->regenerarDocumento();
     }
 }

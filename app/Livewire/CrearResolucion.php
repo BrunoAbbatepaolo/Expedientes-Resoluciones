@@ -17,6 +17,7 @@ use Illuminate\Validation\ValidationException;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Locked;
 use Livewire\Attributes\Renderless;
+use Livewire\Attributes\Url;
 use Livewire\Component;
 use Livewire\WithFileUploads;
 use Mews\Purifier\Facades\Purifier;
@@ -30,6 +31,10 @@ class CrearResolucion extends Component
     // Locked: se usa para armar el nombre de la vista (prototipos.{tipo}).
     #[Locked]
     public string $tipo;
+
+    /** Id de la resolución a copiar ("Usar como base" en la lista); se usa solo al abrir la pantalla. */
+    #[Url]
+    public ?int $base = null;
 
     public string $modo = ''; // 'plantilla' (datos editados en el documento) o 'personalizado' (editor libre)
 
@@ -177,6 +182,12 @@ class CrearResolucion extends Component
         // Establecer la fecha inicial en el formato correcto
         $this->datos['fecha_res'] = date('Y-m-d');
 
+        // Viene de "Usar como base" en la lista de resoluciones.
+        if ($this->base) {
+            $this->cargarBase($this->base);
+            $this->base = null;
+        }
+
         // Viene de "Autocompletar": precarga los datos del documento y abre el formulario.
         $sugerida = session('sugerencia_resolucion');
         if (is_array($sugerida) && ($sugerida['tipo'] ?? null) === $tipo) {
@@ -185,6 +196,29 @@ class CrearResolucion extends Component
             $this->modo = 'plantilla';
             $this->toast('info', "Completé {$cargados} campos con los datos del documento. Revisalos antes de guardar y volvé a adjuntar el archivo si lo necesitás.", 8000);
         }
+    }
+
+    /** "Usar como base": copia los datos de otra resolución del mismo tipo; queda sin número y con la fecha de hoy. */
+    private function cargarBase(int $id): void
+    {
+        $base = Resolucion::find($id);
+        if (! $base || $base->tipo !== $this->tipo || ! $base->esPlantillaCompleta()) {
+            return;
+        }
+        $this->autorizarResolucion($base, 'resolucion_editar');
+
+        /** @var array{campos: array<string, mixed>, articulos_quitados?: list<int>} $guardados */
+        $guardados = $base->datos;
+        foreach ($guardados['campos'] as $campo => $valor) {
+            if (array_key_exists($campo, $this->datos)) {
+                $this->datos[$campo] = $valor;
+            }
+        }
+        $this->datos['num_res'] = '';
+        $this->datos['fecha_res'] = date('Y-m-d');
+        $this->articulosQuitados = array_map('intval', $guardados['articulos_quitados'] ?? []);
+        $this->modo = 'plantilla';
+        $this->toast('info', 'Copié los datos de la resolución '.($base->numero_resolucion ?: 'sin número').'. Revisalos y cambiá lo que corresponda.', 8000);
     }
 
     public function usarPlantilla(): void
@@ -264,6 +298,7 @@ class CrearResolucion extends Component
             return null;
         }
 
+        $resolucion->regenerarDocumento();
         $this->resolucionGuardadaId = $resolucion->id;
         // La lista lo muestra con el enlace para imprimir (por si el navegador bloqueó la pestaña nueva).
         session()->put('resolucion_guardada', ['id' => $resolucion->id, 'numero_exp' => $resolucion->numero_exp]);
@@ -301,7 +336,7 @@ class CrearResolucion extends Component
                 $resolucion = Resolucion::create([
                     'oficina_id' => $oficinaId,
                     'numero_exp' => $numeroExp,
-                    'numero_resolucion' => $numeroResolucion,
+                    'numero_resolucion' => $numeroResolucion !== null && trim($numeroResolucion) !== '' ? trim($numeroResolucion) : null,
                     'fecha' => $fecha,
                     // cod_barrio/cod_casa son integer: los tipos que no usan manzana/lote
                     // llegan como '' (string vacío) y no como null, lo que rompe el insert
@@ -653,7 +688,8 @@ class CrearResolucion extends Component
         return [
             'datos.fecha_res' => 'required|date',
             'datos.num_exp' => ['required', 'string', 'max:50', $this->reglaExpedienteExiste()],
-            'datos.num_res' => 'required|string|max:50',
+            // Opcional: el borrador sale sin número y se asigna al firmar (desde la lista).
+            'datos.num_res' => 'nullable|string|max:50',
             // Se guardan en cod_barrio/cod_casa, columnas integer.
             'datos.manzana' => 'nullable|integer|min:0',
             'datos.lote' => 'nullable|integer|min:0',
@@ -869,7 +905,6 @@ class CrearResolucion extends Component
             'datos.dni_titular_nuevo.required' => 'El DNI del nuevo titular es obligatorio',
             'datos.fecha_res.required' => 'La fecha de resolución es obligatoria',
             'datos.num_exp.required' => 'El número de expediente es obligatorio',
-            'datos.num_res.required' => 'El número de resolución es obligatorio',
             'datos.nombre_titular.required' => 'El nombre del titular es obligatorio',
             'datos.dni_titular.required' => 'El DNI del titular es obligatorio',
             'datos.num_dictamen.required' => 'El número de dictamen es obligatorio',

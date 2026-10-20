@@ -6,16 +6,22 @@ use App\Livewire\Forms\ResolucionForm;
 use App\Models\Resolucion;
 use App\Traits\AuthorizesOficina;
 use App\Traits\NotificaUi;
+use Illuminate\Pagination\LengthAwarePaginator;
+use Livewire\Attributes\Computed;
 use Livewire\Attributes\Locked;
 use Livewire\Attributes\Url;
 use Livewire\Component;
 use Livewire\WithFileUploads;
+use Livewire\WithPagination;
 
 class Resoluciones extends Component
 {
     use AuthorizesOficina;
     use NotificaUi;
     use WithFileUploads;
+    use WithPagination;
+
+    private const POR_PAGINA = 20;
 
     public ResolucionForm $resolucionForm;
 
@@ -26,6 +32,10 @@ class Resoluciones extends Component
     /** Filtro por tipo (CrearResolucion::TIPOS) o 'otras' (las cargadas sin tipo). */
     #[Url(except: '')]
     public string $tipo = '';
+
+    /** Resolución cuyo historial se está mostrando. */
+    #[Locked]
+    public ?int $historialId = null;
 
     // Propiedad para saber qué registro eliminar
     #[Locked]
@@ -87,60 +97,102 @@ class Resoluciones extends Component
     public function limpiarFiltros(): void
     {
         $this->reset('buscar', 'tipo');
+        $this->resetPage();
+    }
+
+    public function updatingBuscar(): void
+    {
+        $this->resetPage();
+    }
+
+    public function updatingTipo(): void
+    {
+        $this->resetPage();
+    }
+
+    /**
+     * Quién creó y modificó la resolución (tabla de auditoría), del más nuevo al más viejo.
+     *
+     * @return list<array{cuando: string, quien: string, que: string, cambios: list<string>}>
+     */
+    #[Computed]
+    public function historial(): array
+    {
+        if (! $this->historialId) {
+            return [];
+        }
+
+        $resolucion = Resolucion::findOrFail($this->historialId);
+        $this->autorizarResolucion($resolucion, 'resolucion_ver');
+
+        $etiquetas = [
+            'numero_exp' => 'Expediente', 'numero_resolucion' => 'N° de resolución', 'fecha' => 'Fecha',
+            'cod_barrio' => 'Barrio', 'cod_casa' => 'Casa', 'fecha_ingreso' => 'Fecha de ingreso', 'tipo' => 'Tipo',
+        ];
+
+        return $resolucion->audits()->with('user')->latest('id')->limit(50)->get()->map(function ($a) use ($etiquetas) {
+            $cambios = [];
+            foreach ((array) $a->new_values as $campo => $nuevo) {
+                if (! isset($etiquetas[$campo]) || $a->event === 'created') {
+                    continue;
+                }
+                $antes = $a->old_values[$campo] ?? null;
+                $cambios[] = $etiquetas[$campo].': '.($antes !== null && $antes !== '' ? $antes : '(vacío)').' → '.($nuevo !== null && $nuevo !== '' ? $nuevo : '(vacío)');
+            }
+
+            return [
+                'cuando' => $a->created_at?->format('d/m/Y H:i') ?? '',
+                'quien' => $a->user->name ?? 'Sistema',
+                'que' => match ($a->event) {
+                    'created' => 'Creó la resolución',
+                    'deleted' => 'Eliminó la resolución',
+                    default => 'Modificó la resolución',
+                },
+                'cambios' => $cambios,
+            ];
+        })->all();
+    }
+
+    public function verHistorial(int $id): void
+    {
+        $resolucion = Resolucion::findOrFail($id);
+        $this->autorizarResolucion($resolucion, 'resolucion_ver');
+        $this->historialId = $id;
+        unset($this->historial);
     }
 
     public function render()
     {
         // Sin permiso no se consulta nada (la vista ya muestra el aviso).
         if (! auth()->user()?->permiso('resolucion_ver')) {
-            return view('livewire.resoluciones', ['resolucionesConExpediente' => collect(), 'tiposPresentes' => collect(), 'total' => 0]);
+            return view('livewire.resoluciones', [
+                'resolucionesConExpediente' => new LengthAwarePaginator([], 0, self::POR_PAGINA),
+                'tiposPresentes' => collect(),
+                'total' => 0,
+            ]);
         }
 
-        $oficinaId = auth()->user()->oficinaAsignadaId()
-            ?? auth()->user()->oficinaIdPara('resolucion_ver');
-
-        // Se agregó latest() para que las más nuevas aparezcan arriba.
-        // Las resoluciones viejas sin oficina_id (ver implementacion_futuro.md 2.1)
-        // se siguen mostrando a todos hasta que se les asigne una oficina.
-        $visibles = Resolucion::query()->where(function ($query) use ($oficinaId) {
-            $query->whereNull('oficina_id');
-
-            if ($oficinaId) {
-                $query->orWhere('oficina_id', $oficinaId);
-            }
-        });
+        $visibles = Resolucion::query()->visiblesPara(auth()->user());
 
         // Tipos presentes (para los filtros) y total, antes de aplicar la búsqueda.
         $tiposPresentes = (clone $visibles)->select('tipo')->distinct()->pluck('tipo')
             ->map(fn ($t) => $t ?: 'otras')->unique()->sort()->values();
         $total = (clone $visibles)->count();
 
-        $consulta = $visibles->with('archivos')->latest();
-        if ($this->tipo === 'otras') {
-            $consulta->whereNull('tipo');
-        } elseif (in_array($this->tipo, CrearResolucion::TIPOS, true)) {
-            $consulta->where('tipo', $this->tipo);
-        }
-        if (trim($this->buscar) !== '') {
-            $termino = '%'.addcslashes(trim($this->buscar), '%_\\').'%';
-            $consulta->where(fn ($q) => $q->where('numero_exp', 'like', $termino)
-                ->orWhere('numero_resolucion', 'like', $termino)
-                ->orWhere('cod_barrio', 'like', $termino)
-                ->orWhere('cod_casa', 'like', $termino));
-        }
-        $resolucionesConExpediente = $consulta->get();
+        $tipo = $this->tipo === 'otras' || in_array($this->tipo, CrearResolucion::TIPOS, true) ? $this->tipo : '';
+        $resoluciones = $visibles->filtrar($this->buscar, $tipo)->with('archivos')->latest()->paginate(self::POR_PAGINA);
 
         // 'expediente' viene de pgsql_mitiv (otro servidor): si no responde, se
         // muestra el listado igual, sin el número de expediente.
         try {
-            $resolucionesConExpediente->load('expediente');
+            $resoluciones->getCollection()->load('expediente');
         } catch (\Throwable $e) {
             report($e);
-            $resolucionesConExpediente->each->setRelation('expediente', null);
+            $resoluciones->getCollection()->each->setRelation('expediente', null);
         }
 
         return view('livewire.resoluciones', [
-            'resolucionesConExpediente' => $resolucionesConExpediente,
+            'resolucionesConExpediente' => $resoluciones,
             'tiposPresentes' => $tiposPresentes,
             'total' => $total,
         ]);
