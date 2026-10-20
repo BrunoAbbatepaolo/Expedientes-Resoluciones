@@ -85,7 +85,7 @@ Hecho:
 - Lista: paginación de a 20, exportar CSV (`resoluciones.exportar`, respeta búsqueda y filtro), historial por resolución (auditoría sin columnas grandes) y "Usar como base" (`?base=ID` en la pantalla de crear).
 - Tipos nuevos: Cancelación Ley 8042, Cancelación por Fondo de Reserva, Oficio judicial (toma de razón) y Adjudicación, con autocompletado desde PDF. Manzana/lote aceptan letras ("B", "6A"); solo si son números se guardan en `cod_barrio`/`cod_casa`.
 - Sugerencia del causante del expediente (mitiv) como titular. mitiv solo tiene el nombre del causante: no hay DNI, barrio ni manzana/lote para traer.
-- Refactor: datos, reglas y nombres de cada tipo pasaron de `CrearResolucion` a `AppServices\Resoluciones\Tipos` (879 → ~650 líneas). Pint aplicado a todo el proyecto.
+- Refactor: datos, reglas y nombres de cada tipo pasaron de `CrearResolucion` a `App\Services\Resoluciones\Tipos` (879 → ~650 líneas). Pint aplicado a todo el proyecto.
 - Texto de los documentos: se quita el espacio antes de coma/punto que dejaban los datos, y `x-resolucion.opcional ... espacio` conserva el espacio que Blade recorta.
 
 Pendiente / decisiones abiertas:
