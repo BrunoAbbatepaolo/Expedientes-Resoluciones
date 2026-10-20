@@ -632,11 +632,11 @@ test('el número de resolución es opcional: se guarda sin número y se asigna d
         ->set('datos.num_dictamen', '1874/26')
         ->call('guardarPlantilla')->assertHasNoErrors();
     $res = Resolucion::sole();
-    $res->update(['documento_html' => '<p>viejo</p>']);
+    $res->forceFill(['documento_html' => '<p>viejo</p>'])->save();
 
     expect($res->numero_resolucion)->toBeNull();
 
-    Livewire::actingAs($user)->test(\App\Livewire\Resoluciones::class)
+    Livewire::actingAs($user)->test(Resoluciones::class)
         ->assertSee('Sin número')->assertSee('Asignar número')
         ->call('cargarResolucion', $res->id)
         ->set('resolucionForm.numero_resolucion', '41/2026')
@@ -653,7 +653,7 @@ test('las notas (Aplicar pagos) se muestran como "Nota": no piden número de res
     Permiso::create(['user_id' => $user->id, 'nombre' => 'resolucion_ver']);
     resolucionSinNumero($user);
 
-    Livewire::actingAs($user)->test(\App\Livewire\Resoluciones::class)
+    Livewire::actingAs($user)->test(Resoluciones::class)
         ->assertSee('Nota')->assertDontSee('Sin número')->assertDontSee('Asignar número');
 });
 
@@ -664,7 +664,7 @@ test('el PDF se guarda fijo al crear: cambiar la plantilla después no modifica 
 
     expect($res->documento_html)->toContain('778899');
 
-    $res->update(['documento_html' => '<p>COPIA FIJA ORIGINAL</p>']);
+    $res->forceFill(['documento_html' => '<p>COPIA FIJA ORIGINAL</p>'])->save();
     $this->actingAs($user)->get(route('resoluciones.imprimir', $res))->assertOk()->assertSee('COPIA FIJA ORIGINAL', false);
 });
 

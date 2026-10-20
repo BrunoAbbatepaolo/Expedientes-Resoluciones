@@ -36,8 +36,10 @@ class Resolucion extends Model
         'pdf',
         'tipo',
         'datos',
-        'documento_html',
     ];
+
+    // documento_html no es asignable en masa: se escribe solo desde regenerarDocumento() (HTML armado en el servidor).
+
 
     /** datos: ['campos' => [...], 'articulos_quitados' => [...]] de la "Plantilla completa" (ver Documento). */
     protected function casts(): array
@@ -131,11 +133,11 @@ class Resolucion extends Model
             return;
         }
 
-        $this->update(['documento_html' => Documento::html(
+        $this->forceFill(['documento_html' => Documento::html(
             $this->tipo,
             (array) ($datos['campos'] ?? []),
             array_map('intval', $datos['articulos_quitados'] ?? []),
-        )]);
+        )])->save();
     }
 
     public function archivos(): HasMany
