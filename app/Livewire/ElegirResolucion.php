@@ -2,6 +2,7 @@
 
 namespace App\Livewire;
 
+use App\Services\Resoluciones\Tipos;
 use App\Traits\AuthorizesOficina;
 use Illuminate\Support\Facades\View;
 use Livewire\Attributes\Computed;
@@ -19,17 +20,7 @@ class ElegirResolucion extends Component
     {
         $this->autorizarPermiso('resolucion_editar');
 
-        $tipos = [
-            ['nombre' => 'Cancelaciones'],
-            ['nombre' => 'Resciciones'],
-            ['nombre' => 'Transferencias'],
-            ['nombre' => 'Transferencia-Cancelacion'],
-            ['nombre' => 'Rectificacion'],
-            ['nombre' => 'AplicarPagos'],
-            ['nombre' => 'ReconocimientoCuotaPagadaDosVeces', 'display' => 'Reconocimiento de Cuota Pagada Dos Veces'],
-            ['nombre' => 'ReconocimientoCuotaPagadaNoCargada', 'display' => 'Recon. de cta. pagadas y no cargadas'],
-            ['nombre' => 'Otros'],
-        ];
+        $tipos = array_map(fn (string $t) => ['nombre' => $t, 'display' => Tipos::nombre($t)], [...Tipos::TODOS, 'Otros']);
 
         // 6 de los 9 tipos no tienen plantilla en resources/views/prototipos/ todavía;
         // se muestran igual (el modo "Personalizado" no depende de la plantilla) pero
@@ -49,8 +40,8 @@ class ElegirResolucion extends Component
 
         return array_filter($this->tipos, function ($tipo) {
             return str_contains(
-                strtolower($tipo['nombre']),
-                strtolower($this->busqueda)
+                mb_strtolower($tipo['nombre'].' '.$tipo['display']),
+                mb_strtolower($this->busqueda)
             );
         });
     }

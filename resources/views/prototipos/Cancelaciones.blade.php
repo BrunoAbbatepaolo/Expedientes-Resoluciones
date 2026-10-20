@@ -197,7 +197,7 @@
                     LOTE <x-resolucion.campo campo="lote" placeholder="[LOTE]" />
                     DEL BARRIO <x-resolucion.campo campo="nombre_barrio" placeholder="[NOMBRE DEL BARRIO]" mayusculas />
                 </span>, que fuera otorgada a
-                <x-resolucion.segun si="nombre_cotitular" con="los Señores" sin="el/la Señor/a" /> <span class="font-bold"><x-resolucion.campo campo="nombre_titular" placeholder="[NOMBRE TITULAR]" mayusculas /></span> DNI N° <x-resolucion.campo campo="dni_titular" placeholder="[DNI TITULAR]" /><x-resolucion.opcional si="nombre_cotitular"> y <span class="font-bold"><x-resolucion.campo campo="nombre_cotitular" placeholder="[NOMBRE COTITULAR]" mayusculas /></span> DNI N° <x-resolucion.campo campo="dni_cotitular" placeholder="[DNI COTITULAR]" /></x-resolucion.opcional>
+                <x-resolucion.segun si="nombre_cotitular" con="los Señores" sin="el/la Señor/a" /> <span class="font-bold"><x-resolucion.campo campo="nombre_titular" placeholder="[NOMBRE TITULAR]" mayusculas /></span> DNI N° <x-resolucion.campo campo="dni_titular" placeholder="[DNI TITULAR]" /><x-resolucion.opcional si="nombre_cotitular" espacio> y <span class="font-bold"><x-resolucion.campo campo="nombre_cotitular" placeholder="[NOMBRE COTITULAR]" mayusculas /></span> DNI N° <x-resolucion.campo campo="dni_cotitular" placeholder="[DNI COTITULAR]" /></x-resolucion.opcional>
                 , en un todo de acuerdo a lo informado por el Departamento Recursos Financieros.
             </p>
         </div>

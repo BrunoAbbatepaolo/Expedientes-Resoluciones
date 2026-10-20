@@ -76,8 +76,8 @@ class CrearResolucion extends Component
     {
         $this->autorizarPermiso('resolucion_editar');
 
-        // Solo letras y guiones: evita que un tipo con '.' o '/' apunte a otra vista.
-        abort_unless(is_string($tipo) && preg_match('/^[\pL\-]+$/u', $tipo), 404);
+        // Solo letras, números y guiones: evita que un tipo con '.' o '/' apunte a otra vista.
+        abort_unless(is_string($tipo) && preg_match('/^[\pL\pN\-]+$/u', $tipo), 404);
 
         $this->tipo = $tipo;
         $this->datos = Tipos::datosVacios();
@@ -240,11 +240,10 @@ class CrearResolucion extends Component
                     'numero_exp' => $numeroExp,
                     'numero_resolucion' => $numeroResolucion !== null && trim($numeroResolucion) !== '' ? trim($numeroResolucion) : null,
                     'fecha' => $fecha,
-                    // cod_barrio/cod_casa son integer: los tipos que no usan manzana/lote
-                    // llegan como '' (string vacío) y no como null, lo que rompe el insert
-                    // en modo estricto de MySQL.
-                    'cod_barrio' => $codBarrio !== '' ? $codBarrio : null,
-                    'cod_casa' => $codCasa !== '' ? $codCasa : null,
+                    // cod_barrio/cod_casa son integer: los tipos que no usan manzana/lote llegan como '' y
+                    // las manzanas o lotes con letra ("B", "6A") no entran: en MySQL estricto romperían el insert.
+                    'cod_barrio' => ctype_digit((string) $codBarrio) ? $codBarrio : null,
+                    'cod_casa' => ctype_digit((string) $codCasa) ? $codCasa : null,
                     // Sanitizado antes de guardar: en modo personalizado 'plantilla' es HTML editado a mano
                     // en el navegador y podría contener HTML/JS malicioso si se muestra a otros usuarios.
                     'plantilla' => Purifier::clean($plantilla, $purificador),

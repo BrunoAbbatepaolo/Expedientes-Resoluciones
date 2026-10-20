@@ -34,7 +34,18 @@ final class Documento
             'datos' => $datos,
         ]))->render();
 
-        return Articulos::procesar($html, $articulosQuitados, $editable);
+        $html = Articulos::procesar($html, $articulosQuitados, $editable);
+
+        return $editable ? $html : self::sinEspacioAntesDePuntuacion($html);
+    }
+
+    /**
+     * Los datos van en spans y la plantilla se escribe en varias líneas: eso deja un espacio antes de la coma o el
+     * punto que sigue al dato ("BARRIO 16 DE JUNIO , que"). Se saca del texto final (en el editor no hace falta).
+     */
+    private static function sinEspacioAntesDePuntuacion(string $html): string
+    {
+        return preg_replace('#\s+((?:</?(?:span|b|strong|u|em)\b[^>]*>\s*)*)([,;:.)])(?=\s|<|$)#u', '$1$2', $html) ?? $html;
     }
 
     /**

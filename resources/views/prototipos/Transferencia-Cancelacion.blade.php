@@ -151,7 +151,7 @@
 
         <p>
             Que, la vivienda antes descripta fue Adjudicada mediante Resolución N° <x-resolucion.campo campo="num_res_adjudicacion" placeholder="[NÚMERO]" /> a los
-            <x-resolucion.segun si="nombre_cotitular_anterior" con="Señores" sin="Señor/a" /> <span class="font-bold"><x-resolucion.campo campo="nombre_titular_anterior" placeholder="[NOMBRE TITULAR ANTERIOR]" mayusculas /></span><x-resolucion.opcional si="nombre_cotitular_anterior"> y <span class="font-bold"><x-resolucion.campo campo="nombre_cotitular_anterior" placeholder="[NOMBRE COTITULAR ANTERIOR]" mayusculas /></span></x-resolucion.opcional>.
+            <x-resolucion.segun si="nombre_cotitular_anterior" con="Señores" sin="Señor/a" /> <span class="font-bold"><x-resolucion.campo campo="nombre_titular_anterior" placeholder="[NOMBRE TITULAR ANTERIOR]" mayusculas /></span><x-resolucion.opcional si="nombre_cotitular_anterior" espacio> y <span class="font-bold"><x-resolucion.campo campo="nombre_cotitular_anterior" placeholder="[NOMBRE COTITULAR ANTERIOR]" mayusculas /></span></x-resolucion.opcional>.
         </p>
 
         <p>
@@ -185,7 +185,7 @@
                     DEL PLAN "<x-resolucion.campo campo="nombre_plan" placeholder="[NOMBRE DEL PLAN]" mayusculas />"
                 </span>
                 que fuera Adjudicada mediante Resolución N° <x-resolucion.campo campo="num_res_adjudicacion" placeholder="[NÚMERO]" /> a los
-                <x-resolucion.segun si="nombre_cotitular_anterior" con="Señores" sin="Señor/a" /> <span class="font-bold"><x-resolucion.campo campo="nombre_titular_anterior" placeholder="[NOMBRE TITULAR ANTERIOR]" mayusculas /></span>, DNI N° <x-resolucion.campo campo="dni_titular_anterior" placeholder="[DNI TITULAR ANTERIOR]" /><x-resolucion.opcional si="nombre_cotitular_anterior"> y <span class="font-bold"><x-resolucion.campo campo="nombre_cotitular_anterior" placeholder="[NOMBRE COTITULAR ANTERIOR]" mayusculas /></span>, DNI N° <x-resolucion.campo campo="dni_cotitular_anterior" placeholder="[DNI COTITULAR ANTERIOR]" /></x-resolucion.opcional>
+                <x-resolucion.segun si="nombre_cotitular_anterior" con="Señores" sin="Señor/a" /> <span class="font-bold"><x-resolucion.campo campo="nombre_titular_anterior" placeholder="[NOMBRE TITULAR ANTERIOR]" mayusculas /></span>, DNI N° <x-resolucion.campo campo="dni_titular_anterior" placeholder="[DNI TITULAR ANTERIOR]" /><x-resolucion.opcional si="nombre_cotitular_anterior" espacio> y <span class="font-bold"><x-resolucion.campo campo="nombre_cotitular_anterior" placeholder="[NOMBRE COTITULAR ANTERIOR]" mayusculas /></span>, DNI N° <x-resolucion.campo campo="dni_cotitular_anterior" placeholder="[DNI COTITULAR ANTERIOR]" /></x-resolucion.opcional>
                 a favor del
                 Señor <span class="font-bold"><x-resolucion.campo campo="nombre_titular_nuevo" placeholder="[NOMBRE TITULAR NUEVO]" mayusculas /></span> DNI N° <x-resolucion.campo campo="dni_titular_nuevo" placeholder="[DNI TITULAR NUEVO]" />
                     <x-resolucion.opcional si="estado_civil_titular_nuevo">(<x-resolucion.campo campo="estado_civil_titular_nuevo" placeholder="[ESTADO CIVIL TITULAR NUEVO]" mayusculas />)</x-resolucion.opcional>

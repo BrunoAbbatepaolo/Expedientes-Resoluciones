@@ -169,7 +169,7 @@
 
         <p class="mt-2">
             Que, la vivienda mencionada fue otorgada a
-            <x-resolucion.segun si="nombre_cotitular" con="los Señores" sin="el/la Señor/a" /> <span class="font-bold"><x-resolucion.campo campo="nombre_titular" placeholder="[NOMBRE TITULAR]" mayusculas /></span> DNI N° <x-resolucion.campo campo="dni_titular" placeholder="[DNI TITULAR]" /><x-resolucion.opcional si="nombre_cotitular"> y <span class="font-bold"><x-resolucion.campo campo="nombre_cotitular" placeholder="[NOMBRE COTITULAR]" mayusculas /></span> DNI N° <x-resolucion.campo campo="dni_cotitular" placeholder="[DNI COTITULAR]" /></x-resolucion.opcional>
+            <x-resolucion.segun si="nombre_cotitular" con="los Señores" sin="el/la Señor/a" /> <span class="font-bold"><x-resolucion.campo campo="nombre_titular" placeholder="[NOMBRE TITULAR]" mayusculas /></span> DNI N° <x-resolucion.campo campo="dni_titular" placeholder="[DNI TITULAR]" /><x-resolucion.opcional si="nombre_cotitular" espacio> y <span class="font-bold"><x-resolucion.campo campo="nombre_cotitular" placeholder="[NOMBRE COTITULAR]" mayusculas /></span> DNI N° <x-resolucion.campo campo="dni_cotitular" placeholder="[DNI COTITULAR]" /></x-resolucion.opcional>
             mediante Acta de Tenencia y Uso Provisorio Intransferible Vivienda Única Social y Resolución de Adjudicación N° <x-resolucion.campo campo="num_res_adjudicacion" placeholder="[NÚMERO]" />.
         </p>
 
@@ -202,7 +202,7 @@
         <div class="articulo">
             <p>
                 <span class="font-bold underline">Art. 1º.- </span>RESCINDIR el Acta de Tenencia y Uso Provisorio Intransferible de Vivienda Única Social suscrita entre este Organismo y los
-                <x-resolucion.segun si="nombre_cotitular" con="Señores" sin="Señor/a" /> <span class="font-bold"><x-resolucion.campo campo="nombre_titular" placeholder="[NOMBRE TITULAR]" mayusculas /></span> DNI N° <x-resolucion.campo campo="dni_titular" placeholder="[DNI TITULAR]" /><x-resolucion.opcional si="nombre_cotitular"> y <span class="font-bold"><x-resolucion.campo campo="nombre_cotitular" placeholder="[NOMBRE COTITULAR]" mayusculas /></span> DNI N° <x-resolucion.campo campo="dni_cotitular" placeholder="[DNI COTITULAR]" /></x-resolucion.opcional>
+                <x-resolucion.segun si="nombre_cotitular" con="Señores" sin="Señor/a" /> <span class="font-bold"><x-resolucion.campo campo="nombre_titular" placeholder="[NOMBRE TITULAR]" mayusculas /></span> DNI N° <x-resolucion.campo campo="dni_titular" placeholder="[DNI TITULAR]" /><x-resolucion.opcional si="nombre_cotitular" espacio> y <span class="font-bold"><x-resolucion.campo campo="nombre_cotitular" placeholder="[NOMBRE COTITULAR]" mayusculas /></span> DNI N° <x-resolucion.campo campo="dni_cotitular" placeholder="[DNI COTITULAR]" /></x-resolucion.opcional>
                 por la causal Falta de Pago, de la vivienda identificada como
                 <span class="font-bold">
                     MANZANA <x-resolucion.campo campo="manzana" placeholder="[MANZANA]" /> – CASA <x-resolucion.campo campo="lote" placeholder="[CASA]" />
@@ -214,7 +214,7 @@
         <div class="articulo">
             <p>
                 <span class="font-bold underline">Art. 2º.- </span>REVOCAR: la Resolución de Adjudicación N° <x-resolucion.campo campo="num_res_adjudicacion" placeholder="[NÚMERO]" /> en lo que respecta a los
-                <x-resolucion.segun si="nombre_cotitular" con="Señores" sin="Señor/a" /> <span class="font-bold"><x-resolucion.campo campo="nombre_titular" placeholder="[NOMBRE TITULAR]" mayusculas /></span> DNI N° <x-resolucion.campo campo="dni_titular" placeholder="[DNI TITULAR]" /><x-resolucion.opcional si="nombre_cotitular"> y <span class="font-bold"><x-resolucion.campo campo="nombre_cotitular" placeholder="[NOMBRE COTITULAR]" mayusculas /></span> DNI N° <x-resolucion.campo campo="dni_cotitular" placeholder="[DNI COTITULAR]" /></x-resolucion.opcional>
+                <x-resolucion.segun si="nombre_cotitular" con="Señores" sin="Señor/a" /> <span class="font-bold"><x-resolucion.campo campo="nombre_titular" placeholder="[NOMBRE TITULAR]" mayusculas /></span> DNI N° <x-resolucion.campo campo="dni_titular" placeholder="[DNI TITULAR]" /><x-resolucion.opcional si="nombre_cotitular" espacio> y <span class="font-bold"><x-resolucion.campo campo="nombre_cotitular" placeholder="[NOMBRE COTITULAR]" mayusculas /></span> DNI N° <x-resolucion.campo campo="dni_cotitular" placeholder="[DNI COTITULAR]" /></x-resolucion.opcional>
                 por la causal Falta de Pago de la vivienda identificada como
                 <span class="font-bold">
                     MANZANA <x-resolucion.campo campo="manzana" placeholder="[MANZANA]" /> – CASA <x-resolucion.campo campo="lote" placeholder="[CASA]" />

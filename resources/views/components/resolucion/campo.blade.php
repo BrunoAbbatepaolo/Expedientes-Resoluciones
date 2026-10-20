@@ -38,4 +38,4 @@
         'fecha_larga' => formatearFechaLarga($valor),
         'moneda' => formatearMoneda($valor),
         default => $mayusculas ? mb_strtoupper($valor) : $valor,
-    } }}</span>@endif @endif
+    } }}</span>@endif@endif

@@ -12,6 +12,7 @@ final class Tipos
     public const TODOS = [
         'Cancelaciones', 'Resciciones', 'Transferencias', 'Transferencia-Cancelacion',
         'Rectificacion', 'AplicarPagos', 'ReconocimientoCuotaPagadaDosVeces', 'ReconocimientoCuotaPagadaNoCargada',
+        'Cancelacion8042', 'CancelacionFondoReserva', 'OficioJudicial', 'Adjudicacion',
     ];
 
     public static function nombre(string $tipo): string
@@ -25,6 +26,10 @@ final class Tipos
             'AplicarPagos' => 'Aplicar pagos',
             'ReconocimientoCuotaPagadaDosVeces' => 'Reconocimiento de cuota pagada dos veces',
             'ReconocimientoCuotaPagadaNoCargada' => 'Reconocimiento de cuota pagada y no cargada',
+            'Cancelacion8042' => 'Cancelación por Ley 8042',
+            'CancelacionFondoReserva' => 'Cancelación por Fondo de Reserva',
+            'OficioJudicial' => 'Oficio judicial (toma de razón)',
+            'Adjudicacion' => 'Adjudicación',
             default => $tipo,
         };
     }
@@ -121,6 +126,30 @@ final class Tipos
             // Tablas de los Reconocimiento (filas que se agregan en el documento; ver components/resolucion/tabla)
             'tabla_cuotas_pagadas' => [],
             'tabla_cuotas_a_reconocer' => [],
+            // Cancelación por Ley 8042, por Fondo de Reserva, Oficio judicial y Adjudicación
+            'ley_condonacion' => '',
+            'decreto_condonacion' => '',
+            'res_fondo_reserva' => '',
+            'modif_fondo_reserva' => '',
+            'tratamiento_solicitante' => '',
+            'nombre_solicitante' => '',
+            'vinculo_solicitante' => '',
+            'num_foja_defuncion' => '',
+            'nombre_fallecido' => '',
+            'dni_fallecido' => '',
+            'fecha_fallecimiento' => '',
+            'oficina_judicial' => '',
+            'caratula' => '',
+            'expte_judicial' => '',
+            'juzgado' => '',
+            'fecha_resolucion_judicial' => '',
+            'num_foja_adjudicaciones' => '',
+            'porcentaje' => '',
+            'fecha_presentacion' => '',
+            'num_foja_catastro' => '',
+            'num_foja_pagos' => '',
+            'precio_vivienda' => '',
+            'precio_terreno' => '',
             // Rectificación: adjudicatarios "donde dice" / "debe decir" (se pueden quitar enteras)
             'tabla_donde_dice' => [],
             'sin_tabla_donde_dice' => false,
@@ -142,6 +171,9 @@ final class Tipos
         return match ($tipo) {
             'AplicarPagos' => ['fecha_res', 'num_exp', 'codigo_pago', 'monto', 'cuotas_adeudadas'],
             'ReconocimientoCuotaPagadaDosVeces', 'ReconocimientoCuotaPagadaNoCargada' => ['fecha_res', 'num_exp', 'codigo_pago', 'quien_suscribe', 'dni_suscribe'],
+            'Cancelacion8042', 'Adjudicacion' => ['fecha_res', 'num_exp', 'nombre_titular', 'dni_titular', 'num_dictamen'],
+            'CancelacionFondoReserva' => ['fecha_res', 'num_exp', 'nombre_fallecido', 'dni_fallecido', 'fecha_fallecimiento', 'num_dictamen'],
+            'OficioJudicial' => ['fecha_res', 'num_exp', 'nombre_titular', 'dni_titular', 'nombre_titular_nuevo', 'dni_titular_nuevo', 'num_dictamen'],
             default => null,
         };
     }
@@ -197,8 +229,9 @@ final class Tipos
             // Opcional: el borrador sale sin número y se asigna al firmar (desde la lista).
             'datos.num_res' => 'nullable|string|max:50',
             // Se guardan en cod_barrio/cod_casa, columnas integer.
-            'datos.manzana' => 'nullable|integer|min:0',
-            'datos.lote' => 'nullable|integer|min:0',
+            // Hay manzanas y lotes con letra ("B", "6A"): solo si son números se guardan para buscar por barrio/casa.
+            'datos.manzana' => 'nullable|string|max:20',
+            'datos.lote' => 'nullable|string|max:20',
             'datos.nombre_barrio' => 'nullable|string|max:255',
             'datos.num_foja_solicitud' => 'nullable|string|max:50',
             'datos.num_foja_informe' => 'nullable|string|max:50',
@@ -288,6 +321,30 @@ final class Tipos
             'datos.tabla_debe_decir.*.*' => 'nullable|string|max:100',
             'datos.sin_tabla_donde_dice' => 'nullable|boolean',
             'datos.sin_tabla_debe_decir' => 'nullable|boolean',
+            // Cancelación por Ley 8042, por Fondo de Reserva, Oficio judicial y Adjudicación
+            'datos.ley_condonacion' => 'nullable|string|max:30',
+            'datos.decreto_condonacion' => 'nullable|string|max:30',
+            'datos.res_fondo_reserva' => 'nullable|string|max:30',
+            'datos.modif_fondo_reserva' => 'nullable|string|max:60',
+            'datos.tratamiento_solicitante' => 'nullable|string|max:30',
+            'datos.nombre_solicitante' => 'nullable|string|max:255',
+            'datos.vinculo_solicitante' => 'nullable|string|max:60',
+            'datos.num_foja_defuncion' => 'nullable|string|max:50',
+            'datos.nombre_fallecido' => 'nullable|string|max:255',
+            'datos.dni_fallecido' => 'nullable|string|max:20',
+            'datos.fecha_fallecimiento' => 'nullable|date',
+            'datos.oficina_judicial' => 'nullable|string|max:255',
+            'datos.caratula' => 'nullable|string|max:255',
+            'datos.expte_judicial' => 'nullable|string|max:50',
+            'datos.juzgado' => 'nullable|string|max:255',
+            'datos.fecha_resolucion_judicial' => 'nullable|date',
+            'datos.num_foja_adjudicaciones' => 'nullable|string|max:50',
+            'datos.porcentaje' => 'nullable|numeric|min:0|max:100',
+            'datos.fecha_presentacion' => 'nullable|date',
+            'datos.num_foja_catastro' => 'nullable|string|max:50',
+            'datos.num_foja_pagos' => 'nullable|string|max:50',
+            'datos.precio_vivienda' => 'nullable|numeric|min:0',
+            'datos.precio_terreno' => 'nullable|numeric|min:0',
         ];
     }
 

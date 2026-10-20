@@ -443,7 +443,7 @@ test('cada tipo: los datos obligatorios están en su plantilla y completándolos
         expect($html)->toContain("x-model=\"\$wire.datos['{$campo}']\"");
         $c->set("datos.{$campo}", match ($campo) {
             'num_exp' => '1234/440-2026',
-            'fecha_res' => '2026-10-19',
+            'fecha_res', 'fecha_fallecimiento' => '2026-10-19',
             default => 'A1',
         });
     }
@@ -721,4 +721,56 @@ test('usar como base: copia los datos de otra resolución, sin número y con la 
     // Un tipo distinto no copia nada.
     Livewire::actingAs($user)->test(CrearResolucion::class, ['tipo' => 'Cancelaciones', 'base' => $res->id])
         ->assertSet('datos.codigo_pago', '');
+});
+
+/** El texto de un documento guardado, sin etiquetas ni saltos de línea de más. */
+function textoPlano(string $html): string
+{
+    return trim(preg_replace('/\s+/', ' ', html_entity_decode(strip_tags($html), ENT_QUOTES)));
+}
+
+test('Cancelación Ley 8042: acepta manzana y lote con letra y arma el documento con la ley y los titulares', function () {
+    $user = editorDeResoluciones();
+
+    Livewire::actingAs($user)->test(CrearResolucion::class, ['tipo' => 'Cancelacion8042'])
+        ->call('usarPlantilla')
+        ->set('datos.num_exp', '1234/440-2026')
+        ->set('datos.manzana', 'B')->set('datos.lote', '6A')->set('datos.nombre_barrio', '16 de Junio')
+        ->set('datos.nombre_titular', 'Maria Elena Brizuela')->set('datos.dni_titular', '16.784.569')
+        ->set('datos.nombre_cotitular', 'Juan Carlos Guaitima')->set('datos.dni_cotitular', '8.395.472')
+        ->set('datos.num_dictamen', '1874/26')
+        ->call('guardarPlantilla')->assertHasNoErrors();
+
+    $res = Resolucion::sole();
+    $html = textoPlano($res->documento_html);
+
+    expect($res->cod_barrio)->toBeNull()
+        ->and($html)->toContain('MANZANA B - LOTE 6A DEL BARRIO 16 DE JUNIO')
+        ->and($html)->toContain('Ley N° 8042/2008; Decreto Nº 1933/01')
+        ->and($html)->toContain('los Señores MARIA ELENA BRIZUELA DNI N° 16.784.569 y JUAN CARLOS GUAITIMA');
+});
+
+test('Adjudicación y Oficio judicial: los importes y porcentajes salen en el documento', function () {
+    $user = editorDeResoluciones();
+
+    Livewire::actingAs($user)->test(CrearResolucion::class, ['tipo' => 'Adjudicacion'])
+        ->call('usarPlantilla')
+        ->set('datos.num_exp', '1234/440-2026')
+        ->set('datos.nombre_titular', 'Gonzalez Ramon')->set('datos.dni_titular', '24.803.980')
+        ->set('datos.precio_vivienda', '33000000')->set('datos.num_cuotas', '360')->set('datos.num_dictamen', '2036/25')
+        ->call('guardarPlantilla')->assertHasNoErrors();
+
+    $texto = textoPlano(Resolucion::sole()->documento_html);
+    expect($texto)->toContain('Art. 2º.- APROBAR el Precio Definitivo')->and($texto)->toContain('33.000.000')->and($texto)->toContain('360');
+
+    Livewire::actingAs($user)->test(CrearResolucion::class, ['tipo' => 'OficioJudicial'])
+        ->call('usarPlantilla')
+        ->set('datos.num_exp', '1235/440-2026')
+        ->set('datos.nombre_titular', 'Barrientos Eduardo')->set('datos.dni_titular', '25.923.831')
+        ->set('datos.nombre_titular_nuevo', 'Gramajo Maria Teresa')->set('datos.dni_titular_nuevo', '23.055.985')
+        ->set('datos.num_dictamen', '2108/26')
+        ->call('guardarPlantilla')->assertHasNoErrors();
+
+    $oficio = textoPlano(Resolucion::latest('id')->first()->documento_html);
+    expect($oficio)->toContain('TOMAR RAZON')->and($oficio)->toContain('100%');
 });
