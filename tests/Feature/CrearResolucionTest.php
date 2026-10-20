@@ -774,3 +774,19 @@ test('Adjudicación y Oficio judicial: los importes y porcentajes salen en el do
     $oficio = textoPlano(Resolucion::latest('id')->first()->documento_html);
     expect($oficio)->toContain('TOMAR RAZON')->and($oficio)->toContain('100%');
 });
+
+test('completar desde el expediente: sugiere el causante como titular y lo carga si la persona acepta', function () {
+    $c = Livewire::actingAs(editorDeResoluciones())->test(CrearResolucion::class, ['tipo' => 'Cancelaciones'])
+        ->call('usarPlantilla')
+        ->assertSet('datos.nombre_titular', '')
+        ->set('datos.num_exp', '1234/440-2026')
+        ->assertSee('Usar «GARCIA, ANA» como titular');
+
+    $c->call('usarTitularSugerido')
+        ->assertSet('datos.nombre_titular', 'GARCIA, ANA')
+        ->assertDontSee('Usar «');
+
+    // Aplicar pagos no lleva titular: no ofrece nada.
+    Livewire::actingAs(editorDeResoluciones())->test(CrearResolucion::class, ['tipo' => 'AplicarPagos'])
+        ->call('usarPlantilla')->set('datos.num_exp', '1234/440-2026')->assertDontSee('Usar «');
+});

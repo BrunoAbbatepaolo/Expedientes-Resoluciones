@@ -178,6 +178,16 @@ final class Tipos
         };
     }
 
+    /** Dato donde va el titular que se carga a mano, o null si el tipo no lleva (o no es el causante del expediente). */
+    public static function campoTitular(string $tipo): ?string
+    {
+        return match ($tipo) {
+            'Cancelaciones', 'Resciciones', 'Cancelacion8042', 'Adjudicacion' => 'nombre_titular',
+            'Transferencias', 'Transferencia-Cancelacion' => 'nombre_titular_nuevo',
+            default => null,
+        };
+    }
+
     public static function conDictamen(string $tipo): bool
     {
         // En los PDF reales de estos tipos el dictamen está siempre (189 de 189). De Rescisiones no hay muestras: opcional.

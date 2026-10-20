@@ -604,16 +604,16 @@ class CrearResolucion extends Component
 
     /**
      * Estado del número de expediente tipeado, para el aviso debajo del campo:
-     * ['estado' => 'vacio'|'ok'|'no'|'error', 'detalle' => ?string].
+     * ['estado' => 'vacio'|'ok'|'no'|'error', 'detalle' => ?string, 'causante' => ?string].
      *
-     * @return array{estado: string, detalle: ?string}
+     * @return array{estado: string, detalle: ?string, causante: ?string}
      */
     #[Computed]
     public function expedienteVinculado(): array
     {
         $numero = trim((string) ($this->datos['num_exp'] ?? ''));
         if (mb_strlen($numero) < 3) {
-            return ['estado' => 'vacio', 'detalle' => null];
+            return ['estado' => 'vacio', 'detalle' => null, 'causante' => null];
         }
 
         try {
@@ -621,12 +621,36 @@ class CrearResolucion extends Component
         } catch (\Throwable $e) {
             report($e);
 
-            return ['estado' => 'error', 'detalle' => null];
+            return ['estado' => 'error', 'detalle' => null, 'causante' => null];
         }
 
         return $exp
-            ? ['estado' => 'ok', 'detalle' => trim(($exp->causante ?? '').' — '.($exp->asunto ?? ''), ' —')]
-            : ['estado' => 'no', 'detalle' => null];
+            ? ['estado' => 'ok', 'detalle' => trim(($exp->causante ?? '').' — '.($exp->asunto ?? ''), ' —'), 'causante' => $exp->causante ?: null]
+            : ['estado' => 'no', 'detalle' => null, 'causante' => null];
+    }
+
+    /**
+     * El causante del expediente (sistema viejo) como titular, si este tipo de resolución lleva titular y todavía
+     * no se cargó uno. Es una sugerencia que la persona acepta: no siempre el causante es el titular.
+     */
+    #[Computed]
+    public function titularSugerido(): ?string
+    {
+        $campo = Tipos::campoTitular($this->tipo);
+        if (! $campo || trim((string) ($this->datos[$campo] ?? '')) !== '') {
+            return null;
+        }
+
+        return $this->expedienteVinculado()['causante'];
+    }
+
+    public function usarTitularSugerido(): void
+    {
+        $campo = Tipos::campoTitular($this->tipo);
+        $causante = $this->titularSugerido();
+        if ($campo && $causante) {
+            $this->datos[$campo] = mb_strtoupper($causante);
+        }
     }
 
     protected function rules(): array
