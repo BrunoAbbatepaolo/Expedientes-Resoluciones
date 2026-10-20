@@ -174,15 +174,29 @@
 
                             {{-- Acciones --}}
                             <div class="col-start-2 row-start-2 row-span-2 flex items-center justify-end lg:col-start-auto lg:row-start-auto lg:row-span-1">
-                                    <div class="pointer-events-auto relative z-20" x-data="{ open: false }" @click.outside="open = false" @keydown.escape="open = false">
-                                        <button type="button" @click="open = !open" :aria-expanded="open" aria-label="Acciones de la resolución {{ $resolucion->numero_resolucion ?: 's/n' }}"
+                                    <div class="pointer-events-auto relative z-20"
+                                        x-data="{
+                                            open: false,
+                                            estilo: '',
+                                            // El menú va fijo (no lo recorta el borde de la lista) y se abre hacia arriba si abajo no entra.
+                                            alternar() {
+                                                this.open = ! this.open;
+                                                if (! this.open) return;
+                                                const r = this.$refs.boton.getBoundingClientRect();
+                                                const alto = 240;
+                                                const arriba = window.innerHeight - r.bottom < alto && r.top > alto;
+                                                this.estilo = `right: ${Math.max(8, window.innerWidth - r.right)}px; ` + (arriba ? `bottom: ${window.innerHeight - r.top + 6}px` : `top: ${r.bottom + 6}px`);
+                                            },
+                                        }"
+                                        @click.outside="open = false" @keydown.escape="open = false" @scroll.window="open = false" @resize.window="open = false">
+                                        <button type="button" x-ref="boton" @click="alternar()" :aria-expanded="open" aria-label="Acciones de la resolución {{ $resolucion->numero_resolucion ?: 's/n' }}"
                                             class="grid size-9 place-items-center rounded-xl text-ipv-ink/55 transition hover:bg-black/[0.06] hover:text-ipv-ink dark:text-ipv-ink-dark/60 dark:hover:bg-white/[0.08] dark:hover:text-ipv-ink-dark">
                                             <svg class="size-5" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="5.5" r="1.7" /><circle cx="12" cy="12" r="1.7" /><circle cx="12" cy="18.5" r="1.7" /></svg>
                                         </button>
-                                        <div x-show="open" x-cloak
-                                            x-transition:enter="transition ease-out duration-150" x-transition:enter-start="opacity-0 scale-95 -translate-y-1" x-transition:enter-end="opacity-100 scale-100 translate-y-0"
+                                        <div x-show="open" x-cloak :style="estilo"
+                                            x-transition:enter="transition ease-out duration-150" x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100"
                                             x-transition:leave="transition ease-in duration-75" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0"
-                                            class="absolute right-0 z-50 mt-1.5 w-52 origin-top-right overflow-hidden rounded-xl bg-white py-1 shadow-xl ring-1 ring-ipv-blue/15 dark:bg-slate-800 dark:ring-white/10">
+                                            class="fixed z-50 w-52 origin-top-right overflow-hidden rounded-xl bg-white py-1 shadow-xl ring-1 ring-ipv-blue/15 dark:bg-slate-800 dark:ring-white/10">
                                             @if ($urlPdf)
                                                 <a href="{{ $urlPdf }}" target="_blank" rel="noopener" @click="open = false"
                                                     class="flex w-full items-center gap-2.5 px-4 py-2.5 text-sm text-ipv-ink/85 transition hover:bg-ipv-blue/[0.08] dark:text-ipv-ink-dark/85 dark:hover:bg-white/[0.06]">
