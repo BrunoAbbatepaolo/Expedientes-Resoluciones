@@ -3,10 +3,13 @@
     'columnas': ['clave' => 'Título'] o ['clave' => ['Título', '$']] (el segundo valor va delante del dato).
 --}}
 @aware(['editable' => false, 'datos' => [], 'marcadores' => false])
-@props(['campo', 'columnas'])
+@props(['campo', 'columnas', 'filas' => 1, 'quitable' => false])
 @php
     $columnas = array_map(fn ($c) => is_array($c) ? ['titulo' => $c[0], 'prefijo' => $c[1] ?? ''] : ['titulo' => $c, 'prefijo' => ''], $columnas);
     $vacia = array_fill_keys(array_keys($columnas), '');
+    $inicial = max(1, (int) $filas);
+    $sin = "sin_{$campo}";
+    $quitada = $quitable && ! empty($datos[$sin]);
     $filas = array_values(array_filter(
         is_array($datos[$campo] ?? null) ? $datos[$campo] : [],
         fn ($fila) => is_array($fila) && implode('', array_map(fn ($v) => trim((string) $v), $fila)) !== '',
@@ -14,10 +17,19 @@
     $lista = "\$wire.datos['{$campo}']";
     // Personalizado: filas vacías para escribir encima.
     if ($marcadores && $filas === []) {
-        $filas = [$vacia, $vacia, $vacia];
+        $filas = array_fill(0, max(3, $inicial), $vacia);
     }
 @endphp
-<div @if ($editable) x-data x-init="if (! Array.isArray({{ $lista }}) || ! {{ $lista }}.length) {{ $lista }} = [@js($vacia)]" @endif>
+@if ($quitada && ! $editable)
+    {{-- tabla quitada: no sale en el documento --}}
+@else
+<div @if ($editable) x-data x-init="if (! Array.isArray({{ $lista }}) || ! {{ $lista }}.length) {{ $lista }} = Array.from({ length: {{ $inicial }} }, () => ({...@js($vacia)}))" @endif>
+    @if ($editable && $quitable)
+        <div class="text-center mb-2" x-show="$wire.datos['{{ $sin }}']" style="display:none;">
+            <button type="button" x-on:click.stop="$wire.datos['{{ $sin }}'] = false" class="px-3 py-1 text-xs rounded-full border border-emerald-500 text-emerald-700 hover:bg-emerald-50">+ Agregar tabla</button>
+        </div>
+    @endif
+    <div @if ($editable && $quitable) x-show="! $wire.datos['{{ $sin }}']" @endif>
     <table class="tabla-resolucion" style="width:100%; border-collapse:collapse; margin-bottom:20px; font-size:13px;">
         <thead>
             <tr style="background:#1e3a5f; color:white;">
@@ -62,4 +74,11 @@
                 class="w-9 h-9 rounded-full bg-rose-500 text-white text-xl font-bold leading-none shadow-sm hover:bg-rose-600 flex items-center justify-center">−</button>
         </div>
     @endif
+    @if ($editable && $quitable)
+        <div class="text-center mb-2">
+            <button type="button" x-on:click.stop="$wire.datos['{{ $sin }}'] = true" class="px-3 py-1 text-xs rounded-full border border-rose-400 text-rose-600 hover:bg-rose-50">Quitar esta tabla</button>
+        </div>
+    @endif
+    </div>
 </div>
+@endif

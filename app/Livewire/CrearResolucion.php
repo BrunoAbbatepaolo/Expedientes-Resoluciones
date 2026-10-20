@@ -147,6 +147,11 @@ class CrearResolucion extends Component
         // Tablas de los Reconocimiento (filas que se agregan en el documento; ver components/resolucion/tabla)
         'tabla_cuotas_pagadas' => [],
         'tabla_cuotas_a_reconocer' => [],
+        // Rectificación: adjudicatarios "donde dice" / "debe decir" (se pueden quitar enteras)
+        'tabla_donde_dice' => [],
+        'sin_tabla_donde_dice' => false,
+        'tabla_debe_decir' => [],
+        'sin_tabla_debe_decir' => false,
     ];
 
     // Plantilla para el modo personalizado
@@ -735,6 +740,12 @@ class CrearResolucion extends Component
             'datos.tabla_cuotas_pagadas.*.*' => 'nullable|string|max:100',
             'datos.tabla_cuotas_a_reconocer' => 'nullable|array|max:50',
             'datos.tabla_cuotas_a_reconocer.*.*' => 'nullable|string|max:100',
+            'datos.tabla_donde_dice' => 'nullable|array|max:50',
+            'datos.tabla_donde_dice.*.*' => 'nullable|string|max:100',
+            'datos.tabla_debe_decir' => 'nullable|array|max:50',
+            'datos.tabla_debe_decir.*.*' => 'nullable|string|max:100',
+            'datos.sin_tabla_donde_dice' => 'nullable|boolean',
+            'datos.sin_tabla_debe_decir' => 'nullable|boolean',
         ];
     }
 

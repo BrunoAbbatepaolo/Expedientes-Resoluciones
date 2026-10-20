@@ -92,6 +92,25 @@ test('Rectificación y Transferencias no exigen un titular que su formulario no 
         ->assertHasNoErrors(['datos.nombre_titular', 'datos.dni_titular']);
 });
 
+test('Rectificación: las tablas de adjudicatarios se completan y se pueden quitar', function () {
+    $fila = ['ord' => '1', 'nombre' => 'PEREZ JUAN', 'documento' => '20.123.456', 'mz' => 'A', 'lote' => '5', 'fnac' => '', 'cupo' => ''];
+
+    Livewire::actingAs(editorDeResoluciones())->test(CrearResolucion::class, ['tipo' => 'Rectificacion'])
+        ->set('modo', 'plantilla')
+        ->set('datos.num_exp', '1234/440-2026')
+        ->set('datos.num_res', '55/2026')->set('datos.num_dictamen', '1874/26')
+        ->set('datos.tabla_donde_dice', [$fila])
+        ->set('datos.sin_tabla_debe_decir', true)
+        ->call('guardarPlantilla')
+        ->assertHasNoErrors();
+
+    $resolucion = Resolucion::first();
+    $html = \App\Services\Resoluciones\Documento::html($resolucion->tipo, $resolucion->datos['campos']);
+
+    expect($html)->toContain('PEREZ JUAN')
+        ->and(substr_count($html, 'tabla-resolucion'))->toBe(1);
+});
+
 /** PDF mínimo con una línea de texto por elemento (texto ASCII). */
 function pdfConTexto(array $lineas): string
 {

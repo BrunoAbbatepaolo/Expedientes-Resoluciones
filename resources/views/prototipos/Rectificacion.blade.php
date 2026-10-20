@@ -299,80 +299,7 @@
         </div>
 
         <div class="recuadro-adjudicatarios">
-            <table>
-                <tr>
-                    <th style="width: 40px;">Ord.</th>
-                    <th style="width: 180px;">Apellidos y Nombres</th>
-                    <th style="width: 90px;">Documento</th>
-                    <th style="width: 40px;">MZ.</th>
-                    <th style="width: 40px;">Lote</th>
-                    <th style="width: 80px;">Fecha Nac.</th>
-                    <th style="width: 40px;">Cupo</th>
-                </tr>
-                <tr>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                </tr>
-                <tr>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                </tr>
-                <tr>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                </tr>
-                <tr>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                </tr>
-                <tr>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                </tr>
-                <tr>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                </tr>
-                <tr>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                </tr>
-            </table>
+            <x-resolucion.tabla campo="tabla_donde_dice" :columnas="['ord' => 'Ord.', 'nombre' => 'Apellidos y Nombres', 'documento' => 'Documento', 'mz' => 'Mz.', 'lote' => 'Lote', 'fnac' => 'Fecha Nac.', 'cupo' => 'Cupo']" :filas="3" quitable />
         </div>
 
         <div class="logo-provincia-pagina1">
@@ -421,72 +348,8 @@
             </div>
 
             <div class="recuadro-pagina2">
-                <table>
-                    <tr>
-                        <th style="width: 40px;">Ord</th>
-                        <th style="width: 180px;">Apellidos y Nombres</th>
-                        <th style="width: 90px;">Documento</th>
-                        <th style="width: 40px;">Mz</th>
-                        <th style="width: 40px;">Lote</th>
-                        <th style="width: 80px;">Fecha Nac</th>
-                        <th style="width: 40px;">Cupo</th>
-                    </tr>
-                    <tr>
-                        <td></td>
-                        <td></td>
-                        <td></td>
-                        <td></td>
-                        <td></td>
-                        <td></td>
-                        <td></td>
-                    </tr>
-                    <tr>
-                        <td></td>
-                        <td></td>
-                        <td></td>
-                        <td></td>
-                        <td></td>
-                        <td></td>
-                        <td></td>
-                    </tr>
-                    <tr>
-                        <td></td>
-                        <td></td>
-                        <td></td>
-                        <td></td>
-                        <td></td>
-                        <td></td>
-                        <td></td>
-                    </tr>
-                    <tr>
-                        <td></td>
-                        <td></td>
-                        <td></td>
-                        <td></td>
-                        <td></td>
-                        <td></td>
-                        <td></td>
-                    </tr>
-                    <tr>
-                        <td></td>
-                        <td></td>
-                        <td></td>
-                        <td></td>
-                        <td></td>
-                        <td></td>
-                        <td></td>
-                    </tr>
-                    <tr>
-                        <td></td>
-                        <td></td>
-                        <td></td>
-                        <td></td>
-                        <td></td>
-                        <td></td>
-                        <td></td>
-                    </tr>
-                </table>
-            </div>
+            <x-resolucion.tabla campo="tabla_debe_decir" :columnas="['ord' => 'Ord.', 'nombre' => 'Apellidos y Nombres', 'documento' => 'Documento', 'mz' => 'Mz.', 'lote' => 'Lote', 'fnac' => 'Fecha Nac.', 'cupo' => 'Cupo']" :filas="3" quitable />
+        </div>
         </div>
 
         <div class="space-y-3 mt-4">
