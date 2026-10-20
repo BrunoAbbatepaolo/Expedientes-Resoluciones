@@ -40,7 +40,6 @@ class Resolucion extends Model
 
     // documento_html no es asignable en masa: se escribe solo desde regenerarDocumento() (HTML armado en el servidor).
 
-
     /** datos: ['campos' => [...], 'articulos_quitados' => [...]] de la "Plantilla completa" (ver Documento). */
     protected function casts(): array
     {
