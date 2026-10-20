@@ -178,6 +178,12 @@ final class Tipos
         };
     }
 
+    /** Las notas (Aplicar pagos y Reconocimientos) no son resoluciones: nunca llevan número de resolución. */
+    public static function esNota(?string $tipo): bool
+    {
+        return in_array($tipo, ['AplicarPagos', 'ReconocimientoCuotaPagadaDosVeces', 'ReconocimientoCuotaPagadaNoCargada'], true);
+    }
+
     /** Dato donde va el titular que se carga a mano, o null si el tipo no lleva (o no es el causante del expediente). */
     public static function campoTitular(string $tipo): ?string
     {

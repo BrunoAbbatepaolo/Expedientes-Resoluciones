@@ -21,6 +21,11 @@ class AnalizadorResolucion
         'AplicarPagos' => ['aplicar pago' => 5, 'pago especial' => 3],
         'ReconocimientoCuotaPagadaDosVeces' => ['pagada dos veces' => 5, 'pagadas doblemente' => 4, 'pagada doblemente' => 4],
         'ReconocimientoCuotaPagadaNoCargada' => ['pagada y no cargada' => 5, 'pagadas y no cargadas' => 5],
+        // Tipos nuevos: sus frases pesan más que las de Cancelaciones, que también aparecen en ellos.
+        'Cancelacion8042' => ['condonado por ley' => 10, '8042/2008' => 8],
+        'CancelacionFondoReserva' => ['fondo de reserva por fallecimiento' => 10, 'certificado de defuncion' => 4],
+        'OficioJudicial' => ['mediante oficio librado' => 10, 'juzgado oficiante' => 4],
+        'Adjudicacion' => ['aprobar el precio definitivo' => 6, 'aprobar el plan de pagos que consta' => 6, 'adjudicar: la unidad habitacional' => 3],
     ];
 
     /** Nombre propio: palabras en mayúsculas o Capitalizadas, con "de/del/la" en el medio. Termina antes de "DNI". */
@@ -49,7 +54,12 @@ class AnalizadorResolucion
     {
         $normalizado = Str::lower(Str::ascii($plano));
 
-        // "TOMAR RAZÓN" (oficio judicial, venta) no tiene plantilla: mencionan "cancelación y levantamiento"
+        // Oficio judicial: tiene su propia plantilla (aunque también "toma razón").
+        if (str_contains($normalizado, 'mediante oficio librado')) {
+            return 'OficioJudicial';
+        }
+
+        // "TOMAR RAZÓN" de una venta no tiene plantilla: mencionan "cancelación y levantamiento"
         // y se tomaban por Cancelaciones, precargando un modelo equivocado (visto en PDF reales).
         if (preg_match('/r\s*e\s*s\s*u\s*e\s*l\s*v\s*e\W*art\W*1\W*[a-z]{0,3}\W*tomar razon/u', $normalizado)) {
             return null;

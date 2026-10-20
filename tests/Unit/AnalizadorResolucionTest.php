@@ -101,3 +101,10 @@ test('"TOMAR RAZÓN" (oficio judicial / venta) no se toma por Cancelación aunqu
     expect(analizar('VISTO, el oficio judicial ... Cancelación Definitiva y Levantamiento de Hipoteca ... R E S U E L V E : Art.1°.-TOMAR RAZON de la Resolución de fecha 29 de abril de 2026 recaída en el juicio caratulado ...')['tipo'])->toBeNull()
         ->and(analizar('R E S U E L V E : Art.1°.-APROBAR la Cancelación Definitiva y Levantamiento de Hipoteca de la vivienda')['tipo'])->toBe('Cancelaciones');
 });
+
+test('reconoce los tipos nuevos aunque también hablen de cancelación o de tomar razón', function () {
+    expect(analizar('Que, el Lote se encuentra condonado por Ley con la conformidad. Ley Nº 8042/2008. Art.1°.-APROBAR la Cancelación Definitiva del Lote')['tipo'])->toBe('Cancelacion8042')
+        ->and(analizar('VISTO la Cancelación Definitiva, por aplicación del Beneficio de Fondo de Reserva por Fallecimiento. Certificado de Defunción')['tipo'])->toBe('CancelacionFondoReserva')
+        ->and(analizar('Que, mediante oficio librado por la Oficina de Gestión Asociada se solicita. R E S U E L V E Art.1°.-TOMAR RAZON de la Resolución. Art.3°.-APROBAR la Cancelación Definitiva')['tipo'])->toBe('OficioJudicial')
+        ->and(analizar('Art.1°.-ADJUDICAR: la unidad habitacional. Art.2°.-APROBAR el Precio Definitivo de la vivienda. Art.3°.-APROBAR el Plan de Pagos que consta de 360 cuotas')['tipo'])->toBe('Adjudicacion');
+});

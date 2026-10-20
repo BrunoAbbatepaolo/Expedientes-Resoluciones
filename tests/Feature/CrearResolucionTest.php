@@ -625,12 +625,18 @@ function resolucionSinNumero(User $user): Resolucion
 test('el número de resolución es opcional: se guarda sin número y se asigna después desde la lista', function () {
     $user = editorDeResoluciones();
     Permiso::create(['user_id' => $user->id, 'nombre' => 'resolucion_ver']);
-    $res = resolucionSinNumero($user);
 
+    Livewire::actingAs($user)->test(CrearResolucion::class, ['tipo' => 'Cancelaciones'])
+        ->call('usarPlantilla')
+        ->set('datos.num_exp', '1234/440-2026')->set('datos.nombre_titular', 'Perez Juan')->set('datos.dni_titular', '20.123.456')
+        ->set('datos.num_dictamen', '1874/26')
+        ->call('guardarPlantilla')->assertHasNoErrors();
+    $res = Resolucion::sole();
     $res->update(['documento_html' => '<p>viejo</p>']);
+
     expect($res->numero_resolucion)->toBeNull();
 
-    Livewire::actingAs($user)->test(Resoluciones::class)
+    Livewire::actingAs($user)->test(\App\Livewire\Resoluciones::class)
         ->assertSee('Sin número')->assertSee('Asignar número')
         ->call('cargarResolucion', $res->id)
         ->set('resolucionForm.numero_resolucion', '41/2026')
@@ -639,7 +645,16 @@ test('el número de resolución es opcional: se guarda sin número y se asigna d
     $res->refresh();
     expect($res->numero_resolucion)->toBe('41/2026')
         ->and($res->datos['campos']['num_res'])->toBe('41/2026')
-        ->and($res->documento_html)->toContain('778899');
+        ->and(textoPlano($res->documento_html))->toContain('RESOLUCION N° 41/2026');
+});
+
+test('las notas (Aplicar pagos) se muestran como "Nota": no piden número de resolución', function () {
+    $user = editorDeResoluciones();
+    Permiso::create(['user_id' => $user->id, 'nombre' => 'resolucion_ver']);
+    resolucionSinNumero($user);
+
+    Livewire::actingAs($user)->test(\App\Livewire\Resoluciones::class)
+        ->assertSee('Nota')->assertDontSee('Sin número')->assertDontSee('Asignar número');
 });
 
 test('el PDF se guarda fijo al crear: cambiar la plantilla después no modifica la resolución', function () {

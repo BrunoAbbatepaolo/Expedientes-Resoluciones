@@ -75,3 +75,20 @@ Componentes en `resources/views/components/resolucion/`: `documento` (envoltorio
 
 - Quitar `quill` de package.json (ya no se importa).
 - Push de la rama y PR (gh sin sesión).
+
+## Fase 2 (2026-10-20): mejoras sobre la plantilla inline
+
+Hecho:
+- Rectificación: las dos tablas de adjudicatarios ("donde dice" / "debe decir") se completan y se pueden quitar (`x-resolucion.tabla ... quitable`).
+- Número de resolución opcional (migración `numero_opcional_y_documento_fijo_en_resoluciones`); se asigna desde la lista ("Asignar número"). Las notas (Aplicar pagos, Reconocimientos) se muestran como "Nota".
+- Documento fijo: `resoluciones.documento_html` guarda el documento armado al crear y al editar datos (`Resolucion::regenerarDocumento`); cambiar una plantilla no altera las viejas.
+- Lista: paginación de a 20, exportar CSV (`resoluciones.exportar`, respeta búsqueda y filtro), historial por resolución (auditoría sin columnas grandes) y "Usar como base" (`?base=ID` en la pantalla de crear).
+- Tipos nuevos: Cancelación Ley 8042, Cancelación por Fondo de Reserva, Oficio judicial (toma de razón) y Adjudicación, con autocompletado desde PDF. Manzana/lote aceptan letras ("B", "6A"); solo si son números se guardan en `cod_barrio`/`cod_casa`.
+- Sugerencia del causante del expediente (mitiv) como titular. mitiv solo tiene el nombre del causante: no hay DNI, barrio ni manzana/lote para traer.
+- Refactor: datos, reglas y nombres de cada tipo pasaron de `CrearResolucion` a `AppServices\Resoluciones\Tipos` (879 → ~650 líneas). Pint aplicado a todo el proyecto.
+- Texto de los documentos: se quita el espacio antes de coma/punto que dejaban los datos, y `x-resolucion.opcional ... espacio` conserva el espacio que Blade recorta.
+
+Pendiente / decisiones abiertas:
+- Rescisión con defunción: no hay PDF de muestra, no se hizo.
+- Firma digital por firmante con código de acceso (la tabla `firmantes` ya está lista).
+- Avisar si ya existe una resolución del mismo tipo para el expediente.

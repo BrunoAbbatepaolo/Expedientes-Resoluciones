@@ -123,6 +123,8 @@
                                     <span class="block truncate text-sm font-semibold text-ipv-ink dark:text-ipv-ink-dark">
                                         @if ($resolucion->numero_resolucion)
                                             Resolución {{ $resolucion->numero_resolucion }}
+                                        @elseif (\App\Services\Resoluciones\Tipos::esNota($resolucion->tipo))
+                                            Nota
                                         @else
                                             Resolución <span class="rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-semibold text-amber-800 dark:bg-amber-400/15 dark:text-amber-200" title="Todavía no se le asignó número">Sin número</span>
                                         @endif
@@ -204,7 +206,7 @@
                                             <button type="button" wire:click="cargarResolucion({{ $resolucion->id }})" @click="open = false; showEditar = true"
                                                 class="flex w-full items-center gap-2.5 px-4 py-2.5 text-left text-sm text-ipv-ink/85 transition hover:bg-ipv-blue/[0.08] dark:text-ipv-ink-dark/85 dark:hover:bg-white/[0.06]">
                                                 <svg class="size-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
-                                                {{ $resolucion->numero_resolucion ? 'Modificar datos' : 'Asignar número' }}
+                                                {{ $resolucion->numero_resolucion || \App\Services\Resoluciones\Tipos::esNota($resolucion->tipo) ? 'Modificar datos' : 'Asignar número' }}
                                             </button>
                                             <div class="my-1 border-t border-ipv-blue/10 dark:border-white/10"></div>
                                             <button type="button" wire:click="confirmarBorrado({{ $resolucion->id }})" @click="open = false; showBorrar = true"
