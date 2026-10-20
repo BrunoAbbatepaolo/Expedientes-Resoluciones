@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Livewire\CrearResolucion;
+use App\Services\Resoluciones\Tipos;
 use App\Models\Resolucion;
 use App\Support\Csv;
 use Illuminate\Http\Request;
@@ -18,7 +18,7 @@ class ExportarResolucionesController extends Controller
 
         $buscar = (string) $request->query('q', '');
         $tipo = (string) $request->query('tipo', '');
-        $tipo = $tipo === 'otras' || in_array($tipo, CrearResolucion::TIPOS, true) ? $tipo : '';
+        $tipo = $tipo === 'otras' || in_array($tipo, Tipos::TODOS, true) ? $tipo : '';
 
         $consulta = Resolucion::query()->visiblesPara($usuario)->filtrar($buscar, $tipo)->latest();
 
@@ -31,7 +31,7 @@ class ExportarResolucionesController extends Controller
                 fputcsv($salida, Csv::fila([
                     $r->numero_exp,
                     $r->numero_resolucion ?? '',
-                    $r->tipo ? CrearResolucion::nombreDeTipo($r->tipo) : 'Sin tipo',
+                    $r->tipo ? Tipos::nombre($r->tipo) : 'Sin tipo',
                     $r->fecha ? \Illuminate\Support\Carbon::parse($r->fecha)->format('d/m/Y') : '',
                     $r->cod_barrio ?? '',
                     $r->cod_casa ?? '',

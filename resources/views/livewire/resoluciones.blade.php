@@ -7,7 +7,7 @@
         @php
             $puedeEditar = (bool) auth()->user()->permiso('resolucion_editar');
             $verExpediente = (bool) auth()->user()->permiso('expediente_ver');
-            $nombreTipo = fn (?string $t) => $t ? \App\Livewire\CrearResolucion::nombreDeTipo($t) : 'Sin tipo';
+            $nombreTipo = fn (?string $t) => $t ? \App\Services\Resoluciones\Tipos::nombre($t) : 'Sin tipo';
             // Color de acento por tipo (institucional: azul, oro y magenta del IPV).
             $acento = fn (?string $t) => match ($t) {
                 'Cancelaciones', 'Transferencia-Cancelacion' => 'azul',

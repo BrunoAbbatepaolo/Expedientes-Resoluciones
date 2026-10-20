@@ -9,6 +9,7 @@ use App\Services\Resoluciones\AnalizadorResolucion;
 use App\Services\Resoluciones\Articulos;
 use App\Services\Resoluciones\Documento;
 use App\Services\Resoluciones\LectorDocumento;
+use App\Services\Resoluciones\Tipos;
 use App\Traits\AuthorizesOficina;
 use App\Traits\NotificaUi;
 use Illuminate\Support\Facades\DB;
@@ -56,108 +57,8 @@ class CrearResolucion extends Component
     #[Locked]
     public ?array $sugerencia = null;
 
-    /** Tipos de resolución con formulario (los mismos nombres que prototipos.*). */
-    public const TIPOS = [
-        'Cancelaciones', 'Resciciones', 'Transferencias', 'Transferencia-Cancelacion',
-        'Rectificacion', 'AplicarPagos', 'ReconocimientoCuotaPagadaDosVeces', 'ReconocimientoCuotaPagadaNoCargada',
-    ];
-
-    // Usar array para mejor organización
-    public array $datos = [
-        'fecha_res' => '',
-        'num_exp' => '',
-        'num_res' => '',
-        'manzana' => '',
-        'lote' => '',
-        'nombre_barrio' => '',
-        'num_foja_solicitud' => '',
-        'num_foja_informe' => '',
-        'fecha_cancelacion' => '',
-        'num_foja_darrd' => '',
-        'num_foja_dictamen' => '',
-        'nombre_titular' => '',
-        'dni_titular' => '',
-        'nombre_cotitular' => '',
-        'dni_cotitular' => '',
-        'num_escritura' => '',
-        'fecha_escritura' => '',
-        'nombre_escribano' => '',
-        'num_foja_boleto' => '',
-        'num_dictamen' => '',
-        'num_res_adjudicacion' => '',
-        'nombre_titular_anterior' => '',
-        'dni_titular_anterior' => '',
-        'nombre_cotitular_anterior' => '',
-        'dni_cotitular_anterior' => '',
-        'num_res_reglamentacion' => '',
-        'num_res_modificatoria' => '',
-        'unidad' => '',
-        'sector' => '',
-        'estado_civil_titular_nuevo' => '',
-        'estado_civil_cotitular_nuevo' => '',
-        // Campos específicos de AplicarPagos (nombre_barrio ya está arriba)
-        'codigo_pago' => '',
-        'causante' => 'DEPARTAMENTO RECURSOS FINANCIEROS',
-        'jefe_computos' => '',
-        'monto' => '',
-        'cuotas_adeudadas' => '',
-        'firma_1_nombre' => '',
-        'firma_1_cargo' => '',
-        'firma_2_nombre' => '',
-        'firma_2_cargo' => '',
-        'firma_1_dependencia' => '',
-        'firma_2_dependencia' => '',
-        // Campos específicos de Rectificación
-        'texto_donde_dice' => '',
-        'res_reglamentacion' => '185/2017',
-        'res_modificatoria' => '779/2017',
-        'fecha_res_adjudicacion' => '',
-        'orden' => '',
-        'num_foja_dni' => '',
-        'num_foja_resolucion' => '',
-        'num_foja_darrd_conf' => '',
-        'cantidad_viviendas' => '',
-        'cantidad_letras' => '',
-        // Campos específicos de Resición
-        'nombre_emprendimiento' => '',
-        'departamento' => '',
-        'monto_deuda' => '',
-        'fecha_deuda' => '',
-        'fecha_dictamen' => '',
-        // Campos específicos de Transferencia
-        'nombre_plan' => '',
-        'nombre_titular_nuevo' => '',
-        'dni_titular_nuevo' => '',
-        'fecha_nacimiento_titular' => '',
-        'nombre_cotitular_nuevo' => '',
-        'dni_cotitular_nuevo' => '',
-        'fecha_nacimiento_cotitular' => '',
-        'fecha_instrumento' => '',
-        'num_foja_plan' => '',
-        'num_foja_recursos' => '',
-        'num_foja_promocion' => '',
-        'num_foja_ratificacion' => '',
-        'num_foja_regularizacion' => '',
-        'num_cuotas' => '',
-        'monto_cuota' => '',
-        'tasa_interes' => '',
-        'fecha_tasa' => '',
-        // Campos específicos de ReconocimientoCuotaPagadaDosVeces
-        'quien_suscribe' => '',
-        'dni_suscribe' => '',
-        'cuota_sin_gastos' => '',
-        'nro_ultima_cuota' => '',
-        'vencimiento_ultima_cuota' => '',
-        'plazo_total_plan' => '',
-        // Tablas de los Reconocimiento (filas que se agregan en el documento; ver components/resolucion/tabla)
-        'tabla_cuotas_pagadas' => [],
-        'tabla_cuotas_a_reconocer' => [],
-        // Rectificación: adjudicatarios "donde dice" / "debe decir" (se pueden quitar enteras)
-        'tabla_donde_dice' => [],
-        'sin_tabla_donde_dice' => false,
-        'tabla_debe_decir' => [],
-        'sin_tabla_debe_decir' => false,
-    ];
+    /** Datos de la resolución: lo que se tipea en el documento (ver Tipos::datosVacios()). */
+    public array $datos = [];
 
     // Plantilla para el modo personalizado
     public string $plantilla = '';
@@ -179,6 +80,7 @@ class CrearResolucion extends Component
         abort_unless(is_string($tipo) && preg_match('/^[\pL\-]+$/u', $tipo), 404);
 
         $this->tipo = $tipo;
+        $this->datos = Tipos::datosVacios();
         // Establecer la fecha inicial en el formato correcto
         $this->datos['fecha_res'] = date('Y-m-d');
 
@@ -279,7 +181,7 @@ class CrearResolucion extends Component
             return null;
         }
 
-        $this->validarConAviso($this->reglasPlantilla(), $this->messages());
+        $this->validarConAviso($this->rules(), $this->messages());
 
         try {
             $resolucion = $this->persistirResolucion(
@@ -497,8 +399,8 @@ class CrearResolucion extends Component
         if ($resultado['tipo'] !== $this->tipo) {
             // Los datos viajan por sesión al formulario correcto (no por el cliente).
             session()->put('sugerencia_resolucion', $resultado);
-            $this->sugerencia = ['tipo' => $resultado['tipo'], 'nombre' => self::nombreDeTipo($resultado['tipo'])];
-            $this->toast('info', 'Este documento parece ser de otro tipo: '.self::nombreDeTipo($resultado['tipo']).'.', 6000);
+            $this->sugerencia = ['tipo' => $resultado['tipo'], 'nombre' => Tipos::nombre($resultado['tipo'])];
+            $this->toast('info', 'Este documento parece ser de otro tipo: '.Tipos::nombre($resultado['tipo']).'.', 6000);
 
             return;
         }
@@ -515,7 +417,7 @@ class CrearResolucion extends Component
     public function aplicarSugerencia() // redirección: devuelve el redirect de Livewire
     {
         $tipo = session('sugerencia_resolucion.tipo');
-        abort_unless(is_string($tipo) && in_array($tipo, self::TIPOS, true), 404);
+        abort_unless(is_string($tipo) && in_array($tipo, Tipos::TODOS, true), 404);
 
         return $this->redirectRoute('resoluciones.crear', ['tipo' => $tipo], navigate: true);
     }
@@ -532,21 +434,6 @@ class CrearResolucion extends Component
         }
 
         return $cargados;
-    }
-
-    public static function nombreDeTipo(string $tipo): string
-    {
-        return match ($tipo) {
-            'Cancelaciones' => 'Cancelaciones',
-            'Resciciones' => 'Rescisiones',
-            'Transferencias' => 'Transferencias',
-            'Transferencia-Cancelacion' => 'Transferencia y Cancelación',
-            'Rectificacion' => 'Rectificación',
-            'AplicarPagos' => 'Aplicar pagos',
-            'ReconocimientoCuotaPagadaDosVeces' => 'Reconocimiento de cuota pagada dos veces',
-            'ReconocimientoCuotaPagadaNoCargada' => 'Reconocimiento de cuota pagada y no cargada',
-            default => $tipo,
-        };
     }
 
     /** Devuelve la URL para imprimir la resolución guardada, o null si no se guardó. */
@@ -683,151 +570,6 @@ class CrearResolucion extends Component
         return Documento::existe($this->tipo) ? Documento::estilos($this->tipo) : '';
     }
 
-    protected function rules(): array
-    {
-        return [
-            'datos.fecha_res' => 'required|date',
-            'datos.num_exp' => ['required', 'string', 'max:50', $this->reglaExpedienteExiste()],
-            // Opcional: el borrador sale sin número y se asigna al firmar (desde la lista).
-            'datos.num_res' => 'nullable|string|max:50',
-            // Se guardan en cod_barrio/cod_casa, columnas integer.
-            'datos.manzana' => 'nullable|integer|min:0',
-            'datos.lote' => 'nullable|integer|min:0',
-            'datos.nombre_barrio' => 'nullable|string|max:255',
-            'datos.num_foja_solicitud' => 'nullable|string|max:50',
-            'datos.num_foja_informe' => 'nullable|string|max:50',
-            'datos.fecha_cancelacion' => 'nullable|date',
-            'datos.num_foja_dictamen' => 'nullable|string|max:50',
-            // El titular que se exige depende del formulario: Transferencias usa el titular
-            // nuevo y Rectificación no tiene titular (antes no se podían guardar nunca).
-            'datos.nombre_titular' => [$this->tipoConTitular() ? 'required' : 'nullable', 'string', 'max:255'],
-            'datos.dni_titular' => [$this->tipoConTitular() ? 'required' : 'nullable', 'string', 'max:20'],
-            'datos.nombre_cotitular' => 'nullable|string|max:255',
-            'datos.dni_cotitular' => 'nullable|string|max:20',
-            'datos.num_escritura' => 'nullable|string|max:50',
-            'datos.fecha_escritura' => 'nullable|date',
-            'datos.nombre_escribano' => 'nullable|string|max:255',
-            // Campos específicos de Resciciones
-            'datos.nombre_emprendimiento' => 'nullable|string|max:255',
-            'datos.departamento' => 'nullable|string|max:100',
-            'datos.monto_deuda' => 'nullable|numeric|min:0',
-            'datos.fecha_deuda' => 'nullable|date',
-            'datos.fecha_dictamen' => 'nullable|date',
-            'datos.num_res_adjudicacion' => 'nullable|string|max:50',
-            // Campos específicos de Transferencia
-            'datos.nombre_plan' => 'nullable|string|max:255',
-            'datos.nombre_titular_nuevo' => [$this->tipoConTitularNuevo() ? 'required' : 'nullable', 'string', 'max:255'],
-            'datos.dni_titular_nuevo' => [$this->tipoConTitularNuevo() ? 'required' : 'nullable', 'string', 'max:20'],
-            'datos.fecha_nacimiento_titular' => 'nullable|date',
-            'datos.nombre_cotitular_nuevo' => 'nullable|string|max:255',
-            'datos.dni_cotitular_nuevo' => 'nullable|string|max:20',
-            'datos.fecha_nacimiento_cotitular' => 'nullable|date',
-            'datos.fecha_instrumento' => 'nullable|date',
-            'datos.num_foja_plan' => 'nullable|string|max:50',
-            'datos.num_foja_recursos' => 'nullable|string|max:50',
-            'datos.num_foja_promocion' => 'nullable|string|max:50',
-            'datos.num_foja_ratificacion' => 'nullable|string|max:50',
-            'datos.num_foja_regularizacion' => 'nullable|string|max:50',
-            'datos.num_cuotas' => 'nullable|integer|min:1',
-            'datos.monto_cuota' => 'nullable|numeric|min:0',
-            'datos.tasa_interes' => 'nullable|numeric|min:0',
-            'datos.fecha_tasa' => 'nullable|date',
-            // Campos específicos de Transferencia-Cancelacion
-            'datos.num_res_reglamentacion' => 'nullable|string|max:50',
-            'datos.num_res_modificatoria' => 'nullable|string|max:50',
-            'datos.unidad' => 'nullable|string|max:20',
-            'datos.sector' => 'nullable|string|max:20',
-            'datos.estado_civil_titular_nuevo' => 'nullable|string|max:30',
-            'datos.estado_civil_cotitular_nuevo' => 'nullable|string|max:30',
-            // Campos específicos de Rectificación
-            'datos.texto_donde_dice' => 'nullable|string',
-            'datos.res_reglamentacion' => 'nullable|string|max:20',
-            'datos.res_modificatoria' => 'nullable|string|max:20',
-            'datos.fecha_res_adjudicacion' => 'nullable|date',
-            'datos.orden' => 'nullable|string|max:10',
-            'datos.num_foja_darrd' => 'nullable|string|max:20',
-            'datos.num_foja_dni' => 'nullable|string|max:20',
-            'datos.num_foja_resolucion' => 'nullable|string|max:20',
-            'datos.num_foja_darrd_conf' => 'nullable|string|max:20',
-            'datos.cantidad_viviendas' => 'nullable|string|max:20',
-            'datos.cantidad_letras' => 'nullable|string|max:100',
-            // Campos específicos de AplicarPagos
-            'datos.codigo_pago' => 'nullable|string|max:20',
-            'datos.monto' => 'nullable|string|max:30',
-            'datos.cuotas_adeudadas' => 'nullable|string|max:10',
-            'datos.causante' => 'nullable|string|max:255',
-            'datos.jefe_computos' => 'nullable|string|max:255',
-            'datos.firma_1_nombre' => 'nullable|string|max:255',
-            'datos.firma_1_cargo' => 'nullable|string|max:255',
-            'datos.firma_2_nombre' => 'nullable|string|max:255',
-            'datos.firma_2_cargo' => 'nullable|string|max:255',
-            'datos.firma_1_dependencia' => 'nullable|string|max:255',
-            'datos.firma_2_dependencia' => 'nullable|string|max:255',
-            // Cada resolución cita su propio dictamen (en los PDF reales nunca se repite entre expedientes).
-            'datos.num_dictamen' => [$this->tipoConDictamen() ? 'required' : 'nullable', 'string', 'max:50'],
-            // Campos específicos de los Reconocimiento
-            'datos.quien_suscribe' => 'nullable|string|max:255',
-            'datos.dni_suscribe' => 'nullable|string|max:20',
-            'datos.cuota_sin_gastos' => 'nullable|string|max:30',
-            'datos.nro_ultima_cuota' => 'nullable|string|max:10',
-            'datos.vencimiento_ultima_cuota' => 'nullable|date',
-            'datos.plazo_total_plan' => 'nullable|string|max:30',
-            'datos.tabla_cuotas_pagadas' => 'nullable|array|max:50',
-            'datos.tabla_cuotas_pagadas.*.*' => 'nullable|string|max:100',
-            'datos.tabla_cuotas_a_reconocer' => 'nullable|array|max:50',
-            'datos.tabla_cuotas_a_reconocer.*.*' => 'nullable|string|max:100',
-            'datos.tabla_donde_dice' => 'nullable|array|max:50',
-            'datos.tabla_donde_dice.*.*' => 'nullable|string|max:100',
-            'datos.tabla_debe_decir' => 'nullable|array|max:50',
-            'datos.tabla_debe_decir.*.*' => 'nullable|string|max:100',
-            'datos.sin_tabla_donde_dice' => 'nullable|boolean',
-            'datos.sin_tabla_debe_decir' => 'nullable|boolean',
-        ];
-    }
-
-    /**
-     * Datos obligatorios de los tipos cuya plantilla no tiene todos los de rules() (p. ej. las notas de
-     * Aplicar pagos y Reconocimiento no llevan número de resolución ni titular): sin esto no se podría guardar nunca,
-     * porque el dato exigido no aparece en el documento. null = se usan las reglas de rules() tal cual.
-     *
-     * @return list<string>|null
-     */
-    private function camposObligatorios(): ?array
-    {
-        return match ($this->tipo) {
-            'AplicarPagos' => ['fecha_res', 'num_exp', 'codigo_pago', 'monto', 'cuotas_adeudadas'],
-            'ReconocimientoCuotaPagadaDosVeces', 'ReconocimientoCuotaPagadaNoCargada' => ['fecha_res', 'num_exp', 'codigo_pago', 'quien_suscribe', 'dni_suscribe'],
-            default => null,
-        };
-    }
-
-    /** rules() con 'required' solo en los datos obligatorios de la plantilla de este tipo. */
-    private function reglasPlantilla(): array
-    {
-        $reglas = $this->rules();
-        $obligatorios = $this->camposObligatorios();
-        if ($obligatorios === null) {
-            return $reglas;
-        }
-
-        foreach ($reglas as $clave => $regla) {
-            $lista = array_values(array_filter(
-                is_array($regla) ? $regla : explode('|', $regla),
-                fn ($r) => ! in_array($r, ['required', 'nullable'], true),
-            ));
-            $campo = substr($clave, strlen('datos.'));
-            $reglas[$clave] = [in_array($campo, $obligatorios, true) ? 'required' : 'nullable', ...$lista];
-        }
-
-        return $reglas;
-    }
-
-    private function tipoConDictamen(): bool
-    {
-        // En los PDF reales de estos tipos el dictamen está siempre (189 de 189). De Rescisiones no hay muestras: opcional.
-        return in_array($this->tipo, ['Cancelaciones', 'Transferencias', 'Transferencia-Cancelacion', 'Rectificacion'], true);
-    }
-
     /**
      * Datos obligatorios de la plantilla de este tipo, para el aviso "Faltan N datos" del editor.
      *
@@ -836,7 +578,7 @@ class CrearResolucion extends Component
     public function obligatorios(): array
     {
         $campos = [];
-        foreach ($this->reglasPlantilla() as $clave => $regla) {
+        foreach ($this->rules() as $clave => $regla) {
             $lista = is_array($regla) ? $regla : explode('|', $regla);
             if (in_array('required', $lista, true) && ! str_contains($clave, '*')) {
                 $campos[] = substr($clave, strlen('datos.'));
@@ -844,16 +586,6 @@ class CrearResolucion extends Component
         }
 
         return $campos;
-    }
-
-    private function tipoConTitularNuevo(): bool
-    {
-        return in_array($this->tipo, ['Transferencias', 'Transferencia-Cancelacion'], true);
-    }
-
-    private function tipoConTitular(): bool
-    {
-        return ! $this->tipoConTitularNuevo() && $this->tipo !== 'Rectificacion';
     }
 
     /** Toda resolución va vinculada a un expediente real: se comprueba en mitivdb (sistema viejo). */
@@ -898,24 +630,14 @@ class CrearResolucion extends Component
             : ['estado' => 'no', 'detalle' => null];
     }
 
+    protected function rules(): array
+    {
+        return Tipos::reglas($this->tipo, $this->reglaExpedienteExiste());
+    }
+
     protected function messages(): array
     {
-        return [
-            'datos.nombre_titular_nuevo.required' => 'El nombre del nuevo titular es obligatorio',
-            'datos.dni_titular_nuevo.required' => 'El DNI del nuevo titular es obligatorio',
-            'datos.fecha_res.required' => 'La fecha de resolución es obligatoria',
-            'datos.num_exp.required' => 'El número de expediente es obligatorio',
-            'datos.nombre_titular.required' => 'El nombre del titular es obligatorio',
-            'datos.dni_titular.required' => 'El DNI del titular es obligatorio',
-            'datos.num_dictamen.required' => 'El número de dictamen es obligatorio',
-            'datos.codigo_pago.required' => 'El código de pago es obligatorio',
-            'datos.monto.required' => 'El monto es obligatorio',
-            'datos.cuotas_adeudadas.required' => 'La cantidad de cuotas adeudadas es obligatoria',
-            'datos.quien_suscribe.required' => 'El nombre de quien suscribe es obligatorio',
-            'datos.dni_suscribe.required' => 'El DNI de quien suscribe es obligatorio',
-            'datos.*.max' => 'El campo excede la longitud máxima permitida',
-            'datos.*.date' => 'El campo debe ser una fecha válida',
-        ];
+        return Tipos::mensajes();
     }
 
     public function render()

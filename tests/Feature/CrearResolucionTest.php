@@ -6,6 +6,7 @@ use App\Models\Permiso;
 use App\Models\Resolucion;
 use App\Models\User;
 use App\Services\Resoluciones\Articulos;
+use App\Services\Resoluciones\Tipos;
 use Livewire\Livewire;
 use Tests\Support\MitivFalso;
 
@@ -449,7 +450,7 @@ test('cada tipo: los datos obligatorios están en su plantilla y completándolos
         ->assertSee('1234/440-2026')
         ->assertDontSee('<input', false)
         ->assertDontSee('x-model', false);
-})->with(CrearResolucion::TIPOS);
+})->with(Tipos::TODOS);
 
 test('firmantes: se eligen de la lista, la resolución guarda su copia y el PDF no cambia si después se edita el firmante', function () {
     $user = editorDeResoluciones();

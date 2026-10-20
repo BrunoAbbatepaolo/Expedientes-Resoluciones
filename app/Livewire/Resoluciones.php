@@ -4,6 +4,7 @@ namespace App\Livewire;
 
 use App\Livewire\Forms\ResolucionForm;
 use App\Models\Resolucion;
+use App\Services\Resoluciones\Tipos;
 use App\Traits\AuthorizesOficina;
 use App\Traits\NotificaUi;
 use Illuminate\Pagination\LengthAwarePaginator;
@@ -29,7 +30,7 @@ class Resoluciones extends Component
     #[Url(as: 'q', except: '')]
     public string $buscar = '';
 
-    /** Filtro por tipo (CrearResolucion::TIPOS) o 'otras' (las cargadas sin tipo). */
+    /** Filtro por tipo (Tipos::TODOS) o 'otras' (las cargadas sin tipo). */
     #[Url(except: '')]
     public string $tipo = '';
 
@@ -179,7 +180,7 @@ class Resoluciones extends Component
             ->map(fn ($t) => $t ?: 'otras')->unique()->sort()->values();
         $total = (clone $visibles)->count();
 
-        $tipo = $this->tipo === 'otras' || in_array($this->tipo, CrearResolucion::TIPOS, true) ? $this->tipo : '';
+        $tipo = $this->tipo === 'otras' || in_array($this->tipo, Tipos::TODOS, true) ? $this->tipo : '';
         $resoluciones = $visibles->filtrar($this->buscar, $tipo)->with('archivos')->latest()->paginate(self::POR_PAGINA);
 
         // 'expediente' viene de pgsql_mitiv (otro servidor): si no responde, se

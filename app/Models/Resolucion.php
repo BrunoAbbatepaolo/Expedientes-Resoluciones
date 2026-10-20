@@ -64,7 +64,7 @@ class Resolucion extends Model
         });
     }
 
-    /** Filtro de la lista: $tipo es un tipo de CrearResolucion::TIPOS o 'otras' (sin tipo); $buscar, texto libre. */
+    /** Filtro de la lista: $tipo es un tipo de Tipos::TODOS o 'otras' (sin tipo); $buscar, texto libre. */
     public function scopeFiltrar(Builder $query, string $buscar, string $tipo): Builder
     {
         if ($tipo === 'otras') {

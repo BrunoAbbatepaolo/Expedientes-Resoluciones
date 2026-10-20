@@ -209,7 +209,7 @@
                                 // Los PDF se sirven solo a la oficina que cargó la resolución (o si es una resolución vieja sin oficina).
                                 $accesible = $res->oficina_id === null || (int) $res->oficina_id === (int) $oficinaPropia;
                                 $urlPdf = $accesible ? $res->urlPdf() : null;
-                                $tipoRes = $res->tipo ? \App\Livewire\CrearResolucion::nombreDeTipo($res->tipo) : null;
+                                $tipoRes = $res->tipo ? \App\Services\Resoluciones\Tipos::nombre($res->tipo) : null;
                             @endphp
                             <li wire:key="res-{{ $res->id }}">
                                 {{-- Toda la fila abre el PDF en otra pestaña. --}}
